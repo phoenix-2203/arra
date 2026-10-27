@@ -1,122 +1,25 @@
-/* Colour themes. Every colour in the app comes from these tokens. The active
-   theme is set on <html data-theme="…"> (default below, ?theme= to preview). */
-:root,
-[data-theme="onyx"] {
-  /* Onyx & Bullion: light grey page, black panel, polished gold */
-  --bg: #f1f1ef;
-  --surface: #ffffff;
-  --text: #111111;
-  --text-soft: #5c5c5c;
-  --line: #dcdcd8;
-  --accent: #111111;
-  --accent-text: #ffffff;
-  --gold: #c99a2e;
-  --gold-grad: linear-gradient(100deg, #f8e7a1 0%, #e2b84b 28%, #b8861f 52%, #f3d77c 74%, #a87a1c 100%);
-  --gold-ink: #241a03;
-  --gold-soft: #f4ebd2;
-  --gold-soft-ink: #5a4410;
-  --panel: #0e0e0e;
-  --panel-text: #f4f4f4;
-  --panel-muted: #9b9b9b;
-  --panel-rule: rgba(255, 255, 255, 0.12);
-  --pat-1: #262626;
-  --pat-2: #1d1d1d;
-  --paid: #2f8a57;
-  --paid-soft: #e1f0e7;
-  --paid-ink: #174a2f;
-  --paid-on-panel: #8fdcb0;
-  --alert: #b3261e;
-  --alert-soft: #f8e0de;
-  --alert-ink: #7a1912;
-  --alert-on-panel: #ff9d93;
-  --focus: #c99a2e;
-  color-scheme: light;
-}
-
-[data-theme="graphite"] {
-  /* Graphite Night: the whole app dark, gold on charcoal */
-  --bg: #0f0f10;
-  --surface: #19191b;
-  --text: #f1f1f1;
-  --text-soft: #9a9aa0;
-  --line: #2c2c30;
-  --accent: #f1f1f1;
-  --accent-text: #111111;
-  --gold: #e3bd55;
-  --gold-grad: linear-gradient(100deg, #fff0b0 0%, #e8c25a 30%, #b88a24 55%, #f6dc85 78%, #b28420 100%);
-  --gold-ink: #1e1602;
-  --gold-soft: #2a2416;
-  --gold-soft-ink: #ecd38f;
-  --panel: #1f1f22;
-  --panel-text: #f4f4f4;
-  --panel-muted: #9a9aa0;
-  --panel-rule: rgba(255, 255, 255, 0.1);
-  --pat-1: #2d2d31;
-  --pat-2: #27272b;
-  --paid: #5cc48a;
-  --paid-soft: #16281e;
-  --paid-ink: #a6e6c0;
-  --paid-on-panel: #8fdcb0;
-  --alert: #ff8a80;
-  --alert-soft: #2e1715;
-  --alert-ink: #ffb4ab;
-  --alert-on-panel: #ff9d93;
-  --focus: #e3bd55;
-  color-scheme: dark;
-}
-
-[data-theme="champagne"] {
-  /* Champagne: white and soft greys, charcoal panel, quieter satin gold */
-  --bg: #f6f6f6;
-  --surface: #ffffff;
-  --text: #1e1e1e;
-  --text-soft: #6b6b6b;
-  --line: #e0e0e0;
-  --accent: #2a2a2a;
-  --accent-text: #ffffff;
-  --gold: #b8964a;
-  --gold-grad: linear-gradient(100deg, #efe0b4 0%, #cfb06a 35%, #a58440 60%, #e3cd91 100%);
-  --gold-ink: #261d08;
-  --gold-soft: #f2ecdc;
-  --gold-soft-ink: #5b4a1f;
-  --panel: #2a2a2a;
-  --panel-text: #f5f5f5;
-  --panel-muted: #a8a8a8;
-  --panel-rule: rgba(255, 255, 255, 0.14);
-  --pat-1: #363636;
-  --pat-2: #313131;
-  --paid: #2f8a57;
-  --paid-soft: #e1f0e7;
-  --paid-ink: #174a2f;
-  --paid-on-panel: #9fe0bb;
-  --alert: #b3261e;
-  --alert-soft: #f8e0de;
-  --alert-ink: #7a1912;
-  --alert-on-panel: #ffa49b;
-  --focus: #b8964a;
-  color-scheme: light;
-}
-
-[data-theme="blackcard"] {
-  /* Black Card: pure black, bright gold foil, gold-edged panel */
-  --bg: #000000;
-  --surface: #0d0d0d;
-  --text: #ffffff;
-  --text-soft: #8f8f8f;
-  --line: #262626;
-  --accent: var(--gold-grad);
-  --accent-text: #1b1300;
+/* Arra colours: black first, greys for surfaces and secondary text, polished
+   gold only on money and the main actions. Every colour comes from here. */
+:root {
+  --bg: #0b0b0c;
+  --surface: #161618;
+  --text: #f2f2f2;
+  --text-soft: #9b9ba1;
+  --line: #2a2a2e;
+  --accent: #f2f2f2;
+  --accent-text: #0b0b0c;
   --gold: #e6be45;
   --gold-grad: linear-gradient(100deg, #fff5c4 0%, #f0cc5a 25%, #c8962a 48%, #fde68e 70%, #b4831c 100%);
   --gold-ink: #1b1300;
-  --gold-soft: #1f1a0b;
+  --gold-soft: #1f1a0d;
   --gold-soft-ink: #f0d58a;
-  --panel: #000000;
+  --gold-edge: #6b5418;
+  --panel: #111112;
   --panel-text: #ffffff;
-  --panel-muted: #8f8f8f;
-  --panel-rule: rgba(230, 190, 69, 0.25);
-  --pat-1: #1a1a1a;
-  --pat-2: #141414;
+  --panel-muted: #9b9ba1;
+  --panel-rule: rgba(230, 190, 69, 0.22);
+  --pat-1: #222225;
+  --pat-2: #1b1b1e;
   --paid: #5cc48a;
   --paid-soft: #10241a;
   --paid-ink: #a6e6c0;
@@ -128,7 +31,6 @@
   --focus: #e6be45;
   color-scheme: dark;
 }
-[data-theme="blackcard"] .adire { border: 1px solid #6b5418; }
 
 :root {
   --radius-panel: 22px;
@@ -177,6 +79,7 @@ p { margin: 0; }
   color: var(--panel-text);
   padding: 22px 22px 20px;
   isolation: isolate;
+  border: 1px solid var(--gold-edge);
 }
 .adire svg.cloth { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; }
 .adire .label { font-size: 14px; color: var(--panel-muted); }
