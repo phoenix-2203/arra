@@ -11,7 +11,7 @@ export const short = (a) => (a ? `${a.slice(0, 6)}…${a.slice(-4)}` : "");
 function currentTheme() {
   const set = document.documentElement.dataset.theme;
   if (set === "light" || set === "dark") return set;
-  return window.matchMedia?.("(prefers-color-scheme: light)").matches ? "light" : "dark";
+  return window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
 function ThemeToggle() {
