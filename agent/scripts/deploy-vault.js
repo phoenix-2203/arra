@@ -24,11 +24,23 @@ console.log(`  Max per order: $${formatUnits(MAX_ORDER_USDT, 6)}`);
 console.log(`  Gas paid in  : USDT (balance ${b.usdt})`);
 console.log(`  Tag          : ${ATTRIBUTION_TAG}`);
 
+// The estimate must name the fee currency too; otherwise the node checks the
+// CELO balance (zero here) and reports "gas required exceeds allowance (0)".
 const gas = await client.estimateGas({
   account,
   data: encodeDeployData({ abi: artifact.abi, bytecode: artifact.bytecode, args }),
+  feeCurrency: USDT_FEE_ADAPTER,
 });
-console.log(`  Est. gas     : ${gas} (paid in USDT; usually a few cents)`);
+console.log(`  Est. gas     : ${gas}`);
+try {
+  // Celo returns the gas price in the fee currency when asked (18-decimal units).
+  const price = BigInt(await client.request({ method: "eth_gasPrice", params: [USDT_FEE_ADAPTER] }));
+  const cost = (gas * price) / 10n ** 12n; // 18 -> 6 decimals
+  console.log(`  Est. cost    : about $${formatUnits(cost, 6)} in USDT`);
+  if (cost * 2n > b.usdtRaw) console.log("  Warning      : balance may be too low; add a little USDT before sending.");
+} catch {
+  console.log("  Est. cost    : (couldn't fetch the USDT gas price; usually a few cents)");
+}
 
 if (!SEND) {
   previewOnly("node scripts/deploy-vault.js");
