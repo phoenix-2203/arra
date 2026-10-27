@@ -158,7 +158,7 @@ export default function Order({ id, wallet }) {
             <button className="money" disabled={!!busy} onClick={() => run("acceptSplit", [bid, BigInt(o.splitOffer.toSupplier)])}>{A.acceptSplit}</button>
           ) : null}
 
-          {has("release") ? <button className="money" disabled={!!busy} onClick={() => run("release", [bid])}>{A.release} (${usd(o.held)})</button> : null}
+          {has("release") ? <button className={o.splitOffer && has("acceptSplit") ? "secondary" : "money"} disabled={!!busy} onClick={() => run("release", [bid])}>{A.release} (${usd(o.held)})</button> : null}
 
           {has("releasePart") ? (
             <div className="block stack">

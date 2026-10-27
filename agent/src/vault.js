@@ -8,7 +8,7 @@ export const vaultAbi = vaultArtifact.abi;
 export const STATUS = ["None", "Pending", "Active", "Shipped", "Disputed", "Released", "Refunded", "Settled"];
 export const FINAL = new Set(["Released", "Refunded", "Settled"]);
 
-const usd = (v) => formatUnits(BigInt(v), 6);
+const usd = (v) => Number(formatUnits(BigInt(v), 6)).toFixed(2);
 
 /** Order as plain JSON (bigints as strings), or null if the id doesn't exist. */
 export async function readOrder(client, vault, id) {

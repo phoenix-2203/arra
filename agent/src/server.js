@@ -3,7 +3,7 @@
 import { createServer as httpServer } from "node:http";
 import { readFileSync, writeFileSync, existsSync, mkdirSync, statSync } from "node:fs";
 import { join, extname, normalize } from "node:path";
-import { isAddress, getAddress } from "viem";
+import { isAddress } from "viem";
 import { reviewSheet, sheetRef, sheetTotal, canonicalSheet } from "./orderSheet.js";
 import { PayeeBook } from "./payeeBook.js";
 import { checkContainerNumber } from "./container.js";
@@ -44,8 +44,9 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
     if (!o) return null;
     const sheet = loadSheet(o.ref);
     const t = now();
-    const v = viewer && isAddress(viewer) ? getAddress(viewer) : null;
-    const role = v === getAddress(o.buyer) ? "buyer" : v === getAddress(o.supplier) ? "supplier" : "anyone";
+    // Compare lower-case: wallets report addresses with or without checksum casing.
+    const v = viewer && isAddress(viewer, { strict: false }) ? viewer.toLowerCase() : null;
+    const role = v === o.buyer.toLowerCase() ? "buyer" : v === o.supplier.toLowerCase() ? "supplier" : "anyone";
     // F9: once the supplier has accepted from this address, remember it.
     const name = sheet?.sheet?.supplier;
     if (name && o.status !== "Pending" && payees.check(o.buyer, name, o.supplier).status === "new") {
@@ -89,7 +90,7 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
 
     "GET /api/orders": async (_b, url) => {
       const who = url.searchParams.get("address");
-      if (!who || !isAddress(who)) return [400, { error: "address required" }];
+      if (!who || !isAddress(who, { strict: false })) return [400, { error: "address required" }];
       const n = await orderCount(client, vault);
       const mine = [];
       for (let id = n; id >= 1 && mine.length < 50; id--) {

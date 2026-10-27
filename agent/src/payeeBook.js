@@ -25,9 +25,9 @@ export class PayeeBook {
    * before) or 'changed' (STOP: confirm by phone before paying).
    */
   check(buyer, supplierName, address) {
-    if (!isAddress(address)) return { status: 'invalid', message: 'That is not a valid wallet address.' };
-    const addr = getAddress(address);
-    const entry = this.data[getAddress(buyer)]?.[key(supplierName)];
+    if (!isAddress(address, { strict: false })) return { status: 'invalid', message: 'That is not a valid wallet address.' };
+    const addr = getAddress(address.toLowerCase());
+    const entry = this.data[getAddress(buyer.toLowerCase())]?.[key(supplierName)];
     if (!entry) {
       return { status: 'new', address: addr, message: `First order with ${supplierName}. The order only goes live once they sign from this address.` };
     }
@@ -44,8 +44,8 @@ export class PayeeBook {
 
   /** Records an address after a supplier accepted an order from it (or the buyer confirmed by phone). */
   remember(buyer, supplierName, address, how = 'accepted') {
-    const b = getAddress(buyer);
-    const addr = getAddress(address);
+    const b = getAddress(buyer.toLowerCase());
+    const addr = getAddress(address.toLowerCase());
     const k = key(supplierName);
     this.data[b] ??= {};
     this.data[b][k] ??= { name: supplierName, addresses: [], history: [] };

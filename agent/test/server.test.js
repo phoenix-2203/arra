@@ -82,6 +82,11 @@ test("order view: role, actions, explanation and payee memory", async () => {
   const [, changed] = await post("/api/payee/check", { buyer: BUYER, supplierName: "Guangzhou Textiles", address: BUYER });
   assert.equal(changed.status, "changed");
   assert.equal((await get("/api/orders/2"))[0], 404);
+  // Wallets may report addresses in lower or upper case.
+  const [, lower] = await get(`/api/orders/1?as=${SUPPLIER.toLowerCase()}`);
+  assert.equal(lower.role, "supplier");
+  const [, upper] = await get(`/api/orders/1?as=0x${SUPPLIER.slice(2).toUpperCase()}`);
+  assert.equal(upper.role, "supplier");
 });
 
 test("my orders, container check, errors and the app shell", async () => {
