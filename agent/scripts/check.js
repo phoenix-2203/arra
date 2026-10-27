@@ -11,4 +11,4 @@ console.log(`Explorer     : ${celoscanAddr(account.address)}`);
 console.log(`Balances     : ${b.usdt} USDT, ${b.celo} CELO`);
 console.log(`Tag on all tx: ${ATTRIBUTION_TAG}`);
 console.log(`Arra vault   : ${ARRA_VAULT || "(not deployed yet)"}`);
-if (b.usdtRaw < 1_000_000n) console.log("\nTip: add about $5 of USDT on Celo to this wallet to pay fees.");
+if (b.usdtRaw < 200_000n) console.log("\nTip: balance is low. About $1 of USDT on Celo covers hundreds of transactions.");
