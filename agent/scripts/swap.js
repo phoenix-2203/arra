@@ -25,7 +25,8 @@ const fmt = (v) => formatUnits(BigInt(v), 6);
 const account = agentAccount();
 const client = publicClient();
 const textile = textileClient();
-const bal = (token) => client.readContract({ address: token, abi: erc20Abi, functionName: "balanceOf", args: [account.address] });
+// Pass the receipt's block so we never read from a node that hasn't seen the swap yet.
+const bal = (token, blockNumber) => client.readContract({ address: token, abi: erc20Abi, functionName: "balanceOf", args: [account.address], ...(blockNumber ? { blockNumber } : {}) });
 
 console.log("Textile FX swap on Celo");
 console.log(`  Wallet       : ${account.address}`);
@@ -105,4 +106,4 @@ const receipt = await client.waitForTransactionReceipt({ hash });
 const tag = await verifyTx({ client, hash });
 console.log(`  Status       : ${receipt.status}`);
 console.log(`  Tag on tx    : ${tag ? tag.codes.join(", ") : "MISSING"}`);
-console.log(`  Balances now : ${fmt(await bal(USDT))} USDT, ${fmt(await bal(CNGN))} cNGN`);
+console.log(`  Balances now : ${fmt(await bal(USDT, receipt.blockNumber))} USDT, ${fmt(await bal(CNGN, receipt.blockNumber))} cNGN`);
