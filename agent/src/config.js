@@ -16,8 +16,8 @@ export const USDT_DECIMALS = 6;
 
 export const IDENTITY_REGISTRY = "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432";
 
-// Filled in after deployment (set ARRA_VAULT in .env).
-export const ARRA_VAULT = process.env.ARRA_VAULT || "";
+// Deployed on Celo mainnet 27 Oct 2026, tx 0xf8d8403f3574d1776a2d440e90fadbe49bb3d7706c5d49bc436a3dc3001bbe86
+export const ARRA_VAULT = process.env.ARRA_VAULT || "0x3da5f9d36d1ae8769a9460a7788a21c8041c7bb3";
 
 // Safety: the vault's per-order cap at launch, in USDT units ($50).
 export const MAX_ORDER_USDT = 50n * 10n ** 6n;

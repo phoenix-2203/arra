@@ -8,7 +8,8 @@
     "check": "node --env-file=.env scripts/check.js",
     "register": "node --env-file=.env scripts/register-agent.js",
     "deploy": "node --env-file=.env scripts/deploy-vault.js",
-    "verify-tag": "node --env-file=.env scripts/verify-tag.js"
+    "verify-tag": "node --env-file=.env scripts/verify-tag.js",
+    "verify-vault": "node --env-file=.env scripts/verify-vault.js"
   },
   "keywords": [],
   "author": "",
