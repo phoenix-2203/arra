@@ -33,6 +33,12 @@ console.log(`  Direction    : ${toUsdt ? "cNGN -> USDT" : "USDT -> cNGN"}`);
 console.log(`  Balances     : ${fmt(await bal(USDT))} USDT, ${fmt(await bal(CNGN))} cNGN`);
 
 const amount = toUsdt ? { buyAmount: usd } : { sellAmount: usd };
+// Textile's RFQ minimum is 1 whole token of whatever you sell (1,000,000 units at 6 decimals).
+const MIN_SELL = 1_000_000n;
+if (!toUsdt && usd < MIN_SELL) {
+  console.log("\nTextile's minimum swap is 1 USDT, so use --usd 1 or more. Nothing was sent.");
+  process.exit(1);
+}
 try {
   const p = (await textile.preview({ side, ...amount })).data;
   console.log(`  Preview      : ${toUsdt ? `${fmt(p.sellAmount)} cNGN -> ${fmt(p.buyAmount)} USDT` : `${fmt(p.sellAmount)} USDT -> ${fmt(p.buyAmount)} cNGN`}`);
@@ -53,11 +59,17 @@ if (!SEND) {
 // then sign the free TakerControl message and retry.
 let res;
 try {
-  res = await textile.request({ side, ...amount, taker: account.address });
+  try {
+    res = await textile.request({ side, ...amount, taker: account.address });
+  } catch (e) {
+    if (!(e instanceof TextileError && e.status === 401)) throw e;
+    const takerProof = await signTakerProof(account, account.address);
+    res = await textile.request({ side, ...amount, taker: account.address, takerProof });
+  }
 } catch (e) {
-  if (!(e instanceof TextileError && e.status === 401)) throw e;
-  const takerProof = await signTakerProof(account, account.address);
-  res = await textile.request({ side, ...amount, taker: account.address, takerProof });
+  if (!(e instanceof TextileError)) throw e;
+  console.log(`\nTextile said no: ${e.message}. Nothing was sent.`);
+  process.exit(1);
 }
 const d = res.data;
 if (d.status !== "quoted") {
