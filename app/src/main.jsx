@@ -8,6 +8,8 @@ try {
   const q = new URLSearchParams(location.search).get("theme");
   const saved = q || localStorage.getItem("arra.theme");
   if (saved === "light" || saved === "dark") document.documentElement.dataset.theme = saved;
+  const accent = new URLSearchParams(location.search).get("accent");
+  if (accent) document.documentElement.dataset.accent = accent;
 } catch {
   /* storage can be unavailable */
 }

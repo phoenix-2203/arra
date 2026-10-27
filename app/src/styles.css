@@ -238,6 +238,12 @@ footer.foot { margin-top: 40px; font-size: 12.5px; color: var(--text-soft); }
 .how li::marker { color: var(--mark); font-weight: 700; }
 @media (min-width: 960px) { .how { padding: 28px 32px; } .how ol { font-size: 15.5px; } }
 
+/* Colour pair options (preview with ?accent=) */
+:root[data-accent="saffron"][data-accent][data-accent] { --panel: #0f1b3d; --pat-1: #182752; --pat-2: #142247; --panel-muted: #a9b4d6; --panel-rule: rgba(255, 184, 28, 0.3); --gold: #ffb81c; --gold-soft: #fff1cf; --gold-soft-ink: #4a3300; --mark: #0f1b3d; --focus: #0f1b3d; }
+:root[data-accent="apricot"][data-accent][data-accent] { --panel: #2e1440; --pat-1: #3c1d52; --pat-2: #351849; --panel-muted: #cdb6dc; --panel-rule: rgba(255, 159, 90, 0.3); --gold: #ff9f5a; --gold-soft: #ffe8d6; --gold-soft-ink: #5a2a05; --mark: #2e1440; --focus: #2e1440; }
+:root[data-accent="electric"][data-accent][data-accent] { --panel: #111318; --pat-1: #1c1f27; --pat-2: #171a21; --panel-muted: #a3a8b5; --panel-rule: rgba(77, 124, 255, 0.35); --gold: #4d7cff; --gold-ink: #ffffff; --gold-soft: #e3eaff; --gold-soft-ink: #142a6b; --mark: #2f5ef0; --focus: #2f5ef0; }
+:root[data-accent="lilac"][data-accent][data-accent] { --panel: #23206b; --pat-1: #2e2a80; --pat-2: #282575; --panel-muted: #c1bdf0; --panel-rule: rgba(185, 166, 255, 0.35); --gold: #b9a6ff; --gold-soft: #ece6ff; --gold-soft-ink: #2d1f73; --mark: #23206b; --focus: #23206b; }
+
 /* theme toggle */
 .bar .tools { display: flex; align-items: center; gap: 8px; }
 .icon-btn { width: 38px; height: 38px; padding: 0; display: grid; place-items: center; border-radius: 999px; background: var(--surface); color: var(--text); border: 1.5px solid var(--edge); }
