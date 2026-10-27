@@ -1,0 +1,21 @@
+{
+  "name": "arra-agent",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test test/",
+    "check": "node --env-file=.env scripts/check.js",
+    "register": "node --env-file=.env scripts/register-agent.js",
+    "deploy": "node --env-file=.env scripts/deploy-vault.js",
+    "verify-tag": "node --env-file=.env scripts/verify-tag.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@celo/attribution-tags": "^0.5.0",
+    "viem": "^2.57.12"
+  },
+  "type": "module"
+}

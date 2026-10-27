@@ -1,0 +1,12 @@
+{
+  "type": "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
+  "name": "Arra",
+  "description": "Arra lets a buyer pay a supplier's deposit from naira, lock the dollar rate for the whole order on Textile FX, and keep the balance locked for that one supplier until the goods ship, or get it back automatically. Built on Celo mainnet for the Agents on Open Rails hackathon.",
+  "image": "https://raw.githubusercontent.com/phoenix-2203/arra/main/docs/logo.png",
+  "services": [
+    { "name": "web", "endpoint": "https://arra.duckdns.org" }
+  ],
+  "x402Support": false,
+  "active": true,
+  "supportedTrust": ["reputation"]
+}
