@@ -7,6 +7,36 @@ import Order from "./pages/Order.jsx";
 
 export const short = (a) => (a ? `${a.slice(0, 6)}…${a.slice(-4)}` : "");
 
+// Light or dark: follows the phone's setting until the person picks one.
+function currentTheme() {
+  const set = document.documentElement.dataset.theme;
+  if (set === "light" || set === "dark") return set;
+  return window.matchMedia?.("(prefers-color-scheme: light)").matches ? "light" : "dark";
+}
+
+function ThemeToggle() {
+  const [theme, setTheme] = useState(currentTheme);
+  const flip = () => {
+    const next = theme === "dark" ? "light" : "dark";
+    document.documentElement.dataset.theme = next;
+    try {
+      localStorage.setItem("arra.theme", next);
+    } catch {
+      /* storage can be unavailable */
+    }
+    setTheme(next);
+  };
+  return (
+    <button className="icon-btn" onClick={flip} aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}>
+      {theme === "dark" ? (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="4.5" /><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8" /></svg>
+      ) : (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" /></svg>
+      )}
+    </button>
+  );
+}
+
 export function navigate(path) {
   history.pushState(null, "", path);
   window.dispatchEvent(new PopStateEvent("popstate"));
@@ -49,7 +79,10 @@ export default function App() {
     <div className="shell">
       <header className="bar">
         <Wordmark />
-        {account ? <span className="who num">{short(account)}</span> : null}
+        <div className="tools">
+          {account ? <span className="who num">{short(account)}</span> : null}
+          <ThemeToggle />
+        </div>
       </header>
       <main>
         {order ? <Order id={Number(order[1])} wallet={wallet} /> : path === "/new" ? <NewOrder wallet={wallet} /> : <Home wallet={wallet} />}

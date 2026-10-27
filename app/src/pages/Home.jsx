@@ -23,8 +23,9 @@ export default function Home({ wallet }) {
 
   if (!account) {
     return (
-      <div className="stack-lg">
-        <section className="adire">
+      <div className="split hero-split">
+        <div className="stack-lg">
+        <section className="adire hero">
           <Cloth />
           <p className="label">Importing from China?</p>
           <h1 style={{ marginTop: 8 }}>Pay the deposit. Keep the balance locked until it ships.</h1>
@@ -40,7 +41,8 @@ export default function Home({ wallet }) {
           )}
           {wallet.connectError ? <p className="note bad">{wallet.connectError}</p> : null}
         </div>
-        <section className="stack">
+        </div>
+        <section className="stack block how">
           <h2>How an order works</h2>
           <ol className="stack small" style={{ paddingLeft: 20, margin: 0 }}>
             <li>You write the order sheet with exact terms. Arra flags vague words like "good quality".</li>
@@ -55,7 +57,7 @@ export default function Home({ wallet }) {
   }
 
   return (
-    <div className="stack-lg">
+    <div className="stack-lg narrow">
       <div className="stack">
         <h1>Your orders</h1>
         {balance !== null ? <p className="muted num">Wallet: ${Number(formatUnits(balance, 6)).toFixed(2)} USDT</p> : null}

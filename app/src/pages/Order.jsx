@@ -84,6 +84,8 @@ export default function Order({ id, wallet }) {
         <button className="linkish" onClick={switchLang}>{t.lang}</button>
       </div>
 
+      <div className="split">
+      <div className="stack-lg">
       <section className={`adire${o.status === "Released" ? " paid" : o.status === "Disputed" ? " alert" : ""}`} aria-live="polite">
         <Cloth />
         <p className="label">{final ? t.total : s?.supplier ? t.lockedFor(s.supplier) : t.locked}</p>
@@ -197,6 +199,8 @@ export default function Order({ id, wallet }) {
         {lastTx ? <p className="note ok">{t.done}. <a href={`${EXPLORER}/tx/${lastTx}`} target="_blank" rel="noreferrer">{t.viewTx}</a></p> : null}
       </section>
 
+      </div>
+      <div className="stack-lg">
       <section className="stack">
         <h2>{t.terms}</h2>
         {s ? (
@@ -218,6 +222,8 @@ export default function Order({ id, wallet }) {
           {t.parties(short(o.buyer), short(o.supplier))} <a href={`${EXPLORER}/address/${o.supplier}`} target="_blank" rel="noreferrer">Celoscan</a>
         </p>
       </section>
+      </div>
+      </div>
     </div>
   );
 }

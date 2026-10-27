@@ -117,7 +117,7 @@ export default function NewOrder({ wallet }) {
   }
 
   return (
-    <div className="stack-lg">
+    <div className="stack-lg narrow">
       <div className="stack">
         <h1>New order</h1>
         <ol className="stepper" aria-label="Steps">
