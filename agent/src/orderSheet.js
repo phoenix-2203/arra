@@ -1,0 +1,89 @@
+// F7: order sheet. Disputes are lost on vague orders ("good quality",
+// "same as sample"). The sheet holds specific terms, and its fingerprint
+// (keccak256 of a canonical form) is stored onchain as the order's `ref`,
+// so neither side can quietly change the terms later.
+import { keccak256, toBytes } from 'viem';
+
+export const SHEET_VERSION = 'arra-order-sheet/1';
+
+const REQUIRED = ['product', 'quantity', 'unit', 'unitPriceUsd', 'specs', 'packaging', 'shipBy', 'incoterm'];
+
+// Phrases that have lost real disputes because nobody can measure them.
+const VAGUE = [
+  /good quality/i,
+  /high quality/i,
+  /same as (the )?sample/i,
+  /as (per )?discussed/i,
+  /\bstandard\b/i,
+  /\bnormal\b/i,
+  /\bbest\b/i,
+  /\bok(ay)?\b/i,
+  /\betc\.?/i,
+];
+
+/** Lists what is missing or vague, in plain words. Empty list = ready to sign. */
+export function reviewSheet(sheet) {
+  const issues = [];
+  for (const key of REQUIRED) {
+    const v = sheet?.[key];
+    if (v === undefined || v === null || v === '' || (Array.isArray(v) && v.length === 0)) {
+      issues.push({ field: key, problem: 'missing' });
+    }
+  }
+  if (sheet?.quantity !== undefined && !(Number.isInteger(sheet.quantity) && sheet.quantity > 0)) {
+    issues.push({ field: 'quantity', problem: 'must be a whole number above zero' });
+  }
+  if (sheet?.unitPriceUsd !== undefined && !(typeof sheet.unitPriceUsd === 'string' && /^\d+(\.\d{1,6})?$/.test(sheet.unitPriceUsd))) {
+    issues.push({ field: 'unitPriceUsd', problem: 'write the price as a number like "2.35"' });
+  }
+  if (sheet?.shipBy && !/^\d{4}-\d{2}-\d{2}$/.test(sheet.shipBy)) {
+    issues.push({ field: 'shipBy', problem: 'use a date like 2026-12-15' });
+  }
+  const texts = [
+    ['product', sheet?.product],
+    ['packaging', sheet?.packaging],
+    ['inspection', sheet?.inspection],
+    ...(Array.isArray(sheet?.specs) ? sheet.specs.map((s, i) => [`specs[${i}]`, s]) : []),
+  ];
+  for (const [field, text] of texts) {
+    if (typeof text !== 'string') continue;
+    for (const re of VAGUE) {
+      if (re.test(text)) {
+        issues.push({ field, problem: `"${text.match(re)[0]}" can't be measured. Say exactly what it means (size, weight, material, colour code, tolerance).` });
+        break;
+      }
+    }
+  }
+  return issues;
+}
+
+/** Total in USDT base units (6 decimals) from quantity x unit price, no floating point. */
+export function sheetTotal(sheet) {
+  const [whole, frac = ''] = sheet.unitPriceUsd.split('.');
+  const unit = BigInt(whole) * 1_000_000n + BigInt((frac + '000000').slice(0, 6));
+  return unit * BigInt(sheet.quantity);
+}
+
+function canonical(value) {
+  if (Array.isArray(value)) return '[' + value.map(canonical).join(',') + ']';
+  if (value && typeof value === 'object') {
+    return '{' + Object.keys(value).sort().filter((k) => value[k] !== undefined)
+      .map((k) => JSON.stringify(k) + ':' + canonical(value[k])).join(',') + '}';
+  }
+  return JSON.stringify(value);
+}
+
+/** The exact text both sides see and sign off on. Key order doesn't matter. */
+export function canonicalSheet(sheet) {
+  return canonical({ ...sheet, version: SHEET_VERSION });
+}
+
+/** bytes32 fingerprint passed to ArraVault.createOrder as `ref`. */
+export function sheetRef(sheet) {
+  return keccak256(toBytes(canonicalSheet(sheet)));
+}
+
+/** Anyone holding the sheet can check it matches what is onchain. */
+export function matchesRef(sheet, ref) {
+  return sheetRef(sheet).toLowerCase() === String(ref).toLowerCase();
+}
