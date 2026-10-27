@@ -1,0 +1,144 @@
+// English + Simplified Chinese for everything a supplier sees (F10).
+// The buyer flow is English; the order page follows the viewer's language.
+export const STRINGS = {
+  en: {
+    lang: "中文",
+    locked: "Locked for you",
+    lockedFor: (name) => `Locked for ${name}`,
+    held: "held in the vault",
+    total: "Order total",
+    deposit: "Deposit",
+    balance: "Balance",
+    depositOnAccept: "Paid to the supplier the moment they accept",
+    status: {
+      Pending: "Waiting for the supplier to accept",
+      Active: "Accepted. Being made",
+      Shipped: "Shipped. Buyer checking goods",
+      Disputed: "Disputed",
+      Released: "Paid in full",
+      Refunded: "Refunded to buyer",
+      Settled: "Settled by agreement",
+    },
+    steps: ["Money locked", "Supplier accepted", "Shipped", "Paid"],
+    acceptBy: "Accept by",
+    shipBy: "Ship by",
+    checkWindow: "Buyer's check period",
+    days: (n) => (n === 1 ? "1 day" : `${n} days`),
+    terms: "Agreed terms",
+    termsMatch: "These terms match the fingerprint stored with the order, so they can't be changed.",
+    termsMissing: "The detailed terms aren't on this server. The order still works; ask the buyer for the order sheet.",
+    fields: { product: "Product", quantity: "Quantity", unitPriceUsd: "Unit price (USD)", specs: "Specifications", packaging: "Packaging", inspection: "Inspection", shipBy: "Ship by", incoterm: "Delivery terms" },
+    connect: "Connect wallet",
+    youAre: { buyer: "You are the buyer", supplier: "You are the supplier", anyone: "Viewing only" },
+    actions: {
+      accept: "Accept order and receive deposit",
+      decline: "Decline order",
+      markShipped: "Mark as shipped",
+      refundBuyer: "Cancel and refund the buyer",
+      cancel: "Cancel order",
+      release: "Pay the full balance",
+      releasePart: "Pay part of the balance",
+      dispute: "Raise a problem",
+      proposeSplit: "Offer a split",
+      acceptSplit: "Accept the split",
+      claim: "Pay out to supplier",
+      reclaim: "Return money to buyer",
+    },
+    acceptNote: "Accepting from this wallet proves it's yours and works on Celo. Payments for this order only ever go to this address.",
+    containerLabel: "Container number",
+    containerHint: "4 letters and 7 digits, from the bill of lading",
+    splitOffer: (s, b) => `Split offer: $${s} to the supplier, $${b} back to the buyer`,
+    yourOffer: "Waiting for the other side to accept your offer.",
+    working: "Confirm in your wallet…",
+    done: "Done",
+    viewTx: "View transaction",
+    share: "Send this link to your supplier",
+    copy: "Copy link",
+    copied: "Copied",
+    notFound: "This order doesn't exist.",
+    loading: "Loading order…",
+    errorWrongWallet: "Connect the wallet this order belongs to.",
+    parties: (b, s) => `Buyer ${b}, supplier ${s}.`,
+    connectToAct: "Connect the wallet this order was sent to, to accept it or update it.",
+  },
+  zh: {
+    lang: "English",
+    locked: "已为您锁定",
+    lockedFor: (name) => `已为 ${name} 锁定`,
+    held: "存放在合约中",
+    total: "订单总额",
+    deposit: "定金",
+    balance: "尾款",
+    depositOnAccept: "供应商接单后立即到账",
+    status: {
+      Pending: "等待供应商接单",
+      Active: "已接单，生产中",
+      Shipped: "已发货，买家验货中",
+      Disputed: "有争议",
+      Released: "已全额付款",
+      Refunded: "已退款给买家",
+      Settled: "已协商结算",
+    },
+    steps: ["资金已锁定", "供应商已接单", "已发货", "已付款"],
+    acceptBy: "接单截止",
+    shipBy: "发货截止",
+    checkWindow: "买家验货期",
+    days: (n) => `${n} 天`,
+    terms: "约定条款",
+    termsMatch: "以下条款与订单中存储的指纹一致，任何一方都无法修改。",
+    termsMissing: "服务器上没有详细条款。订单仍然有效，请向买家索取订单表。",
+    fields: { product: "产品", quantity: "数量", unitPriceUsd: "单价（美元）", specs: "规格", packaging: "包装", inspection: "验货", shipBy: "发货截止", incoterm: "交货条款" },
+    connect: "连接钱包",
+    youAre: { buyer: "您是买家", supplier: "您是供应商", anyone: "仅查看" },
+    actions: {
+      accept: "接单并收取定金",
+      decline: "拒绝订单",
+      markShipped: "标记为已发货",
+      refundBuyer: "取消并退款给买家",
+      cancel: "取消订单",
+      release: "支付全部尾款",
+      releasePart: "支付部分尾款",
+      dispute: "提出问题",
+      proposeSplit: "提出分配方案",
+      acceptSplit: "接受分配方案",
+      claim: "付款给供应商",
+      reclaim: "退款给买家",
+    },
+    acceptNote: "用此钱包接单可证明钱包属于您并可在 Celo 上收款。本订单的款项只会付到这个地址。",
+    containerLabel: "集装箱号",
+    containerHint: "4 个字母加 7 位数字，见提单",
+    splitOffer: (s, b) => `分配方案：供应商 $${s}，退还买家 $${b}`,
+    yourOffer: "等待对方接受您的方案。",
+    working: "请在钱包中确认…",
+    done: "完成",
+    viewTx: "查看交易",
+    share: "把此链接发给供应商",
+    copy: "复制链接",
+    copied: "已复制",
+    notFound: "订单不存在。",
+    loading: "正在加载订单…",
+    errorWrongWallet: "请连接此订单对应的钱包。",
+    parties: (b, s) => `买家 ${b}，供应商 ${s}。`,
+    connectToAct: "请连接接收此订单的钱包，以接单或更新订单。",
+  },
+};
+
+export function initialLang() {
+  try {
+    const q = new URLSearchParams(location.search).get("lang");
+    if (q === "zh" || q === "en") return q;
+    const saved = localStorage.getItem("arra.lang");
+    if (saved === "zh" || saved === "en") return saved;
+  } catch {
+    /* storage can be unavailable */
+  }
+  return typeof navigator !== "undefined" && /^zh/i.test(navigator.language) ? "zh" : "en";
+}
+
+export function saveLang(l) {
+  try {
+    localStorage.setItem("arra.lang", l);
+  } catch {
+    /* ignore */
+  }
+}

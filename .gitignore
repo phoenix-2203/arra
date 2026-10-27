@@ -6,3 +6,4 @@ contracts/cache/
 contracts/broadcast/
 .DS_Store
 agent/data/
+app/dist/
