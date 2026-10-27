@@ -7,11 +7,11 @@ import Order from "./pages/Order.jsx";
 
 export const short = (a) => (a ? `${a.slice(0, 6)}…${a.slice(-4)}` : "");
 
-// Light or dark: follows the phone's setting until the person picks one.
+// Dark by default; the person can switch to light.
 function currentTheme() {
   const set = document.documentElement.dataset.theme;
   if (set === "light" || set === "dark") return set;
-  return window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  return "dark";
 }
 
 function ThemeToggle() {
