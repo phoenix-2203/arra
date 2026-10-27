@@ -10,7 +10,7 @@ import { USDT, USDT_FEE_ADAPTER, MAX_ORDER_USDT, ATTRIBUTION_TAG } from "../src/
 import { SEND, balances, previewOnly, celoscanTx, celoscanAddr } from "./_common.js";
 
 const artifact = JSON.parse(
-  readFileSync(new URL("../../contracts/out/ArraVault.sol/ArraVault.json", import.meta.url))
+  readFileSync(new URL("../abi/ArraVault.json", import.meta.url))
 );
 const account = agentAccount();
 const client = publicClient();
@@ -26,7 +26,7 @@ console.log(`  Tag          : ${ATTRIBUTION_TAG}`);
 
 const gas = await client.estimateGas({
   account,
-  data: encodeDeployData({ abi: artifact.abi, bytecode: artifact.bytecode.object, args }),
+  data: encodeDeployData({ abi: artifact.abi, bytecode: artifact.bytecode, args }),
 });
 console.log(`  Est. gas     : ${gas} (paid in USDT; usually a few cents)`);
 
@@ -38,7 +38,7 @@ if (!SEND) {
 const wallet = taggedWallet(account);
 const hash = await wallet.deployContract({
   abi: artifact.abi,
-  bytecode: artifact.bytecode.object,
+  bytecode: artifact.bytecode,
   args,
   feeCurrency: USDT_FEE_ADAPTER,
 });
