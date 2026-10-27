@@ -27,8 +27,8 @@ export default function Home({ wallet }) {
         <section className="adire">
           <Cloth />
           <p className="label">Importing from China?</p>
-          <h1 style={{ marginTop: 8, color: "#fff" }}>Pay the deposit. Keep the balance locked until it ships.</h1>
-          <p style={{ marginTop: 12, color: "#d5d8f5" }}>
+          <h1 style={{ marginTop: 8 }}>Pay the deposit. Keep the balance locked until it ships.</h1>
+          <p className="lede" style={{ marginTop: 12 }}>
             Your supplier gets their deposit the moment they accept. The rest waits in an open contract they can see but can't touch until the goods ship. If they don't, it comes back to you automatically.
           </p>
         </section>
