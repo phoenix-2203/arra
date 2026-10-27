@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { formatUnits, isAddress } from "viem";
 import { api } from "../api.js";
-import { lockOrder, usdtBalance } from "../chain.js";
+import { lockOrder, usdtBalance, cngnBalance, convertNairaToUsdt } from "../chain.js";
 import { navigate } from "../App.jsx";
 
 const MAX_ORDER = 50_000_000n; // $50 cap while Arra is new (set in the vault)
@@ -54,10 +54,15 @@ export default function NewOrder({ wallet }) {
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   const [balance, setBalance] = useState(null);
+  const [cngn, setCngn] = useState(null);
+  const [payWith, setPayWith] = useState("usdt");
+  const [fxRate, setFxRate] = useState(null);
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
 
   useEffect(() => {
-    if (account) usdtBalance(account).then(setBalance).catch(() => {});
+    if (!account) return;
+    usdtBalance(account).then(setBalance).catch(() => {});
+    cngnBalance(account).then(setCngn).catch(() => {});
   }, [account]);
 
   // F9: check the payout address against this buyer's history.
@@ -76,6 +81,15 @@ export default function NewOrder({ wallet }) {
     const t = setTimeout(() => api.reviewSheet(sheet).then(setReview).catch((e) => setError(e.message)), 350);
     return () => clearTimeout(t);
   }, [sheet, step]);
+
+  // Live naira price for whatever USDT the wallet is missing.
+  const missing = review?.ready && balance !== null ? BigInt(review.totalUsdt) - balance : 0n;
+  useEffect(() => {
+    setFxRate(null);
+    if (step !== 3 || payWith !== "naira" || missing <= 0n) return;
+    const t = setTimeout(() => api.fxPreview(formatUnits(missing, 6)).then(setFxRate).catch((e) => setFxRate({ error: e.message })), 300);
+    return () => clearTimeout(t);
+  }, [step, payWith, missing]);
 
   if (!account) {
     return (
@@ -96,7 +110,12 @@ export default function NewOrder({ wallet }) {
   const datesOk = shipBy > acceptBy && shipBy <= now + 180 * DAY;
   const supplierOk = f.supplier.trim() && isAddress(supplierAddr) && supplierAddr.toLowerCase() !== account.toLowerCase() && payee && payee.status !== "invalid" && (payee.status !== "changed" || phoneConfirmed);
   const tooBig = total > MAX_ORDER;
-  const short = balance !== null && total > balance;
+  // F11: with naira, Arra converts only what the wallet is missing, at one firm Textile rate.
+  const needUsdt = balance !== null && total > balance ? total - balance : 0n;
+  const naira = payWith === "naira";
+  const fxCngn = fxRate ? BigInt(fxRate.cngn) : null;
+  const short = naira ? fxCngn !== null && cngn !== null && fxCngn > cngn : balance !== null && total > balance;
+  const ngn = (v) => `₦${Number(formatUnits(v, 6)).toLocaleString("en-NG", { maximumFractionDigits: 0 })}`;
 
   async function lock() {
     setError("");
@@ -104,6 +123,16 @@ export default function NewOrder({ wallet }) {
     try {
       if (payee?.status === "changed") await api.confirmPayee(account, f.supplier, supplierAddr);
       const { ref } = await api.saveSheet(sheet);
+      if (naira && needUsdt > 0n) {
+        const words = {
+          quote: "Getting a firm naira rate from Textile…",
+          sign: "Sign the free message that proves this wallet is yours. It moves no money.",
+          approve: "Allow the conversion to use your cNGN. Confirm in your wallet.",
+          swap: "Convert naira to USDT at the locked rate. Confirm in your wallet.",
+        };
+        await convertNairaToUsdt(account, formatUnits(needUsdt, 6), api, (s) => setBusy(words[s]));
+        setBalance(await usdtBalance(account));
+      }
       const { id } = await lockOrder(
         { buyer: account, supplier: supplierAddr, total, depositBps: depositPct * 100, acceptBy, shipBy, disputeWindow: checkDays * DAY, ref },
         (s) => setBusy(s === "approve" ? "Step 1 of 2: allow Arra's vault to take the USDT. Confirm in your wallet." : "Step 2 of 2: lock the money. Confirm in your wallet."),
@@ -204,6 +233,24 @@ export default function NewOrder({ wallet }) {
               <small>Paid when they accept. Chinese suppliers usually ask for 30%. At least 10% always stays locked.</small>
             </label>
           </div>
+          <fieldset className="block stack payfrom">
+            <legend>Pay from</legend>
+            <label className="choice">
+              <input type="radio" name="payWith" checked={!naira} onChange={() => setPayWith("usdt")} />
+              <span><strong>USDT in my wallet</strong><small className="num">{balance !== null ? `You have $${usd(balance)}` : "Checking balance…"}</small></span>
+            </label>
+            <label className="choice">
+              <input type="radio" name="payWith" checked={naira} onChange={() => setPayWith("naira")} />
+              <span><strong>Naira (cNGN), converted now</strong><small className="num">{cngn !== null ? `You have ${ngn(cngn)} cNGN` : "Checking balance…"}. One firm rate from Textile FX, locked for the whole order.</small></span>
+            </label>
+            {naira && needUsdt === 0n ? <p className="note ok">Your USDT already covers this order, so nothing needs converting.</p> : null}
+            {naira && needUsdt > 0n && fxRate && !fxRate.error ? (
+              <p className="note num">
+                {ngn(BigInt(fxRate.cngn))} becomes ${usd(needUsdt)} USDT at about ₦{Math.round(fxRate.ngnPerUsd).toLocaleString("en-NG")} per $1, fee included. You'll confirm the final rate before anything moves.
+              </p>
+            ) : null}
+            {naira && fxRate?.error ? <p className="note bad">Couldn't get a naira rate: {fxRate.error}</p> : null}
+          </fieldset>
           <div className="row">
             <label className="field">
               <span>Supplier must accept within</span>
@@ -225,12 +272,13 @@ export default function NewOrder({ wallet }) {
           </ul>
           {!datesOk ? <p className="note bad">The ship-by date must be after the accept deadline and within 180 days.</p> : null}
           {tooBig ? <p className="note bad">While Arra is new, orders are capped at $50. Lower the quantity or split it into several orders.</p> : null}
-          {short && !tooBig ? <p className="note bad">Your wallet has ${usd(balance)} USDT; this order needs ${usd(total)}.</p> : null}
+          {short && !tooBig && !naira ? <p className="note bad">Your wallet has ${usd(balance)} USDT; this order needs ${usd(total)}. Choose naira above to convert the rest.</p> : null}
+          {short && !tooBig && naira ? <p className="note bad">You need {ngn(fxCngn)} cNGN for this order and have {ngn(cngn)}.</p> : null}
           {error ? <p className="note bad">{error}</p> : null}
           {busy ? <p className="note">{busy}</p> : null}
           <div className="row">
             <button className="secondary" disabled={!!busy} onClick={() => setStep(2)}>Back</button>
-            <button className="money" disabled={!!busy || !datesOk || tooBig || short} onClick={lock}>Lock ${usd(total)}</button>
+            <button className="money" disabled={!!busy || !datesOk || tooBig || short} onClick={lock}>{naira && needUsdt > 0n && fxCngn ? `Convert ${ngn(fxCngn)} and lock $${usd(total)}` : `Lock $${usd(total)}`}</button>
           </div>
         </section>
       )}

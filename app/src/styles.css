@@ -250,3 +250,10 @@ button.money { box-shadow: 0 0 22px var(--glow), 0 0 0 1px rgba(0, 0, 0, 0.08) i
 button.money:hover { box-shadow: 0 0 32px var(--glow); }
 button.secondary, .button.secondary { background: var(--accent); }
 :root[data-theme="light"] button.secondary { background: var(--surface); }
+
+/* pay-from choice */
+fieldset.payfrom { margin: 0; min-width: 0; }
+fieldset.payfrom legend { font-weight: 600; font-size: 14px; padding: 0 4px; }
+label.choice { display: flex; gap: 12px; align-items: flex-start; cursor: pointer; }
+label.choice input { width: 20px; height: 20px; margin-top: 3px; accent-color: var(--mark); flex: none; }
+label.choice small { display: block; font-size: 13px; color: var(--text-soft); margin-top: 2px; }

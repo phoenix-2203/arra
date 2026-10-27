@@ -18,3 +18,7 @@ export const api = {
   order: (id, as) => call("GET", `/api/orders/${id}${as ? `?as=${as}` : ""}`),
   myOrders: (address) => call("GET", `/api/orders?address=${address}`),
 };
+
+api.fxPreview = (usd) => call("POST", "/api/fx/preview", { usd });
+api.fxQuote = (taker, usd, takerProof) => call("POST", "/api/fx/quote", { taker, usd, takerProof });
+api.fxSubmit = (rfqId, txHash) => call("POST", `/api/fx/${rfqId}/submit`, { txHash });
