@@ -131,7 +131,14 @@ export default function NewOrder({ wallet }) {
           swap: "Convert naira to USDT at the locked rate. Confirm in your wallet.",
         };
         await convertNairaToUsdt(account, formatUnits(needUsdt, 6), api, (s) => setBusy(words[s]));
-        setBalance(await usdtBalance(account));
+        // Some network nodes lag a second or two behind; wait until the USDT shows up.
+        setBusy("Converted. Waiting for the USDT to show in your wallet…");
+        let b = await usdtBalance(account);
+        for (let i = 0; i < 15 && b < total; i++) {
+          await new Promise((r) => setTimeout(r, 1000));
+          b = await usdtBalance(account);
+        }
+        setBalance(b);
       }
       const { id } = await lockOrder(
         { buyer: account, supplier: supplierAddr, total, depositBps: depositPct * 100, acceptBy, shipBy, disputeWindow: checkDays * DAY, ref },
