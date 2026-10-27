@@ -5,3 +5,4 @@ contracts/out/
 contracts/cache/
 contracts/broadcast/
 .DS_Store
+agent/data/
