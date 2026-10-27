@@ -3,6 +3,14 @@
 #   bash <(curl -fsSL https://raw.githubusercontent.com/phoenix-2203/arra/main/deploy/setup.sh)
 # or, inside a clone:  bash deploy/setup.sh
 set -euo pipefail
+if [ "$(uname -s)" != "Linux" ]; then
+  echo "This sets Arra up on your server. Log in to the server first (ssh), then run it there."
+  exit 1
+fi
+if [ "$(id -u)" != "0" ]; then
+  echo "Run this as root on the server (for example: sudo -i, then run it again)."
+  exit 1
+fi
 DIR=/opt/arra
 PORT=8787
 
