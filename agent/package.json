@@ -10,7 +10,8 @@
     "deploy": "node --env-file=.env scripts/deploy-vault.js",
     "verify-tag": "node --env-file=.env scripts/verify-tag.js",
     "verify-vault": "node --env-file=.env scripts/verify-vault.js",
-    "start": "node --env-file-if-exists=.env scripts/serve.js"
+    "start": "node --env-file-if-exists=.env scripts/serve.js",
+    "swap": "node --env-file=.env scripts/swap.js"
   },
   "keywords": [],
   "author": "",
