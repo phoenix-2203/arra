@@ -8,6 +8,7 @@ import { reviewSheet, sheetRef, sheetTotal, canonicalSheet } from "./orderSheet.
 import { PayeeBook } from "./payeeBook.js";
 import { checkContainerNumber } from "./container.js";
 import { readOrder, orderCount, nextActions, explain } from "./vault.js";
+import { textileClient, ngnPerUsd, rampSupportsCelo, TextileError } from "./textile.js";
 
 const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml", ".png": "image/png", ".json": "application/json", ".ico": "image/x-icon", ".webmanifest": "application/manifest+json" };
 const MAX_BODY = 64 * 1024;
@@ -32,7 +33,22 @@ async function readJson(req) {
   }
 }
 
-export function createApp({ client, vault, dataDir, staticDir, now = () => Math.floor(Date.now() / 1000) }) {
+export function createApp({ client, vault, dataDir, staticDir, now = () => Math.floor(Date.now() / 1000), textile = textileClient() }) {
+  // Claim tokens for firm quotes stay on the server; the browser only gets the rfqId.
+  const claims = new Map();
+  const usdUnits = (v) => {
+    if (!/^\d+(\.\d{1,6})?$/.test(String(v ?? ""))) throw Object.assign(new Error("usd must be an amount like 12.50"), { status: 400 });
+    const [w, f = ""] = String(v).split(".");
+    return BigInt(w) * 1_000_000n + BigInt((f + "000000").slice(0, 6));
+  };
+  const fx = async (fn) => {
+    try {
+      return await fn();
+    } catch (e) {
+      if (e instanceof TextileError) return [e.status === 401 ? 401 : 502, { error: e.message, code: e.code ?? null }];
+      throw e;
+    }
+  };
   const sheetsDir = join(dataDir, "sheets");
   mkdirSync(sheetsDir, { recursive: true });
   const payees = new PayeeBook(join(dataDir, "payees.json"));
@@ -88,6 +104,29 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
     // F8
     "POST /api/container/check": async (body) => [200, checkContainerNumber(body.number)],
 
+    // F11: cNGN -> USDT on Textile FX. Exact output: the buyer gets exactly the USDT the order needs.
+    "POST /api/fx/preview": async (body) =>
+      fx(async () => {
+        const buyAmount = usdUnits(body.usd);
+        const { data } = await textile.preview({ buyAmount });
+        return [200, { cngn: data.sellAmount, usdt: data.buyAmount ?? buyAmount.toString(), ngnPerUsd: ngnPerUsd({ sellAmount: data.sellAmount, buyAmount: data.buyAmount ?? buyAmount }) }];
+      }),
+    "POST /api/fx/quote": async (body) =>
+      fx(async () => {
+        if (!isAddress(body.taker ?? "", { strict: false })) return [400, { error: "taker must be an address" }];
+        const { data } = await textile.request({ buyAmount: usdUnits(body.usd), taker: body.taker, takerProof: body.takerProof });
+        if (data.status !== "quoted") return [200, { status: data.status, reason: data.reason ?? null }];
+        claims.set(data.rfqId, data.claimToken);
+        setTimeout(() => claims.delete(data.rfqId), 15 * 60 * 1000).unref?.();
+        const q = data.quote;
+        return [200, { status: "quoted", rfqId: data.rfqId, takerPays: q.takerPays, buyAmount: q.buyAmount, feeAmount: q.feeAmount, reactor: q.reactor, expiresAt: q.expiresAt, ngnPerUsd: ngnPerUsd({ sellAmount: q.takerPays, buyAmount: q.buyAmount }), transactions: data.transactions }];
+      }),
+    "GET /api/ramp/providers": async () =>
+      fx(async () => {
+        const all = await textile.rampProviders();
+        return [200, { celo: rampSupportsCelo(all) }];
+      }),
+
     "GET /api/orders": async (_b, url) => {
       const who = url.searchParams.get("address");
       if (!who || !isAddress(who, { strict: false })) return [400, { error: "address required" }];
@@ -109,6 +148,15 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
         if (m && req.method === "GET") {
           const view = await orderView(Number(m[1]), url.searchParams.get("as"));
           return view ? send(res, 200, view) : send(res, 404, { error: "No such order" });
+        }
+        const sub = url.pathname.match(/^\/api\/fx\/([A-Za-z0-9_-]+)\/submit$/);
+        if (sub && req.method === "POST") {
+          const claim = claims.get(sub[1]);
+          if (!claim) return send(res, 404, { error: "Unknown or expired quote" });
+          const body = await readJson(req);
+          if (!/^0x[0-9a-fA-F]{64}$/.test(body.txHash ?? "")) return send(res, 400, { error: "txHash required" });
+          const [st, payload] = await fx(async () => [200, (await textile.submit(sub[1], claim, body.txHash)).data ?? { ok: true }]);
+          return send(res, st, payload);
         }
         const s = url.pathname.match(/^\/api\/sheets\/(0x[0-9a-fA-F]{64})$/);
         if (s && req.method === "GET") {
