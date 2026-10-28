@@ -22,3 +22,5 @@ export const api = {
 api.fxPreview = (usd) => call("POST", "/api/fx/preview", { usd });
 api.fxQuote = (taker, usd, takerProof) => call("POST", "/api/fx/quote", { taker, usd, takerProof });
 api.fxSubmit = (rfqId, txHash) => call("POST", `/api/fx/${rfqId}/submit`, { txHash });
+api.stats = () => call("GET", "/api/stats");
+api.timeline = (id) => call("GET", `/api/orders/${id}/timeline`);

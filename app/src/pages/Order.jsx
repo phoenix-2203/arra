@@ -23,10 +23,12 @@ export default function Order({ id, wallet }) {
   const [containerCheck, setContainerCheck] = useState(null);
   const [splitPct, setSplitPct] = useState(50);
   const [copied, setCopied] = useState(false);
+  const [steps, setSteps] = useState(null);
   const isNew = new URLSearchParams(location.search).has("new");
 
   const load = useCallback(() => {
     api.order(id, account).then(setView).catch((e) => setError(e.status === 404 ? t.notFound : e.message));
+    api.timeline(id).then((r) => setSteps(r.steps)).catch(() => {});
   }, [id, account, t.notFound]);
 
   useEffect(() => {
@@ -201,6 +203,30 @@ export default function Order({ id, wallet }) {
 
       </div>
       <div className="stack-lg">
+      <section className="stack">
+        <h2>{t.timelineTitle}</h2>
+        {steps?.length ? (
+          <ol className="timeline">
+            {steps.map((st) => (
+              <li key={st.tx + st.event} className={`tl-${st.event}`}>
+                <span className="tl-dot" aria-hidden="true" />
+                <div>
+                  <p className="tl-what">
+                    <span>{t.timeline[st.event] ?? st.event}</span>
+                    {st.amount && st.event !== "SplitProposed" ? <span className="tl-amt num">${usd(st.amount)}</span> : null}
+                  </p>
+                  <p className="tl-when small muted num">
+                    {new Date(st.at * 1000).toLocaleString(lang === "zh" ? "zh-CN" : "en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                    <a className="tl-link" href={`${EXPLORER}/tx/${st.tx}`} target="_blank" rel="noreferrer">{t.viewTx}</a>
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <p className="small muted">{t.timelineEmpty}</p>
+        )}
+      </section>
       <section className="stack">
         <h2>{t.terms}</h2>
         {s ? (

@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { connect, hasWallet, isMiniPay, VAULT, EXPLORER } from "./chain.js";
 import { Wordmark } from "./Adire.jsx";
 import Home from "./pages/Home.jsx";
+import Landing from "./pages/Landing.jsx";
 import NewOrder from "./pages/NewOrder.jsx";
 import Order from "./pages/Order.jsx";
 
@@ -40,7 +41,13 @@ function ThemeToggle() {
 export function navigate(path) {
   history.pushState(null, "", path);
   window.dispatchEvent(new PopStateEvent("popstate"));
+  window.scrollTo(0, 0);
 }
+
+const link = (path) => (e) => {
+  e.preventDefault();
+  navigate(path);
+};
 
 export default function App() {
   const [path, setPath] = useState(location.pathname);
@@ -62,9 +69,12 @@ export default function App() {
     }
   }, []);
 
-  // MiniPay connects silently; other wallets wait for a tap.
+  // MiniPay connects silently and skips the homepage; other wallets wait for a tap.
   useEffect(() => {
-    if (isMiniPay()) doConnect();
+    if (isMiniPay()) {
+      doConnect();
+      if (location.pathname === "/") navigate("/app");
+    }
     if (hasWallet() && window.ethereum.on) {
       const onChange = (accs) => setAccount(accs?.[0] ?? null);
       window.ethereum.on("accountsChanged", onChange);
@@ -74,22 +84,36 @@ export default function App() {
 
   const order = path.match(/^\/o\/(\d+)/);
   const wallet = { account, connect: doConnect, connectError };
+  const landing = path === "/";
 
   return (
-    <div className="shell">
+    <div className={`shell${landing ? " wide" : ""}`}>
       <header className="bar">
         <Wordmark />
+        {landing ? (
+          <nav className="nav-links" aria-label="Sections">
+            <a href="#how">How it works</a>
+            <a href="#security">Security</a>
+            <a href="#faq">Questions</a>
+          </nav>
+        ) : null}
         <div className="tools">
-          {account ? <span className="who num">{short(account)}</span> : null}
+          {account ? <a className="who num" href="/app" onClick={link("/app")}>{short(account)}</a> : null}
+          {landing ? <a href="/app" className="button money small-btn" onClick={link("/app")}>Open app</a> : null}
+          {!landing && !account ? <button className="secondary small-btn" onClick={doConnect}>Connect</button> : null}
           <ThemeToggle />
         </div>
       </header>
       <main>
-        {order ? <Order id={Number(order[1])} wallet={wallet} /> : path === "/new" ? <NewOrder wallet={wallet} /> : <Home wallet={wallet} />}
+        {order ? <Order id={Number(order[1])} wallet={wallet} /> : path === "/new" ? <NewOrder wallet={wallet} /> : landing ? <Landing wallet={wallet} /> : <Home wallet={wallet} />}
       </main>
       <footer className="foot">
-        Money is held by an open contract on Celo, not by Arra.{" "}
-        <a href={`${EXPLORER}/address/${VAULT}`} target="_blank" rel="noreferrer">Read the vault</a>
+        <span>Money is held by an open contract on Celo, not by Arra.</span>
+        <span className="foot-links">
+          <a href={`${EXPLORER}/address/${VAULT}`} target="_blank" rel="noreferrer">Vault</a>
+          <a href="https://github.com/phoenix-2203/arra" target="_blank" rel="noreferrer">Code</a>
+          <a href="/" onClick={link("/")}>Home</a>
+        </span>
       </footer>
     </div>
   );
