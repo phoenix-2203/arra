@@ -9,6 +9,7 @@ import { PayeeBook } from "./payeeBook.js";
 import { checkContainerNumber } from "./container.js";
 import { readOrder, orderCount, nextActions, explain } from "./vault.js";
 import { textileClient, ngnPerUsd, rampSupportsCelo, TextileError } from "./textile.js";
+import { LogIndex, vaultStats } from "./history.js";
 
 const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml", ".png": "image/png", ".json": "application/json", ".ico": "image/x-icon", ".webmanifest": "application/manifest+json" };
 const MAX_BODY = 64 * 1024;
@@ -33,7 +34,8 @@ async function readJson(req) {
   }
 }
 
-export function createApp({ client, vault, dataDir, staticDir, now = () => Math.floor(Date.now() / 1000), textile = textileClient() }) {
+export function createApp({ client, vault, dataDir, staticDir, now = () => Math.floor(Date.now() / 1000), textile = textileClient(), history = new LogIndex({ client, vault }) }) {
+  let statsCache = null;
   // Claim tokens for firm quotes stay on the server; the browser only gets the rfqId.
   const claims = new Map();
   const usdUnits = (v) => {
@@ -73,6 +75,12 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
 
   const routes = {
     "GET /api/health": async () => [200, { ok: true, vault }],
+
+    // Live totals for the homepage (cached for a minute).
+    "GET /api/stats": async () => {
+      if (!statsCache || Date.now() - statsCache.at > 60_000) statsCache = { at: Date.now(), data: await vaultStats(client, vault) };
+      return [200, statsCache.data];
+    },
 
     // F7: check an order sheet and get its fingerprint before funding.
     "POST /api/sheet/review": async (body) => {
@@ -148,6 +156,14 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
         if (m && req.method === "GET") {
           const view = await orderView(Number(m[1]), url.searchParams.get("as"));
           return view ? send(res, 200, view) : send(res, 404, { error: "No such order" });
+        }
+        const tl = url.pathname.match(/^\/api\/orders\/(\d+)\/timeline$/);
+        if (tl && req.method === "GET") {
+          try {
+            return send(res, 200, { steps: await history.timeline(Number(tl[1])) });
+          } catch (e) {
+            return send(res, 200, { steps: null, error: "History is temporarily unavailable" });
+          }
         }
         const sub = url.pathname.match(/^\/api\/fx\/([A-Za-z0-9_-]+)\/submit$/);
         if (sub && req.method === "POST") {

@@ -99,3 +99,27 @@ test("split offers show up as an action for the other side only", async () => {
   assert.ok(nextActions(o, await now(), "buyer").includes("acceptSplit"));
   assert.ok(!nextActions(o, await now(), "supplier").includes("acceptSplit"));
 });
+
+test("history: each order's steps in order, with times and transactions; homepage totals", async () => {
+  const { LogIndex, vaultStats } = await import("../src/history.js");
+  const idx = new LogIndex({ client, vault, fromBlock: 0n, chunk: 3n }); // tiny chunks to exercise paging
+  const t1 = await idx.timeline(1);
+  assert.deepEqual(t1.map((s) => s.event), ["OrderCreated", "BalanceRefunded"]);
+  assert.equal(t1[0].amount, "10000000");
+  const t2 = await idx.timeline(2);
+  assert.deepEqual(t2.map((s) => s.event), ["OrderCreated", "OrderAccepted", "OrderShipped", "BalanceReleased"]);
+  assert.equal(t2[1].amount, "6000000", "deposit paid on accept");
+  assert.ok(t2.every((s, i) => i === 0 || s.at >= t2[i - 1].at), "times go forward");
+  assert.match(t2[0].tx, /^0x[0-9a-f]{64}$/);
+  const t3 = await idx.timeline(3);
+  assert.deepEqual(t3.map((s) => s.event), ["OrderCreated", "OrderAccepted", "SplitProposed"]);
+  assert.equal((await idx.timeline(99)).length, 0);
+
+  const st = await vaultStats(client, vault);
+  assert.equal(st.orders, 3);
+  assert.equal(st.completed, 2);
+  assert.equal(st.buyers, 1);
+  assert.equal(st.suppliers, 1);
+  assert.equal(st.totalValue, "40000000");
+  assert.equal(st.lockedNow, "8000000", "order 3 keeps 80% of $10 locked");
+});
