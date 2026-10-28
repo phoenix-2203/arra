@@ -2,7 +2,10 @@
 # Installs or updates Arra on the VPS. Run as root from anywhere:
 #   bash <(curl -fsSL https://raw.githubusercontent.com/phoenix-2203/arra/main/deploy/setup.sh)
 # or, inside a clone:  bash deploy/setup.sh
+# Pass your DuckDNS name to get a ready Caddy block, e.g.:  ... setup.sh) arratrade
 set -euo pipefail
+NAME="${1:-arra}"
+DOMAIN="${NAME%.duckdns.org}.duckdns.org"
 if [ "$(uname -s)" != "Linux" ]; then
   echo "This sets Arra up on your server. Log in to the server first (ssh), then run it there."
   exit 1
@@ -64,6 +67,11 @@ sleep 2
 curl -fsS "http://127.0.0.1:$PORT/api/health" && echo
 echo
 echo "Arra is running on 127.0.0.1:$PORT."
-echo "If Caddy doesn't serve it yet, add this to your Caddyfile and run: systemctl reload caddy"
+echo "Add these lines to the end of your Caddyfile (usually /etc/caddy/Caddyfile), then run: systemctl reload caddy"
 echo
-cat "$DIR/deploy/Caddyfile"
+echo "$DOMAIN {"
+echo "	encode zstd gzip"
+echo "	reverse_proxy 127.0.0.1:$PORT"
+echo "}"
+echo
+echo "Then open https://$DOMAIN"
