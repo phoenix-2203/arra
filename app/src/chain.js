@@ -36,8 +36,10 @@ export async function connect() {
   return address;
 }
 
-// MiniPay pays fees in stablecoins and needs legacy-style fee fields.
-const feeOpts = () => (isMiniPay() ? { feeCurrency: USDT_FEE_ADAPTER } : {});
+// MiniPay chooses the fee currency itself (users never hold CELO) and only takes
+// legacy transactions, so inside MiniPay we send plain requests with no fee fields,
+// as in its own examples. Other wallets pay fees in CELO as usual.
+const feeOpts = () => ({});
 
 async function write(address, abi, functionName, args) {
   if (!wallet) throw new Error("Connect your wallet first.");
@@ -108,6 +110,9 @@ export async function convertNairaToUsdt(taker, usd, api, onStep = () => {}) {
     q = await api.fxQuote(taker, usd);
   } catch (e) {
     if (e.status !== 401) throw e;
+    if (isMiniPay()) {
+      throw new Error("Paying from naira needs a one-time wallet signature that MiniPay doesn't support yet. Pay with USDT here, or open Arra in another Celo wallet to pay from naira.");
+    }
     onStep("sign");
     q = await api.fxQuote(taker, usd, await signTakerProof(taker));
   }
