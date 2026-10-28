@@ -7,7 +7,7 @@ import { publicClient, agentAccount, taggedWallet } from "../src/wallet.js";
 import { ARRA_VAULT, USDT_FEE_ADAPTER } from "../src/config.js";
 import { runKeeper } from "../src/keeper.js";
 
-const PORT = Number(process.env.PORT ?? 8787);
+const PORT = Number(process.env.PORT ?? 8791);
 const client = publicClient();
 const app = createApp({
   client,

@@ -15,7 +15,13 @@ if [ "$(id -u)" != "0" ]; then
   exit 1
 fi
 DIR=/opt/arra
-PORT=8787
+PORT="${ARRA_PORT:-8791}"
+# Don't collide with another app on this server.
+if ss -ltn 2>/dev/null | grep -q ":$PORT " && ! systemctl is-active --quiet arra; then
+  echo "Port $PORT is already used by another app on this server."
+  echo "Pick a free one and rerun, e.g.:  ARRA_PORT=8795 bash <(curl -fsSL https://raw.githubusercontent.com/phoenix-2203/arra/main/deploy/setup.sh)"
+  exit 1
+fi
 
 if [ ! -d "$DIR/.git" ]; then
   git clone https://github.com/phoenix-2203/arra "$DIR"
@@ -31,6 +37,9 @@ echo "Installing agent…"
 echo "Building app (uses up to 3 GB of memory)…"
 (cd "$DIR/app" && npm ci --no-audit --no-fund && NODE_OPTIONS=--max-old-space-size=3072 npm run build)
 
+if [ -f "$DIR/agent/.env" ]; then
+  sed -i "s/^PORT=.*/PORT=$PORT/" "$DIR/agent/.env"
+fi
 if [ ! -f "$DIR/agent/.env" ]; then
   cat > "$DIR/agent/.env" <<ENV
 CELO_RPC_URL=https://forno.celo.org
