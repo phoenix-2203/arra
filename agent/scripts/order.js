@@ -79,7 +79,19 @@ switch (cmd) {
 try {
   await client.simulateContract({ account, address: ARRA_VAULT, abi: vaultAbi, functionName: fn, args });
 } catch (e) {
-  console.log(`\nThe vault would refuse "${cmd}" right now: ${e.shortMessage ?? e.message}`);
+  const why = {
+    WrongStatus: "the order isn't at the stage where that's possible",
+    NotSupplier: "only the supplier's wallet can do that",
+    NotBuyer: "only the buyer's wallet can do that",
+    NotParty: "only the buyer or the supplier can do that (and not on their own offer)",
+    TooLate: "the deadline for that has passed",
+    TooEarly: "the deadline hasn't passed yet",
+    BadAmount: "that amount isn't possible (more than what's locked, or zero)",
+    NoOffer: "there's no split offer to accept",
+    OfferMismatch: "the split offer changed; check it again",
+  };
+  const name = e.cause?.data?.errorName ?? e.data?.errorName;
+  console.log(`\nThe vault would refuse "${cmd}" right now: ${why[name] ?? e.shortMessage ?? e.message}. Nothing was sent.`);
   process.exit(1);
 }
 if (!SEND) {
