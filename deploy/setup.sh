@@ -4,7 +4,7 @@
 # or, inside a clone:  bash deploy/setup.sh
 # Pass your DuckDNS name to get a ready Caddy block, e.g.:  ... setup.sh) arratrade
 set -euo pipefail
-NAME="${1:-arra}"
+NAME="${1:-usearra}"
 DOMAIN="${NAME%.duckdns.org}.duckdns.org"
 if [ "$(uname -s)" != "Linux" ]; then
   echo "This sets Arra up on your server. Log in to the server first (ssh), then run it there."

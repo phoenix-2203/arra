@@ -6,7 +6,7 @@
   "services": [
     {
       "name": "web",
-      "endpoint": "https://arra.duckdns.org"
+      "endpoint": "https://usearra.duckdns.org"
     }
   ],
   "x402Support": false,
