@@ -54,6 +54,8 @@ export default function Order({ id, wallet }) {
 
   const { order: o, sheet, role, actions, now } = view;
   const s = sheet?.sheet;
+  const goods = (s?.kind ?? "goods") === "goods";
+  const statusLabel = o.status === "Shipped" && !goods ? t.statusDelivered : t.status[o.status];
   const held = BigInt(o.held);
   const final = ["Released", "Refunded", "Settled"].includes(o.status);
   const step = STEP_OF[o.status];
@@ -92,19 +94,19 @@ export default function Order({ id, wallet }) {
         <Cloth />
         <p className="label">{final ? t.total : s?.supplier ? t.lockedFor(s.supplier) : t.locked}</p>
         <p className="amount">${usd(final ? o.total : o.held)}<small>USDT</small></p>
-        <p className="state">{t.status[o.status]}</p>
+        <p className="state">{statusLabel}</p>
         <dl className="facts">
           <div><dt>{t.total}</dt><dd>${usd(o.total)}</dd></div>
           <div><dt>{t.deposit}</dt><dd>${usd(o.deposit)}</dd></div>
           {o.status === "Pending" ? <div><dt>{t.acceptBy}</dt><dd>{day(o.acceptBy, lang)}</dd></div> : null}
-          {o.status === "Pending" || o.status === "Active" ? <div><dt>{t.shipBy}</dt><dd>{day(o.shipBy, lang)}</dd></div> : null}
+          {o.status === "Pending" || o.status === "Active" ? <div><dt>{goods ? t.shipBy : t.deliverBy}</dt><dd>{day(o.shipBy, lang)}</dd></div> : null}
           {o.status === "Shipped" ? <div><dt>{t.checkWindow}</dt><dd>{day(o.shippedAt + o.disputeWindow, lang)}</dd></div> : null}
         </dl>
       </section>
 
       {o.status !== "Refunded" ? (
         <ol className="steps" aria-label="Progress">
-          {t.steps.map((label, i) => (
+          {t.steps.map((label0, i) => ({ label: i === 2 && !goods ? t.stepDelivered : label0, i })).map(({ label, i }) => (
             <li key={label} className={i + 1 <= step ? (step === 4 ? "paid" : "done") : ""}>{label}</li>
           ))}
         </ol>
@@ -146,7 +148,18 @@ export default function Order({ id, wallet }) {
             </>
           ) : null}
 
-          {has("markShipped") ? (
+          {has("markShipped") && !goods ? (
+            <div className="block stack">
+              <label className="field">
+                <span>{t.deliveryNote}</span>
+                <input value={container} onChange={(e) => setContainer(e.target.value)} maxLength={140} />
+                <small>{t.deliveryNoteHint}</small>
+              </label>
+              <button disabled={!!busy} onClick={() => run("markShipped", [bid, keccak256(toBytes(container.trim() || "delivered"))])}>{t.markDelivered}</button>
+            </div>
+          ) : null}
+
+          {has("markShipped") && goods ? (
             <div className="block stack">
               <label className="field">
                 <span>{t.containerLabel}</span>

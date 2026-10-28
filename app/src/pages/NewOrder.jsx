@@ -7,7 +7,39 @@ import { navigate } from "../App.jsx";
 const MAX_ORDER = 50_000_000n; // $50 cap while Arra is new (set in the vault)
 const DAY = 86400;
 
+// What kind of deal: the wording and required fields adapt; the contract is the same.
+const KINDS = {
+  goods: {
+    label: "Goods shipped to me", hint: "Imports, and anything sent by sea, air or courier",
+    payee: "Supplier", payeeName: "Supplier's business name", namePh: "Guangzhou Hengli Textiles",
+    product: "Product", productPh: "Men's cotton T-shirts, crew neck", qtyPh: "500", unitPh: "pieces", pricePh: "2.35",
+    specsPh: "180 gsm, 100% combed cotton\nSizes: 150 M, 200 L, 150 XL\nColour: Pantone 19-4052 navy",
+    packaging: true, checkLabel: "How you'll check the goods (optional)", checkPh: "Photos of 5 random cartons before shipping",
+    dateLabel: "Ship by", terms: "Delivery terms", termsPh: "FOB Guangzhou", notDone: "Not shipped by",
+    depositHint: "Chinese suppliers usually ask for 30%.",
+  },
+  custom: {
+    label: "Made to order", hint: "Tailoring, furniture, fabrication, event decor",
+    payee: "Maker", payeeName: "Maker's business name", namePh: "Ade's Tailoring",
+    product: "What's being made", productPh: "Agbada, 3-piece, aso-oke", qtyPh: "1", unitPh: "set", pricePh: "35",
+    specsPh: "Chest 42 in, length 56 in\nNavy aso-oke with gold embroidery\nFitting on 20 November",
+    packaging: false, checkLabel: "How you'll check it (optional)", checkPh: "Fitting before collection",
+    dateLabel: "Ready by", terms: "Collection or delivery (optional)", termsPh: "Delivered to Lekki Phase 1", notDone: "Not delivered by",
+    depositHint: "Makers often ask for half up front to buy materials.",
+  },
+  service: {
+    label: "A service or project", hint: "Freelance work, building projects, events, repairs",
+    payee: "Provider", payeeName: "Provider's name", namePh: "Tunde Studio",
+    product: "What's being delivered", productPh: "Logo and brand kit", qtyPh: "1", unitPh: "project", pricePh: "40",
+    specsPh: "3 logo concepts\n2 rounds of changes\nSVG and PNG files",
+    packaging: false, checkLabel: "How you'll check it (optional)", checkPh: "Review call before final files",
+    dateLabel: "Deliver by", terms: null, notDone: "Not delivered by",
+    depositHint: "Use the balance as milestones: release part at each stage.",
+  },
+};
+
 const blankSheet = {
+  kind: "goods",
   supplier: "",
   product: "",
   quantity: "",
@@ -23,16 +55,17 @@ const blankSheet = {
 // Form fields -> the order sheet the agent fingerprints.
 function toSheet(f) {
   const s = {
+    kind: f.kind,
     supplier: f.supplier.trim(),
     product: f.product.trim(),
     quantity: Number(f.quantity),
     unit: f.unit.trim(),
     unitPriceUsd: f.unitPriceUsd.trim(),
     specs: f.specs.split("\n").map((x) => x.trim()).filter(Boolean),
-    packaging: f.packaging.trim(),
     shipBy: f.shipBy,
-    incoterm: f.incoterm.trim(),
   };
+  if (f.packaging.trim()) s.packaging = f.packaging.trim();
+  if (f.incoterm.trim()) s.incoterm = f.incoterm.trim();
   if (f.inspection.trim()) s.inspection = f.inspection.trim();
   return s;
 }
@@ -58,6 +91,7 @@ export default function NewOrder({ wallet }) {
   const [payWith, setPayWith] = useState("usdt");
   const [fxRate, setFxRate] = useState(null);
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
+  const K = KINDS[f.kind];
 
   useEffect(() => {
     if (!account) return;
@@ -157,7 +191,7 @@ export default function NewOrder({ wallet }) {
       <div className="stack">
         <h1>New order</h1>
         <ol className="stepper" aria-label="Steps">
-          {["Supplier", "Order sheet", "Lock money"].map((s, i) => (
+          {["Who you pay", "Order sheet", "Lock money"].map((s, i) => (
             <li key={s} className={step === i + 1 ? "on" : ""} aria-current={step === i + 1 ? "step" : undefined}>{i + 1} {s}</li>
           ))}
         </ol>
@@ -165,12 +199,21 @@ export default function NewOrder({ wallet }) {
 
       {step === 1 && (
         <section className="stack">
+          <fieldset className="block stack payfrom">
+            <legend>What kind of deal?</legend>
+            {Object.entries(KINDS).map(([k, v]) => (
+              <label key={k} className="choice">
+                <input type="radio" name="kind" checked={f.kind === k} onChange={() => setF({ ...f, kind: k, unit: v.unitPh })} />
+                <span><strong>{v.label}</strong><small>{v.hint}</small></span>
+              </label>
+            ))}
+          </fieldset>
           <label className="field">
-            <span>Supplier's business name</span>
-            <input value={f.supplier} onChange={set("supplier")} placeholder="Guangzhou Hengli Textiles" autoComplete="organization" />
+            <span>{K.payeeName}</span>
+            <input value={f.supplier} onChange={set("supplier")} placeholder={K.namePh} autoComplete="organization" />
           </label>
           <label className="field">
-            <span>Supplier's Celo wallet address</span>
+            <span>{K.payee}'s Celo wallet address</span>
             <input value={supplierAddr} onChange={(e) => setSupplierAddr(e.target.value.trim())} placeholder="0x…" spellCheck="false" autoCapitalize="off" className="num" />
             <small>They must accept the order from this same wallet, which proves it's theirs before any money reaches them.</small>
           </label>
@@ -193,23 +236,23 @@ export default function NewOrder({ wallet }) {
 
       {step === 2 && (
         <section className="stack">
-          <p className="muted small">Write it so a stranger could check the goods against it. This exact sheet is fingerprinted into the order, so neither side can change it later.</p>
-          <label className="field"><span>Product</span><input value={f.product} onChange={set("product")} placeholder="Men's cotton T-shirts, crew neck" /></label>
+          <p className="muted small">Write it so a stranger could check the result against it. This exact sheet is fingerprinted into the order, so neither side can change it later.</p>
+          <label className="field"><span>{K.product}</span><input value={f.product} onChange={set("product")} placeholder={K.productPh} /></label>
           <div className="row">
-            <label className="field"><span>Quantity</span><input inputMode="numeric" value={f.quantity} onChange={set("quantity")} placeholder="500" /></label>
-            <label className="field"><span>Unit</span><input value={f.unit} onChange={set("unit")} placeholder="pieces" /></label>
+            <label className="field"><span>Quantity</span><input inputMode="numeric" value={f.quantity} onChange={set("quantity")} placeholder={K.qtyPh} /></label>
+            <label className="field"><span>Unit</span><input value={f.unit} onChange={set("unit")} placeholder={K.unitPh} /></label>
           </div>
-          <label className="field"><span>Price per unit (USD)</span><input inputMode="decimal" value={f.unitPriceUsd} onChange={set("unitPriceUsd")} placeholder="2.35" /></label>
+          <label className="field"><span>Price per unit (USD)</span><input inputMode="decimal" value={f.unitPriceUsd} onChange={set("unitPriceUsd")} placeholder={K.pricePh} /></label>
           <label className="field">
             <span>Specifications</span>
-            <textarea value={f.specs} onChange={set("specs")} placeholder={"180 gsm, 100% combed cotton\nSizes: 150 M, 200 L, 150 XL\nColour: Pantone 19-4052 navy"} />
-            <small>One per line. Use numbers: weight, size, material, colour code.</small>
+            <textarea value={f.specs} onChange={set("specs")} placeholder={K.specsPh} />
+            <small>One per line. Use numbers where you can: sizes, weights, materials, counts, dates.</small>
           </label>
-          <label className="field"><span>Packaging</span><input value={f.packaging} onChange={set("packaging")} placeholder="50 per carton, each in a polybag" /></label>
-          <label className="field"><span>How you'll check the goods (optional)</span><input value={f.inspection} onChange={set("inspection")} placeholder="Photos of 5 random cartons before shipping" /></label>
-          <div className="row">
-            <label className="field"><span>Ship by</span><input type="date" value={f.shipBy} onChange={set("shipBy")} /></label>
-            <label className="field"><span>Delivery terms</span><input value={f.incoterm} onChange={set("incoterm")} placeholder="FOB Guangzhou" /></label>
+          {K.packaging ? <label className="field"><span>Packaging</span><input value={f.packaging} onChange={set("packaging")} placeholder="50 per carton, each in a polybag" /></label> : null}
+          <label className="field"><span>{K.checkLabel}</span><input value={f.inspection} onChange={set("inspection")} placeholder={K.checkPh} /></label>
+          <div className={K.terms ? "row" : ""}>
+            <label className="field"><span>{K.dateLabel}</span><input type="date" value={f.shipBy} onChange={set("shipBy")} /></label>
+            {K.terms ? <label className="field"><span>{K.terms}</span><input value={f.incoterm} onChange={set("incoterm")} placeholder={K.termsPh} /></label> : null}
           </div>
           {review && !review.ready ? (
             <div className="note bad">
@@ -237,7 +280,7 @@ export default function NewOrder({ wallet }) {
             <label className="field">
               <span>Deposit: {depositPct}%</span>
               <input type="range" min="0" max="90" step="5" value={depositPct} onChange={(e) => setDepositPct(Number(e.target.value))} />
-              <small>Paid when they accept. Chinese suppliers usually ask for 30%. At least 10% always stays locked.</small>
+              <small>Paid when they accept. {K.depositHint} At least 10% always stays locked.</small>
             </label>
           </div>
           <fieldset className="block stack payfrom">
@@ -274,7 +317,7 @@ export default function NewOrder({ wallet }) {
           </div>
           <ul className="small muted stack" style={{ paddingLeft: 18, margin: 0 }}>
             <li>Not accepted in {acceptDays} day{acceptDays > 1 ? "s" : ""}: all ${usd(total)} comes back to you.</li>
-            <li>Not shipped by {f.shipBy}: the ${usd(total - deposit)} balance comes back to you.</li>
+            <li>{K.notDone} {f.shipBy}: the ${usd(total - deposit)} balance comes back to you.</li>
             <li>No problem raised within {checkDays} day{checkDays > 1 ? "s" : ""} of shipping: the balance pays the supplier.</li>
           </ul>
           {!datesOk ? <p className="note bad">The ship-by date must be after the accept deadline and within 180 days.</p> : null}

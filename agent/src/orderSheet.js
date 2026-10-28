@@ -6,7 +6,14 @@ import { keccak256, toBytes } from 'viem';
 
 export const SHEET_VERSION = 'arra-order-sheet/1';
 
-const REQUIRED = ['product', 'quantity', 'unit', 'unitPriceUsd', 'specs', 'packaging', 'shipBy', 'incoterm'];
+// Kinds of deal. Imports need packaging and delivery terms; made-to-order and
+// service deals don't.
+export const KINDS = ['goods', 'custom', 'service'];
+const REQUIRED_BY_KIND = {
+  goods: ['product', 'quantity', 'unit', 'unitPriceUsd', 'specs', 'packaging', 'shipBy', 'incoterm'],
+  custom: ['product', 'quantity', 'unit', 'unitPriceUsd', 'specs', 'shipBy'],
+  service: ['product', 'quantity', 'unit', 'unitPriceUsd', 'specs', 'shipBy'],
+};
 
 // Phrases that have lost real disputes because nobody can measure them.
 const VAGUE = [
@@ -24,7 +31,9 @@ const VAGUE = [
 /** Lists what is missing or vague, in plain words. Empty list = ready to sign. */
 export function reviewSheet(sheet) {
   const issues = [];
-  for (const key of REQUIRED) {
+  const kind = sheet?.kind ?? 'goods';
+  if (!KINDS.includes(kind)) issues.push({ field: 'kind', problem: 'must be goods, custom or service' });
+  for (const key of REQUIRED_BY_KIND[kind] ?? REQUIRED_BY_KIND.goods) {
     const v = sheet?.[key];
     if (v === undefined || v === null || v === '' || (Array.isArray(v) && v.length === 0)) {
       issues.push({ field: key, problem: 'missing' });

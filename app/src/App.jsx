@@ -93,6 +93,7 @@ export default function App() {
         {landing ? (
           <nav className="nav-links" aria-label="Sections">
             <a href="#how">How it works</a>
+            <a href="#uses">Use cases</a>
             <a href="#security">Security</a>
             <a href="#faq">Questions</a>
           </nav>

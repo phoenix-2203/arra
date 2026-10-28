@@ -46,3 +46,13 @@ test('fingerprint ignores key order but catches any change to the terms', () => 
   assert.ok(matchesRef(good, sheetRef(good).toUpperCase().replace('0X', '0x')));
   assert.ok(canonicalSheet(good).includes('arra-order-sheet/1'));
 });
+
+test('service and made-to-order deals do not need packaging or shipping terms', () => {
+  const service = { kind: 'service', product: 'Logo and brand kit', quantity: 1, unit: 'project', unitPriceUsd: '40', specs: ['3 logo concepts', '2 rounds of changes', 'SVG + PNG files'], shipBy: '2026-12-01' };
+  assert.deepEqual(reviewSheet(service), []);
+  assert.deepEqual(reviewSheet({ ...service, kind: 'custom' }), []);
+  const asGoods = reviewSheet({ ...service, kind: 'goods' }).map((i) => i.field);
+  assert.ok(asGoods.includes('packaging') && asGoods.includes('incoterm'));
+  assert.equal(reviewSheet({ ...service, kind: 'loan' })[0].field, 'kind');
+  assert.notEqual(sheetRef(service), sheetRef({ ...service, kind: 'custom' }), 'the kind is part of the fingerprint');
+});

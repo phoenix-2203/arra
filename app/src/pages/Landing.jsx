@@ -128,6 +128,15 @@ const FEATURES = [
   ["alarm", "Bank-detail change alarm", "If a known supplier suddenly wants paying somewhere new, Arra stops you until you've confirmed by phone."],
 ];
 
+const USES = [
+  ["ship", "Imports from China", "The deposit goes to the factory when they accept; the balance waits for the container."],
+  ["wallet", "Diaspora projects at home", "Fund a build or a business in Nigeria and release money stage by stage as the work is done, not on promises."],
+  ["sheet", "Made-to-order", "Tailors, furniture makers, fabricators. Half for materials up front, the rest when it's ready and checked."],
+  ["clock", "Events", "Caterers, decorators, DJs, venues. Book with a deposit, pay the balance after the day, settle a split if something falls short."],
+  ["code", "Freelance and agency work", "Milestones without a platform holding your money, for local clients or clients abroad."],
+  ["signature", "Online vendors", "A safer alternative to pay-on-delivery. The fingerprinted order sheet settles \"what I ordered vs what I got\"."],
+];
+
 const FAQ = [
   ["Who holds the money?", "An open contract on Celo. Not Arra, not a bank, not the supplier. Its code is public and verified, and its rules decide where money goes: to the supplier when you release it, or back to you if the deadlines pass."],
   ["Can Arra take or freeze my money?", "No. The contract owner can only pause new orders or change the per-order limit. It has no way to move locked money."],
@@ -144,7 +153,7 @@ export default function Landing({ wallet }) {
         <div className="hero-copy">
           <h1 className="display">Pay the deposit. Keep the balance locked until it ships.</h1>
           <p className="lede-lg">
-            Arra is escrow for importers buying from China. Your supplier gets their deposit the moment they accept. The rest waits in an open contract they can see but can't touch until the goods ship.
+            Arra is escrow for importers buying from China, and for any deal paid with a deposit and a balance. Your supplier gets their deposit the moment they accept. The rest waits in an open contract they can see but can't touch until the goods ship.
           </p>
           <div className="hero-cta">
             <a href="/new" className="button money" onClick={go("/new")}>Start an order</a>
@@ -226,6 +235,20 @@ export default function Landing({ wallet }) {
         <div lang="en">
           <h2 className="section-title">Your supplier sees it in Chinese</h2>
           <p className="lede-lg">Send one link. It opens in Simplified Chinese with the locked amount, the exact terms and an Accept button. Suppliers ask for deposits because they can't see the buyer's money. Now they can.</p>
+        </div>
+      </section>
+
+      <section className="band" id="uses">
+        <h2 className="section-title">Not just imports. Any deal with a deposit and a balance.</h2>
+        <p className="lede-lg" style={{ marginBottom: 26 }}>Arra was built for importers, but the same contract protects any deal where one side pays something now and the rest on delivery. Choose the kind of deal when you start an order and the wording adapts.</p>
+        <div className="features">
+          {USES.map(([icon, title, body]) => (
+            <article key={title} className="feature">
+              <Icon name={icon} size={26} />
+              <h3>{title}</h3>
+              <p>{body}</p>
+            </article>
+          ))}
         </div>
       </section>
 
