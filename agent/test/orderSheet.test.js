@@ -27,7 +27,7 @@ test('vague words are flagged with a plain explanation', () => {
 test('missing and malformed fields are flagged', () => {
   const issues = reviewSheet({ product: 'Shoes', quantity: 0, unitPriceUsd: '$3', shipBy: 'next month' });
   const fields = issues.map((i) => i.field);
-  for (const f of ['unit', 'specs', 'packaging', 'incoterm', 'quantity', 'unitPriceUsd', 'shipBy']) {
+  for (const f of ['unit', 'specs', 'incoterm', 'quantity', 'unitPriceUsd', 'shipBy']) {
     assert.ok(fields.includes(f), f);
   }
 });
@@ -47,12 +47,12 @@ test('fingerprint ignores key order but catches any change to the terms', () => 
   assert.ok(canonicalSheet(good).includes('arra-order-sheet/1'));
 });
 
-test('service and made-to-order deals do not need packaging or shipping terms', () => {
+test('service and made-to-order deals do not need shipping terms', () => {
   const service = { kind: 'service', product: 'Logo and brand kit', quantity: 1, unit: 'project', unitPriceUsd: '40', specs: ['3 logo concepts', '2 rounds of changes', 'SVG + PNG files'], shipBy: '2026-12-01' };
   assert.deepEqual(reviewSheet(service), []);
   assert.deepEqual(reviewSheet({ ...service, kind: 'custom' }), []);
   const asGoods = reviewSheet({ ...service, kind: 'goods' }).map((i) => i.field);
-  assert.ok(asGoods.includes('packaging') && asGoods.includes('incoterm'));
+  assert.ok(asGoods.includes('incoterm') && !asGoods.includes('packaging'), 'imports need delivery terms; packaging is optional');
   assert.equal(reviewSheet({ ...service, kind: 'loan' })[0].field, 'kind');
   assert.notEqual(sheetRef(service), sheetRef({ ...service, kind: 'custom' }), 'the kind is part of the fingerprint');
 });

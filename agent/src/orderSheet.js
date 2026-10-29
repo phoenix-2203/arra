@@ -6,11 +6,11 @@ import { keccak256, toBytes } from 'viem';
 
 export const SHEET_VERSION = 'arra-order-sheet/1';
 
-// Kinds of deal. Imports need packaging and delivery terms; made-to-order and
-// service deals don't.
+// Kinds of deal. Imports need delivery terms (who pays shipping); made-to-order
+// and service deals don't. Packaging is optional everywhere.
 export const KINDS = ['goods', 'custom', 'service'];
 const REQUIRED_BY_KIND = {
-  goods: ['product', 'quantity', 'unit', 'unitPriceUsd', 'specs', 'packaging', 'shipBy', 'incoterm'],
+  goods: ['product', 'quantity', 'unit', 'unitPriceUsd', 'specs', 'shipBy', 'incoterm'],
   custom: ['product', 'quantity', 'unit', 'unitPriceUsd', 'specs', 'shipBy'],
   service: ['product', 'quantity', 'unit', 'unitPriceUsd', 'specs', 'shipBy'],
 };
