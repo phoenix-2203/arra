@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { formatUnits, keccak256, toBytes } from "viem";
 import { api } from "../api.js";
 import { vaultCall, toUnits, EXPLORER } from "../chain.js";
@@ -26,10 +26,26 @@ export default function Order({ id, wallet }) {
   const [steps, setSteps] = useState(null);
   const isNew = new URLSearchParams(location.search).has("new");
 
+  // A brand-new order can take a few seconds to reach every network node, so a
+  // "not found" is retried quickly before we believe it.
+  const misses = useRef(0);
   const load = useCallback(() => {
-    api.order(id, account).then(setView).catch((e) => setError(e.status === 404 ? t.notFound : e.message));
+    api
+      .order(id, account)
+      .then((v) => {
+        misses.current = 0;
+        setError("");
+        setView(v);
+      })
+      .catch((e) => {
+        if (e.status === 404 && misses.current < 12) {
+          misses.current += 1;
+          setError(t.confirming);
+          setTimeout(load, 2500);
+        } else setError(e.status === 404 ? t.notFound : e.message);
+      });
     api.timeline(id).then((r) => setSteps(r.steps)).catch(() => {});
-  }, [id, account, t.notFound]);
+  }, [id, account, t.notFound, t.confirming]);
 
   useEffect(() => {
     load();
@@ -49,7 +65,7 @@ export default function Order({ id, wallet }) {
     saveLang(next);
   };
 
-  if (error && !view) return <p className="note bad">{error}</p>;
+  if (error && !view) return <p className={error === t.confirming ? "note" : "note bad"}>{error}</p>;
   if (!view) return <p className="muted">{t.loading}</p>;
 
   const { order: o, sheet, role, actions, now } = view;
