@@ -147,6 +147,16 @@ export default function NewOrder({ wallet }) {
     return () => clearTimeout(t);
   }, [sheet, step]);
 
+  // If the delivery date is close, shorten the accept window automatically so the
+  // supplier's accept deadline always comes before the delivery date.
+  useEffect(() => {
+    if (!f.shipBy) return;
+    const ship = Date.parse(`${f.shipBy}T23:59:59Z`) / 1000;
+    const now = Date.now() / 1000;
+    const fits = [7, 3, 1].filter((d) => now + d * DAY < ship);
+    if (fits.length && now + acceptDays * DAY >= ship) setAcceptDays(fits[0]);
+  }, [f.shipBy]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Live naira price for whatever USDT the wallet is missing.
   const missing = review?.ready && balance !== null ? BigInt(review.totalUsdt) - balance : 0n;
   useEffect(() => {
@@ -410,7 +420,13 @@ export default function NewOrder({ wallet }) {
             </ul>
           </div>
 
-          {!datesOk ? <p className="note bad">The {K.dateLabel.toLowerCase()} date must be after the accept deadline and within 180 days.</p> : null}
+          {!datesOk && shipBy > 0 && shipBy <= acceptBy ? (
+            <p className="note bad">
+              The {K.payee.toLowerCase()} has until {new Date(acceptBy * 1000).toLocaleDateString("en-GB", { day: "numeric", month: "short" })} to accept, but the {K.dateLabel.toLowerCase()} date is {new Date(shipBy * 1000).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}. Choose a shorter accept time above, or go back and pick a later date.
+            </p>
+          ) : null}
+          {!datesOk && shipBy > acceptBy ? <p className="note bad">The {K.dateLabel.toLowerCase()} date must be within 180 days.</p> : null}
+          {!datesOk && !shipBy ? <p className="note bad">Go back and pick a {K.dateLabel.toLowerCase()} date.</p> : null}
           {tooBig ? <p className="note bad">While Arra is new, orders are capped at $50. Lower the quantity or split it into several orders.</p> : null}
           {short && !tooBig && !naira ? <p className="note bad">Your wallet has ${usd(balance)} USDT; this order needs ${usd(total)}. Choose naira above to convert the rest.</p> : null}
           {short && !tooBig && naira ? <p className="note bad">You need {ngn(fxCngn)} cNGN for this order and have {ngn(cngn)}.</p> : null}
