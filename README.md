@@ -121,7 +121,7 @@ Each one answers a documented way these deals fail.
 9. **Bank-detail change alarm (F9).** Arra remembers each supplier's address. A new one for a known supplier is blocked until the buyer confirms by phone.
 10. **Bilingual supplier page (F10).** The supplier's link opens in English or Simplified Chinese (the buyer picks, or it follows the supplier's phone language) with the locked amount, the terms and an Accept button.
 11. **Rate locked on day one (F11).** Pay from naira: Textile FX converts cNGN into exactly the USDT the order needs at one firm rate, so a weaker naira next month can't hurt.
-12. **Onchain timeline.** Every step (locked, accepted, shipped, released) is read from the vault's events with its time and transaction link.
+12. **Onchain timeline, history and receipts.** Every step (locked, accepted, shipped, released) is read from the vault's events with its time and transaction link. A History page lists every payment in and out of your wallet (downloadable as CSV), and every order has a printable receipt with each payment and its transaction link.
 13. **No gas, no problem.** A supplier with an empty wallet can't pay the network fee to accept. Arra checks the supplier's wallet while the order is being made, and the buyer can send 0.02 or 0.05 CELO (or $0.10 USDT for MiniPay and Valora) along with the order, in the same flow. If they skipped it, the order page offers the same one-tap top-up.
 
 ## Not just imports

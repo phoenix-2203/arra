@@ -61,7 +61,10 @@ export default function Home({ wallet }) {
           <h1>Your orders</h1>
           <p className="muted num">{short(account)}</p>
         </div>
-        <button className="money auto" onClick={() => navigate("/new")}><Icon name="plus" size={18} /> New order</button>
+        <div className="row-gap">
+          <button className="secondary auto" onClick={() => navigate("/history")}><Icon name="clock" size={18} /> History</button>
+          <button className="money auto" onClick={() => navigate("/new")}><Icon name="plus" size={18} /> New order</button>
+        </div>
       </div>
 
       <section className="balances" aria-label="Balances">

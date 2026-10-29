@@ -5,7 +5,7 @@ import { vaultCall, toUnits, EXPLORER, celoBalance, usdtBalance, sendCelo, sendU
 import { Cloth } from "../Adire.jsx";
 import { withToast } from "../toast.jsx";
 import { STRINGS, initialLang, saveLang } from "../i18n.js";
-import { short } from "../App.jsx";
+import { short, navigate } from "../App.jsx";
 
 const usd = (v) => Number(formatUnits(BigInt(v), 6)).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const day = (ts, lang) => new Date(ts * 1000).toLocaleDateString(lang === "zh" ? "zh-CN" : "en-GB", { day: "numeric", month: "short", year: "numeric" });
@@ -182,7 +182,10 @@ export default function Order({ id, wallet }) {
     <div className="stack-lg" lang={lang}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
         <h1 style={{ fontSize: 24 }}>#{o.id} {s?.product ?? ""}</h1>
-        <button className="linkish" onClick={switchLang}>{t.lang}</button>
+        <span className="row-gap">
+          <a className="linkish" href={`/o/${o.id}/receipt`} onClick={(e) => { e.preventDefault(); navigate(`/o/${o.id}/receipt`); }}>{t.receipt}</a>
+          <button className="linkish" onClick={switchLang}>{t.lang}</button>
+        </span>
       </div>
 
       <div className="split">

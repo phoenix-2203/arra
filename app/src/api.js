@@ -23,4 +23,5 @@ api.fxPreview = (usd) => call("POST", "/api/fx/preview", { usd });
 api.fxQuote = (taker, usd, takerProof) => call("POST", "/api/fx/quote", { taker, usd, takerProof });
 api.fxSubmit = (rfqId, txHash) => call("POST", `/api/fx/${rfqId}/submit`, { txHash });
 api.stats = () => call("GET", "/api/stats");
+api.activity = (address) => call("GET", `/api/activity?address=${address}`);
 api.timeline = (id) => call("GET", `/api/orders/${id}/timeline`);

@@ -6,6 +6,8 @@ import Landing from "./pages/Landing.jsx";
 import { Toasts } from "./toast.jsx";
 import NewOrder from "./pages/NewOrder.jsx";
 import Order from "./pages/Order.jsx";
+import History from "./pages/History.jsx";
+import Receipt from "./pages/Receipt.jsx";
 
 export const short = (a) => (a ? `${a.slice(0, 6)}…${a.slice(-4)}` : "");
 
@@ -84,6 +86,7 @@ export default function App() {
   }, [doConnect]);
 
   const order = path.match(/^\/o\/(\d+)/);
+  const receipt = path.match(/^\/o\/(\d+)\/receipt$/);
   const wallet = { account, connect: doConnect, connectError };
   const landing = path === "/";
 
@@ -100,6 +103,7 @@ export default function App() {
           </nav>
         ) : null}
         <div className="tools">
+          {account && !landing ? <a className={`navlink${path === "/history" ? " on" : ""}`} href="/history" onClick={link("/history")}>History</a> : null}
           {account ? <a className="who num" href="/app" onClick={link("/app")}>{short(account)}</a> : null}
           {landing ? <a href="/app" className="button money small-btn" onClick={link("/app")}>Open app</a> : null}
           {!landing && !account ? <button className="secondary small-btn" onClick={doConnect}>Connect</button> : null}
@@ -107,7 +111,7 @@ export default function App() {
         </div>
       </header>
       <main>
-        {order ? <Order id={Number(order[1])} wallet={wallet} /> : path === "/new" ? <NewOrder wallet={wallet} /> : landing ? <Landing wallet={wallet} /> : <Home wallet={wallet} />}
+        {receipt ? <Receipt id={Number(receipt[1])} wallet={wallet} /> : order ? <Order id={Number(order[1])} wallet={wallet} /> : path === "/new" ? <NewOrder wallet={wallet} /> : path === "/history" ? <History wallet={wallet} /> : landing ? <Landing wallet={wallet} /> : <Home wallet={wallet} />}
       </main>
       <Toasts />
       <footer className="foot">
