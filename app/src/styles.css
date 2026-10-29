@@ -281,7 +281,8 @@ footer.foot { display: flex; flex-wrap: wrap; gap: 8px 20px; justify-content: sp
 }
 .display.small { font-size: clamp(30px, 6vw, 52px); }
 .lede-lg { font-size: 17.5px; line-height: 1.6; color: var(--text-soft); max-width: 36em; }
-.hero { display: grid; gap: 36px; padding-top: 8px; }
+.hero { display: grid; grid-template-columns: minmax(0, 1fr); gap: 36px; padding-top: 8px; }
+.hero > * { min-width: 0; }
 .hero-copy > * + * { margin-top: 22px; }
 .hero-cta { display: flex; flex-wrap: wrap; gap: 12px; }
 .hero-cta .button { width: auto; padding: 15px 22px; }
@@ -551,3 +552,11 @@ details.more[open] summary { margin-bottom: 12px; }
   .shell { max-width: none; padding: 0; }
   .receipt { box-shadow: none; padding: 0; background: #fff; }
 }
+
+/* ---- Snappier on phones: no tap delay, instant press feedback ---- */
+button, .button, a, .chip, .tab, label.choice { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+button, .button, .chip, .tab { transition: transform 0.08s ease, box-shadow 0.15s ease, background-color 0.15s ease; }
+button:not(:disabled):active, .button:active, .chip:not(:disabled):active, .tab:active { transform: scale(0.97); }
+.hero-copy { min-width: 0; }
+.hero-copy h1.display { overflow-wrap: anywhere; }
+@media (max-width: 340px) { h1.display { font-size: 38px; } }

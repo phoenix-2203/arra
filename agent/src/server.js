@@ -1,6 +1,7 @@
 // Arra's HTTP API plus the static app. No framework: node:http only, so it
 // runs comfortably on a small VPS.
 import { createServer as httpServer } from "node:http";
+import { gzipSync } from "node:zlib";
 import { readFileSync, writeFileSync, existsSync, mkdirSync, statSync } from "node:fs";
 import { join, extname, normalize } from "node:path";
 import { isAddress } from "viem";
@@ -201,7 +202,7 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
         const [status, payload] = await route(body, url);
         return send(res, status, payload);
       }
-      return serveStatic(staticDir, url.pathname, res);
+      return serveStatic(staticDir, url.pathname, res, req);
     } catch (e) {
       send(res, e.status ?? 500, { error: e.status ? e.message : "Something went wrong" });
       if (!e.status) console.error(e);
@@ -209,17 +210,31 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
   };
 }
 
-function serveStatic(dir, pathname, res) {
+// Compressed copies of the app's files, made once. The main script shrinks
+// from ~590 KB to ~180 KB, which matters a lot on mobile data.
+const gzCache = new Map();
+const COMPRESS = new Set([".html", ".js", ".css", ".svg", ".json", ".webmanifest"]);
+
+function serveStatic(dir, pathname, res, req) {
   if (!dir || !existsSync(dir)) return send(res, 404, { error: "App not built" });
   const safe = normalize(decodeURIComponent(pathname)).replace(/^(\.\.[/\\])+/, "");
   let file = join(dir, safe);
   if (!file.startsWith(dir) || !existsSync(file) || statSync(file).isDirectory()) file = join(dir, "index.html"); // SPA routes
   const ext = extname(file);
-  res.writeHead(200, {
+  const headers = {
     "content-type": MIME[ext] ?? "application/octet-stream",
     "cache-control": ext === ".html" ? "no-cache" : "public, max-age=31536000, immutable",
-  });
-  res.end(readFileSync(file));
+    vary: "accept-encoding",
+  };
+  let body = readFileSync(file);
+  if (COMPRESS.has(ext) && /\bgzip\b/.test(req?.headers["accept-encoding"] ?? "")) {
+    const key = `${file}:${statSync(file).mtimeMs}`;
+    if (!gzCache.has(key)) gzCache.set(key, gzipSync(body, { level: 9 }));
+    body = gzCache.get(key);
+    headers["content-encoding"] = "gzip";
+  }
+  res.writeHead(200, headers);
+  res.end(body);
 }
 
 export function listen(handler, port) {
