@@ -3,6 +3,7 @@ import { formatUnits, keccak256, toBytes } from "viem";
 import { api } from "../api.js";
 import { vaultCall, toUnits, EXPLORER } from "../chain.js";
 import { Cloth } from "../Adire.jsx";
+import { withToast } from "../toast.jsx";
 import { STRINGS, initialLang, saveLang } from "../i18n.js";
 import { short } from "../App.jsx";
 
@@ -77,16 +78,33 @@ export default function Order({ id, wallet }) {
   const step = STEP_OF[o.status];
   const toSupplierSplit = (held * BigInt(splitPct)) / 100n;
 
+  // One transaction, followed by a notification from "confirm" to "done", then
+  // the page refreshes until the network shows the new state.
   async function run(name, args) {
     setError("");
     setBusy(t.working);
+    const before = `${o.status}:${o.held}:${o.splitOffer?.toSupplier ?? ""}`;
+    const amount = name === "releasePart" ? usd(args[1]) : null;
     try {
-      setLastTx(await vaultCall(name, args));
+      const hash = await withToast((cb) => vaultCall(name, args, cb), {
+        confirm: t.toast.confirm,
+        pending: t.toast.pending,
+        done: t.toast.done[name] ? t.toast.done[name](amount) : t.done,
+      });
+      setLastTx(hash);
       setPartAmount("");
       setContainer("");
-      load();
+      for (let i = 0; i < 10; i++) {
+        const v = await api.order(id, account).catch(() => null);
+        if (v && `${v.order.status}:${v.order.held}:${v.order.splitOffer?.toSupplier ?? ""}` !== before) {
+          setView(v);
+          break;
+        }
+        await new Promise((r) => setTimeout(r, 1200));
+      }
+      api.timeline(id).then((r) => setSteps(r.steps)).catch(() => {});
     } catch (e) {
-      setError(e.shortMessage ?? e.message);
+      if (!/reject|denied|cancel/i.test(e.shortMessage ?? e.message ?? "")) setError(e.shortMessage ?? e.message);
     } finally {
       setBusy("");
     }

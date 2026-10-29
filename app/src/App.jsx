@@ -3,6 +3,7 @@ import { connect, hasWallet, isMiniPay, VAULT, EXPLORER } from "./chain.js";
 import { Wordmark } from "./Adire.jsx";
 import Home from "./pages/Home.jsx";
 import Landing from "./pages/Landing.jsx";
+import { Toasts } from "./toast.jsx";
 import NewOrder from "./pages/NewOrder.jsx";
 import Order from "./pages/Order.jsx";
 
@@ -108,6 +109,7 @@ export default function App() {
       <main>
         {order ? <Order id={Number(order[1])} wallet={wallet} /> : path === "/new" ? <NewOrder wallet={wallet} /> : landing ? <Landing wallet={wallet} /> : <Home wallet={wallet} />}
       </main>
+      <Toasts />
       <footer className="foot">
         <span>Money is held by an open contract on Celo, not by Arra.</span>
         <span className="foot-links">

@@ -19,7 +19,21 @@ const erc20 = [
   { type: "function", name: "balanceOf", stateMutability: "view", inputs: [{ type: "address" }], outputs: [{ type: "uint256" }] },
 ];
 
-export const reader = createPublicClient({ chain: celo, transport: http() });
+// Celo confirms in about a second, so check for receipts every ~0.8 s (viem's default is 4 s).
+export const reader = createPublicClient({ chain: celo, transport: http(undefined, { retryCount: 4, retryDelay: 400 }), pollingInterval: 800 });
+
+// Right after a transaction, a public node can be a block behind and wrongly
+// predict the next one would fail. Re-check a few times before believing it.
+async function simulateSoon(params, tries = 4) {
+  for (let i = 0; ; i++) {
+    try {
+      return await reader.simulateContract(params);
+    } catch (e) {
+      if (i >= tries - 1) throw e;
+      await new Promise((r) => setTimeout(r, 1200));
+    }
+  }
+}
 export const hasWallet = () => typeof window !== "undefined" && !!window.ethereum;
 export const isMiniPay = () => hasWallet() && !!window.ethereum.isMiniPay;
 
@@ -41,36 +55,38 @@ export async function connect() {
 // as in its own examples. Other wallets pay fees in CELO as usual.
 const feeOpts = () => ({});
 
-async function write(address, abi, functionName, args) {
+async function write(address, abi, functionName, args, { onSent } = {}) {
   if (!wallet) throw new Error("Connect your wallet first.");
-  await reader.simulateContract({ account: wallet.account, address, abi, functionName, args });
+  await simulateSoon({ account: wallet.account, address, abi, functionName, args });
   const hash = await wallet.writeContract({ address, abi, functionName, args, ...feeOpts() });
-  const receipt = await reader.waitForTransactionReceipt({ hash });
+  onSent?.(hash);
+  const receipt = await reader.waitForTransactionReceipt({ hash, retryCount: 20 });
   if (receipt.status !== "success") throw new Error("The transaction failed onchain.");
   return hash;
 }
 
 export const usdtBalance = (who) => reader.readContract({ address: USDT, abi: erc20, functionName: "balanceOf", args: [who] });
 
-export async function lockOrder({ buyer, supplier, total, depositBps, acceptBy, shipBy, disputeWindow, ref }, onStep = () => {}) {
+export async function lockOrder({ buyer, supplier, total, depositBps, acceptBy, shipBy, disputeWindow, ref }, onStep = () => {}, onSent = () => {}) {
   const allowance = await reader.readContract({ address: USDT, abi: erc20, functionName: "allowance", args: [buyer, VAULT] });
   if (allowance < total) {
     onStep("approve");
-    await write(USDT, erc20, "approve", [VAULT, total]);
+    await write(USDT, erc20, "approve", [VAULT, total], { onSent: (h) => onSent("approve", h) });
   }
   onStep("lock");
   if (!wallet) throw new Error("Connect your wallet first.");
   const args = [supplier, total, depositBps, BigInt(acceptBy), BigInt(shipBy), disputeWindow, ref];
-  await reader.simulateContract({ account: wallet.account, address: VAULT, abi: vaultAbi, functionName: "createOrder", args });
+  await simulateSoon({ account: wallet.account, address: VAULT, abi: vaultAbi, functionName: "createOrder", args });
   const hash = await wallet.writeContract({ address: VAULT, abi: vaultAbi, functionName: "createOrder", args, ...feeOpts() });
-  const receipt = await reader.waitForTransactionReceipt({ hash });
+  onSent("lock", hash);
+  const receipt = await reader.waitForTransactionReceipt({ hash, retryCount: 20 });
   // Read the id from the event, not the simulation, in case someone else ordered at the same moment.
   const [created] = parseEventLogs({ abi: vaultAbi, eventName: "OrderCreated", logs: receipt.logs });
   return { id: Number(created.args.id), hash };
 }
 
 // One function per button. Names match the contract.
-export const vaultCall = (functionName, args) => write(VAULT, vaultAbi, functionName, args);
+export const vaultCall = (functionName, args, opts) => write(VAULT, vaultAbi, functionName, args, opts);
 
 // ---- Naira payment (F11): cNGN -> exactly the USDT the order needs, on Textile FX ----
 export const CNGN = "0xF6829D7393dAe24509eb1E52eE8e572e2E271a4f";

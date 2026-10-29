@@ -3,6 +3,7 @@ import { formatUnits, isAddress } from "viem";
 import { api } from "../api.js";
 import { lockOrder, usdtBalance, cngnBalance, convertNairaToUsdt } from "../chain.js";
 import { navigate } from "../App.jsx";
+import { toast } from "../toast.jsx";
 
 const MAX_ORDER = 50_000_000n; // $50 cap while Arra is new (set in the vault)
 const DAY = 86400;
@@ -174,10 +175,22 @@ export default function NewOrder({ wallet }) {
         }
         setBalance(b);
       }
+      // One notification per wallet confirmation, so the buyer always knows what's happening.
+      let current = null;
       const { id } = await lockOrder(
         { buyer: account, supplier: supplierAddr, total, depositBps: depositPct * 100, acceptBy, shipBy, disputeWindow: checkDays * DAY, ref },
-        (s) => setBusy(s === "approve" ? "Step 1 of 2: allow Arra's vault to take the USDT. Confirm in your wallet." : "Step 2 of 2: lock the money. Confirm in your wallet."),
-      );
+        (s) => {
+          if (current) current.update({ kind: "ok", title: "USDT allowed", spinner: false });
+          setBusy(s === "approve" ? "Step 1 of 2: allow Arra's vault to take the USDT. Confirm in your wallet." : "Step 2 of 2: lock the money. Confirm in your wallet.");
+          current = toast({ title: s === "approve" ? "Step 1 of 2: allow the USDT. Confirm in your wallet" : `Step 2 of 2: lock $${usd(total)}. Confirm in your wallet`, spinner: true });
+        },
+        (s, hash) => current?.update({ title: s === "approve" ? "Allowing USDT…" : `Locking $${usd(total)}…`, hash }),
+      ).catch((e) => {
+        const msg = e.shortMessage ?? e.message ?? "";
+        current?.update({ kind: "bad", title: /reject|denied|cancel/i.test(msg) ? "Cancelled. Nothing was locked." : "Didn't go through", body: /reject|denied|cancel/i.test(msg) ? null : msg, spinner: false });
+        throw e;
+      });
+      current?.update({ kind: "ok", title: `Order #${id} locked. $${usd(total)} is safe in the vault`, body: "Send your supplier the link on the next screen.", spinner: false });
       navigate(`/o/${id}?new=1`);
     } catch (e) {
       setError(e.shortMessage ?? e.message);
