@@ -21,7 +21,10 @@ export default function Receipt({ id, wallet }) {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    api.order(id, account).then(setView).catch((e) => setError(e.status === 404 ? t.notFound : e.message));
+    api.order(id, account).then((v) => {
+      setView(v);
+      if (v.link && id !== v.link) history.replaceState(null, "", `/o/${v.link}/receipt`);
+    }).catch((e) => setError(e.status === 404 ? t.notFound : e.message));
     api.timeline(id).then((r) => setSteps(r.steps ?? [])).catch(() => setSteps([]));
   }, [id, account]);
 
@@ -40,7 +43,7 @@ export default function Receipt({ id, wallet }) {
   return (
     <div className="stack-lg">
       <div className="row no-print receipt-tools">
-        <button className="secondary auto" onClick={() => navigate(`/o/${o.id}`)}>Back to order</button>
+        <button className="secondary auto" onClick={() => navigate(`/o/${view.link}`)}>Back to order</button>
         <button className="money auto" onClick={() => window.print()}>Save as PDF</button>
       </div>
 
@@ -117,7 +120,7 @@ export default function Receipt({ id, wallet }) {
         <footer className="rc-foot">
           <p>Every payment above is a public transaction on the Celo network and can be checked on Celoscan. The money was held by the Arra vault contract ({VAULT}), not by Arra.</p>
           <p>Terms fingerprint: <span className="num rc-addr">{o.ref}</span>{s ? " The agreed terms match this fingerprint." : ""}</p>
-          <p>usearra.duckdns.org/o/{o.id}</p>
+          <p>{location.host}/o/{view.link}</p>
         </footer>
       </article>
     </div>

@@ -85,8 +85,9 @@ export default function App() {
     }
   }, [doConnect]);
 
-  const order = path.match(/^\/o\/(\d+)/);
-  const receipt = path.match(/^\/o\/(\d+)\/receipt$/);
+  // Orders open by their private link code (or, for old links, their number).
+  const order = path.match(/^\/o\/([A-Za-z0-9]{1,10})/);
+  const receipt = path.match(/^\/o\/([A-Za-z0-9]{1,10})\/receipt$/);
   const wallet = { account, connect: doConnect, connectError };
   const landing = path === "/";
 
@@ -111,7 +112,7 @@ export default function App() {
         </div>
       </header>
       <main>
-        {receipt ? <Receipt id={Number(receipt[1])} wallet={wallet} /> : order ? <Order id={Number(order[1])} wallet={wallet} /> : path === "/new" ? <NewOrder wallet={wallet} /> : path === "/history" ? <History wallet={wallet} /> : landing ? <Landing wallet={wallet} /> : <Home wallet={wallet} />}
+        {receipt ? <Receipt id={receipt[1]} wallet={wallet} /> : order ? <Order id={order[1]} wallet={wallet} /> : path === "/new" ? <NewOrder wallet={wallet} /> : path === "/history" ? <History wallet={wallet} /> : landing ? <Landing wallet={wallet} /> : <Home wallet={wallet} />}
       </main>
       <Toasts />
       <footer className="foot">

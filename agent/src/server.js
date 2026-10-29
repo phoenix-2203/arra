@@ -10,6 +10,7 @@ import { checkContainerNumber } from "./container.js";
 import { readOrder, orderCount, nextActions, explain } from "./vault.js";
 import { textileClient, ngnPerUsd, rampSupportsCelo, TextileError } from "./textile.js";
 import { LogIndex, vaultStats } from "./history.js";
+import { OrderLinks } from "./links.js";
 
 const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml", ".png": "image/png", ".json": "application/json", ".ico": "image/x-icon", ".webmanifest": "application/manifest+json" };
 const MAX_BODY = 64 * 1024;
@@ -34,7 +35,7 @@ async function readJson(req) {
   }
 }
 
-export function createApp({ client, vault, dataDir, staticDir, now = () => Math.floor(Date.now() / 1000), textile = textileClient(), history = new LogIndex({ client, vault }) }) {
+export function createApp({ client, vault, dataDir, staticDir, now = () => Math.floor(Date.now() / 1000), textile = textileClient(), history = new LogIndex({ client, vault }), links = null }) {
   let statsCache = null;
   // Claim tokens for firm quotes stay on the server; the browser only gets the rfqId.
   const claims = new Map();
@@ -54,6 +55,9 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
   const sheetsDir = join(dataDir, "sheets");
   mkdirSync(sheetsDir, { recursive: true });
   const payees = new PayeeBook(join(dataDir, "payees.json"));
+  links ??= new OrderLinks(join(dataDir, "link-secret"));
+  // An order can be addressed by its private link code or (old links) its number.
+  const toId = async (x) => (/^\d{1,9}$/.test(x) ? Number(x) : links.resolve(x, await orderCount(client, vault)));
   const sheetPath = (ref) => join(sheetsDir, `${ref.toLowerCase()}.json`);
   const loadSheet = (ref) => (existsSync(sheetPath(ref)) ? JSON.parse(readFileSync(sheetPath(ref), "utf8")) : null);
 
@@ -70,7 +74,7 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
     if (name && o.status !== "Pending" && payees.check(o.buyer, name, o.supplier).status === "new") {
       payees.remember(o.buyer, name, o.supplier, `accepted order ${id}`);
     }
-    return { order: o, sheet, role, actions: nextActions(o, t, role), explanation: explain(o, t), now: t };
+    return { order: o, link: links.code(id), sheet, role, actions: nextActions(o, t, role), explanation: explain(o, t), now: t };
   }
 
   const routes = {
@@ -139,7 +143,7 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
     "GET /api/activity": async (_b, url) => {
       const who = url.searchParams.get("address");
       if (!who || !isAddress(who, { strict: false })) return [400, { error: "address required" }];
-      const rows = (await history.activity(who)).map(({ ref, ...r }) => ({ ...r, product: loadSheet(ref)?.sheet?.product ?? null, counterpartyName: r.role === "buyer" ? loadSheet(ref)?.sheet?.supplier ?? null : null }));
+      const rows = (await history.activity(who)).map(({ ref, ...r }) => ({ ...r, link: links.code(r.orderId), product: loadSheet(ref)?.sheet?.product ?? null, counterpartyName: r.role === "buyer" ? loadSheet(ref)?.sheet?.supplier ?? null : null }));
       const sum = (flow) => rows.filter((r) => r.flow === flow).reduce((s, r) => s + BigInt(r.amount), 0n).toString();
       return [200, { rows, totals: { in: sum("in"), out: sum("out") } }];
     },
@@ -161,15 +165,18 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
     const url = new URL(req.url, "http://x");
     try {
       if (url.pathname.startsWith("/api/")) {
-        const m = url.pathname.match(/^\/api\/orders\/(\d+)$/);
+        const m = url.pathname.match(/^\/api\/orders\/([A-Za-z0-9]{1,10})$/);
         if (m && req.method === "GET") {
-          const view = await orderView(Number(m[1]), url.searchParams.get("as"));
+          const id = await toId(m[1]);
+          const view = id ? await orderView(id, url.searchParams.get("as")) : null;
           return view ? send(res, 200, view) : send(res, 404, { error: "No such order" });
         }
-        const tl = url.pathname.match(/^\/api\/orders\/(\d+)\/timeline$/);
+        const tl = url.pathname.match(/^\/api\/orders\/([A-Za-z0-9]{1,10})\/timeline$/);
         if (tl && req.method === "GET") {
+          const id = await toId(tl[1]);
+          if (!id) return send(res, 404, { error: "No such order" });
           try {
-            return send(res, 200, { steps: await history.timeline(Number(tl[1])) });
+            return send(res, 200, { steps: await history.timeline(id) });
           } catch (e) {
             return send(res, 200, { steps: null, error: "History is temporarily unavailable" });
           }

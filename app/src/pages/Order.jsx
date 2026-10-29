@@ -100,16 +100,18 @@ export default function Order({ id, wallet }) {
         misses.current = 0;
         setError("");
         setView(v);
+        // Swap an old number link for the order's private link in the address bar.
+        if (v.link && id !== v.link) history.replaceState(null, "", `/o/${v.link}${location.search}`);
       })
       .catch((e) => {
-        if (e.status === 404 && misses.current < 12) {
+        if (e.status === 404 && isNew && misses.current < 12) {
           misses.current += 1;
           setError(t.confirming);
           setTimeout(load, 2500);
         } else setError(e.status === 404 ? t.notFound : e.message);
       });
     api.timeline(id).then((r) => setSteps(r.steps)).catch(() => {});
-  }, [id, account, t.notFound, t.confirming]);
+  }, [id, account, isNew, t.notFound, t.confirming]);
 
   useEffect(() => {
     load();
@@ -176,14 +178,14 @@ export default function Order({ id, wallet }) {
   const A = t.actions;
   const bid = BigInt(o.id);
   const has = (a) => actions.includes(a);
-  const shareUrl = `${location.origin}/o/${o.id}${shareLang === "auto" ? "" : `?lang=${shareLang}`}`;
+  const shareUrl = `${location.origin}/o/${view.link}${shareLang === "auto" ? "" : `?lang=${shareLang}`}`;
 
   return (
     <div className="stack-lg" lang={lang}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
         <h1 style={{ fontSize: 24 }}>#{o.id} {s?.product ?? ""}</h1>
         <span className="row-gap">
-          <a className="linkish" href={`/o/${o.id}/receipt`} onClick={(e) => { e.preventDefault(); navigate(`/o/${o.id}/receipt`); }}>{t.receipt}</a>
+          <a className="linkish" href={`/o/${view.link}/receipt`} onClick={(e) => { e.preventDefault(); navigate(`/o/${view.link}/receipt`); }}>{t.receipt}</a>
           <button className="linkish" onClick={switchLang}>{t.lang}</button>
         </span>
       </div>

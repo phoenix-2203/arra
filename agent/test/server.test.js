@@ -107,6 +107,25 @@ test("order view: role, actions, explanation and payee memory", async () => {
   assert.equal(upper.role, "supplier");
 });
 
+test("private links: each order has an unguessable code that opens it", async () => {
+  const { OrderLinks, LINK_RE } = await import("../src/links.js");
+  const [, byNumber] = await get("/api/orders/1");
+  assert.match(byNumber.link, LINK_RE);
+  const [st, byCode] = await get(`/api/orders/${byNumber.link}?as=${BUYER}`);
+  assert.equal(st, 200);
+  assert.equal(byCode.order.id, 1);
+  assert.equal(byCode.role, "buyer");
+  assert.equal((await get(`/api/orders/${byNumber.link}/timeline`))[0], 200);
+  assert.equal((await get("/api/orders/abcdefghjk"))[0], 404, "a made-up code finds nothing");
+  // Same secret, same code; different secret, different code.
+  const a = new OrderLinks(null, "secret-a"), b = new OrderLinks(null, "secret-b");
+  assert.equal(a.code(1), new OrderLinks(null, "secret-a").code(1));
+  assert.notEqual(a.code(1), b.code(1));
+  assert.notEqual(a.code(1), a.code(2));
+  assert.equal(a.resolve(a.code(7), 10), 7);
+  assert.equal(a.resolve(a.code(11), 10), null, "only existing orders");
+});
+
 test("my orders, container check, errors and the app shell", async () => {
   const [, list] = await get(`/api/orders?address=${SUPPLIER}`);
   assert.equal(list.orders.length, 1);

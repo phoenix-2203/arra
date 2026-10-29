@@ -106,12 +106,12 @@ export default function Home({ wallet }) {
 
       {list.length ? (
         <ul className="order-list">
-          {list.map(({ order: o, sheet, role }) => {
+          {list.map(({ order: o, link, sheet, role }) => {
             const needs = ACTION_NEEDED[role].includes(o.status);
             const pct = (STEP[o.status] / 4) * 100;
             return (
               <li key={o.id}>
-                <a href={`/o/${o.id}`} onClick={(e) => { e.preventDefault(); navigate(`/o/${o.id}`); }}>
+                <a href={`/o/${link}`} onClick={(e) => { e.preventDefault(); navigate(`/o/${link}`); }}>
                   <div className="ol-top">
                     <span className="ol-title">#{o.id} {sheet?.sheet?.product ?? (role === "buyer" ? `to ${short(o.supplier)}` : `from ${short(o.buyer)}`)}</span>
                     <span className="ol-amt num">{usd(o.total)}</span>

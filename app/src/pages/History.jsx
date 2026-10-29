@@ -121,7 +121,7 @@ export default function History({ wallet }) {
                   </p>
                   <p className="small hist-links">
                     <span className="muted num">{time(r.at)}</span>
-                    <a href={`/o/${r.orderId}/receipt`} onClick={(e) => { e.preventDefault(); navigate(`/o/${r.orderId}/receipt`); }}>Receipt</a>
+                    <a href={`/o/${r.link}/receipt`} onClick={(e) => { e.preventDefault(); navigate(`/o/${r.link}/receipt`); }}>Receipt</a>
                     <a href={`${EXPLORER}/tx/${r.tx}`} target="_blank" rel="noreferrer">Celoscan</a>
                   </p>
                 </div>
