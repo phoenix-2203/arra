@@ -135,6 +135,15 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
         return [200, { celo: rampSupportsCelo(all) }];
       }),
 
+    // Transaction history: every payment in or out of one wallet, newest first.
+    "GET /api/activity": async (_b, url) => {
+      const who = url.searchParams.get("address");
+      if (!who || !isAddress(who, { strict: false })) return [400, { error: "address required" }];
+      const rows = (await history.activity(who)).map(({ ref, ...r }) => ({ ...r, product: loadSheet(ref)?.sheet?.product ?? null, counterpartyName: r.role === "buyer" ? loadSheet(ref)?.sheet?.supplier ?? null : null }));
+      const sum = (flow) => rows.filter((r) => r.flow === flow).reduce((s, r) => s + BigInt(r.amount), 0n).toString();
+      return [200, { rows, totals: { in: sum("in"), out: sum("out") } }];
+    },
+
     "GET /api/orders": async (_b, url) => {
       const who = url.searchParams.get("address");
       if (!who || !isAddress(who, { strict: false })) return [400, { error: "address required" }];

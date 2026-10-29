@@ -64,6 +64,63 @@ export class LogIndex {
   }
 }
 
+/**
+ * How each vault event moves money for the buyer and the supplier of that
+ * order. "in" / "out" change the person's wallet; "info" is money moving
+ * inside the order (for example the buyer's locked money paying the deposit).
+ */
+export function moneyFor(event, a) {
+  const amt = (v) => (v != null ? v.toString() : null);
+  switch (event) {
+    case "OrderCreated":
+      return { buyer: ["out", amt(a.total), "Locked in the vault"], supplier: ["info", amt(a.total), "Buyer locked the money"] };
+    case "OrderAccepted":
+      return { buyer: ["info", amt(a.depositPaid), "Deposit paid to the supplier from the vault"], supplier: ["in", amt(a.depositPaid), "Deposit received"] };
+    case "PartReleased":
+      return { buyer: ["info", amt(a.amount), "Part of the balance paid to the supplier"], supplier: ["in", amt(a.amount), "Part of the balance received"] };
+    case "BalanceReleased":
+      return { buyer: ["info", amt(a.amount), "Balance paid to the supplier"], supplier: ["in", amt(a.amount), "Balance received"] };
+    case "BalanceRefunded":
+      return { buyer: ["in", amt(a.amount), "Refunded to you"], supplier: ["info", amt(a.amount), "Refunded to the buyer"] };
+    case "SplitSettled":
+      return { buyer: ["in", amt(a.toBuyer), "Your share of the agreed split"], supplier: ["in", amt(a.toSupplier), "Your share of the agreed split"] };
+    default:
+      return null; // shipped, disputed, split offered: no money moved
+  }
+}
+
+/** Every money movement for one wallet, newest first, across all its orders. */
+LogIndex.prototype.activity = async function activity(address) {
+  await this.sync();
+  const me = address.toLowerCase();
+  const parties = new Map();
+  for (const l of this.logs) {
+    if (l.eventName === "OrderCreated") parties.set(l.args.id, { buyer: l.args.buyer.toLowerCase(), supplier: l.args.supplier.toLowerCase(), ref: l.args.ref });
+  }
+  const rows = [];
+  for (const l of this.logs) {
+    const p = parties.get(l.args.id);
+    if (!p) continue;
+    const role = p.buyer === me ? "buyer" : p.supplier === me ? "supplier" : null;
+    if (!role) continue;
+    const m = moneyFor(l.eventName, l.args)?.[role];
+    if (!m || m[1] === "0") continue;
+    rows.push({
+      orderId: Number(l.args.id),
+      role,
+      event: l.eventName,
+      flow: m[0],
+      amount: m[1],
+      label: m[2],
+      counterparty: role === "buyer" ? p.supplier : p.buyer,
+      ref: p.ref,
+      at: await this.time(l.blockNumber),
+      tx: l.transactionHash,
+    });
+  }
+  return rows.reverse();
+};
+
 /** Totals across all orders, for the homepage. */
 export async function vaultStats(client, vault) {
   const n = await orderCount(client, vault);

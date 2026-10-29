@@ -123,3 +123,16 @@ test("history: each order's steps in order, with times and transactions; homepag
   assert.equal(st.totalValue, "40000000");
   assert.equal(st.lockedNow, "8000000", "order 3 keeps 80% of $10 locked");
 });
+
+test("activity: each wallet sees its own money in and out, newest first", async () => {
+  const { LogIndex } = await import("../src/history.js");
+  const idx = new LogIndex({ client, vault, fromBlock: 0n });
+  const b = await idx.activity(buyer.address.toLowerCase());
+  // Buyer locked $10, $20, $10 and got order 1's $10 back; deposits/releases are info rows.
+  assert.equal(b.filter((r) => r.flow === "out").reduce((s, r) => s + BigInt(r.amount), 0n), parseUnits("40", 6));
+  assert.deepEqual(b.filter((r) => r.flow === "in").map((r) => [r.orderId, r.event]), [[1, "BalanceRefunded"]]);
+  assert.ok(b.every((r, i) => i === 0 || r.at <= b[i - 1].at), "newest first");
+  const s = await idx.activity(supplier.address);
+  assert.deepEqual(s.filter((r) => r.flow === "in").map((r) => [r.orderId, r.amount]).sort(), [[2, "14000000"], [2, "6000000"], [3, "2000000"]].sort());
+  assert.equal((await idx.activity("0x000000000000000000000000000000000000dEaD")).length, 0);
+});
