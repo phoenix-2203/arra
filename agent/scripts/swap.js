@@ -8,7 +8,7 @@ import { verifyTx } from "@celo/attribution-tags";
 import { agentAccount, taggedWallet, publicClient } from "../src/wallet.js";
 import { USDT_FEE_ADAPTER } from "../src/config.js";
 import { textileClient, signTakerProof, ngnPerUsd, CNGN, USDT, TextileError } from "../src/textile.js";
-import { SEND, celoscanTx } from "./_common.js";
+import { SEND, celoscanTx, readSoon, tagOf } from "./_common.js";
 
 const args = process.argv.slice(2);
 const usdArg = args[args.indexOf("--usd") + 1];
@@ -103,7 +103,7 @@ const hash = await wallet.sendTransaction({ to: s.to, data: s.data, value: BigIn
 console.log(`  Swap sent    : ${celoscanTx(hash)}`);
 await textile.submit(d.rfqId, d.claimToken, hash).catch((e) => console.log(`  (report to Textile failed: ${e.message})`));
 const receipt = await client.waitForTransactionReceipt({ hash });
-const tag = await verifyTx({ client, hash });
+const tag = await tagOf(verifyTx, client, hash);
 console.log(`  Status       : ${receipt.status}`);
 console.log(`  Tag on tx    : ${tag ? tag.codes.join(", ") : "MISSING"}`);
-console.log(`  Balances now : ${fmt(await bal(USDT, receipt.blockNumber))} USDT, ${fmt(await bal(CNGN, receipt.blockNumber))} cNGN`);
+console.log(`  Balances now : ${fmt(await readSoon((b) => bal(USDT, b), receipt.blockNumber))} USDT, ${fmt(await readSoon((b) => bal(CNGN, b), receipt.blockNumber))} cNGN`);

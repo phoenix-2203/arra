@@ -18,7 +18,7 @@ import { agentAccount, taggedWallet, publicClient } from "../src/wallet.js";
 import { ARRA_VAULT, USDT_FEE_ADAPTER } from "../src/config.js";
 import { vaultAbi, readOrder, nextActions, explain } from "../src/vault.js";
 import { checkContainerNumber } from "../src/container.js";
-import { SEND, celoscanTx } from "./_common.js";
+import { SEND, celoscanTx, readSoon, tagOf } from "./_common.js";
 
 const [cmd, idArg] = process.argv.slice(2).filter((a) => !a.startsWith("--") || a === "--send").filter((a) => a !== "--send");
 const opt = (name) => {
@@ -103,8 +103,8 @@ const wallet = taggedWallet(account);
 const hash = await wallet.writeContract({ address: ARRA_VAULT, abi: vaultAbi, functionName: fn, args, feeCurrency: USDT_FEE_ADAPTER });
 console.log(`\nSent: ${celoscanTx(hash)}`);
 const receipt = await client.waitForTransactionReceipt({ hash });
-const tag = await verifyTx({ client, hash });
-const after = await client.readContract({ address: ARRA_VAULT, abi: vaultAbi, functionName: "getOrder", args: [id], blockNumber: receipt.blockNumber });
+const tag = await tagOf(verifyTx, client, hash);
+const after = await readSoon((blockNumber) => client.readContract({ address: ARRA_VAULT, abi: vaultAbi, functionName: "getOrder", args: [id], ...(blockNumber ? { blockNumber } : {}) }), receipt.blockNumber);
 console.log(`Status    : ${receipt.status}`);
 console.log(`Tag on tx : ${tag ? tag.codes.join(", ") : "MISSING"}`);
 console.log(`Order now : ${["None", "Pending", "Active", "Shipped", "Disputed", "Released", "Refunded", "Settled"][Number(after.status)]}, ${Number(after.held) / 1e6} USDT still locked`);

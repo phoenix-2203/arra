@@ -23,3 +23,28 @@ export function previewOnly(what) {
 
 export const celoscanTx = (h) => `https://celoscan.io/tx/${h}`;
 export const celoscanAddr = (a) => `https://celoscan.io/address/${a}`;
+
+// Some public RPC nodes lag a block or two behind the one that confirmed a
+// transaction. Retry a read for a few seconds, then fall back to the latest block.
+export async function readSoon(fn, blockNumber, tries = 8) {
+  for (let i = 0; i < tries; i++) {
+    try {
+      return await fn(blockNumber);
+    } catch (e) {
+      if (i === tries - 1) break;
+      await new Promise((r) => setTimeout(r, 1500));
+    }
+  }
+  return fn(undefined);
+}
+
+export async function tagOf(verifyTx, client, hash) {
+  for (let i = 0; i < 8; i++) {
+    try {
+      return await verifyTx({ client, hash });
+    } catch {
+      await new Promise((r) => setTimeout(r, 1500));
+    }
+  }
+  return null;
+}
