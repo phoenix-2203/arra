@@ -51,7 +51,7 @@ sequenceDiagram
     B->>T: Firm quote: cNGN → exactly the USDT needed
     T-->>B: One rate for the whole order (0.01% fee)
     B->>V: Lock total, with the sheet's fingerprint
-    A->>S: Link opens in Chinese: amount, terms, Accept
+    A->>S: Link opens in their language: amount, terms, Accept
     S->>V: accept() from their own wallet
     V-->>S: Deposit paid instantly
     S->>V: markShipped(container no. checked by the agent)
@@ -119,7 +119,7 @@ Each one answers a documented way these deals fail.
 7. **Fingerprinted order sheet (F7).** Arra flags unmeasurable terms ("good quality", "same as sample") and stores the sheet's keccak256 fingerprint onchain as the order's reference, so neither side can change the terms later.
 8. **Fake shipment check (F8).** Container numbers (ISO 6346) carry a check digit; a made-up one is rejected instantly.
 9. **Bank-detail change alarm (F9).** Arra remembers each supplier's address. A new one for a known supplier is blocked until the buyer confirms by phone.
-10. **Bilingual supplier page (F10).** The supplier's link opens in Simplified Chinese with the locked amount, the terms and an Accept button.
+10. **Bilingual supplier page (F10).** The supplier's link opens in English or Simplified Chinese (the buyer picks, or it follows the supplier's phone language) with the locked amount, the terms and an Accept button.
 11. **Rate locked on day one (F11).** Pay from naira: Textile FX converts cNGN into exactly the USDT the order needs at one firm rate, so a weaker naira next month can't hurt.
 12. **Onchain timeline.** Every step (locked, accepted, shipped, released) is read from the vault's events with its time and transaction link.
 

@@ -142,7 +142,7 @@ const FAQ = [
   ["Can Arra take or freeze my money?", "No. The contract owner can only pause new orders or change the per-order limit. It has no way to move locked money."],
   ["What if the supplier never ships?", "If they don't accept by the accept-by date, all your money comes back. If they accept but don't ship by the ship-by date, the balance comes back. Arra's agent sends the refund automatically when the date passes."],
   ["What does it cost?", "Arra charges no fee. You pay the network fee (a fraction of a cent) and, if you pay in naira, Textile FX's 0.01% fee, which is already in the rate you see."],
-  ["Does my supplier need crypto experience?", "They need a wallet on Celo, such as MiniPay. The order page opens in Chinese for them, with the locked amount and one button to accept."],
+  ["Does my supplier need crypto experience?", "They need a wallet on Celo, such as MiniPay. The order page opens in their language (English or Chinese), with the locked amount and one button to accept."],
   ["What about large orders?", "While Arra is new, each order is capped at $50. The cap goes up as the contract builds a track record."],
 ];
 
@@ -234,7 +234,7 @@ export default function Landing({ wallet }) {
         </div>
         <div lang="en">
           <h2 className="section-title">Your supplier sees it in Chinese</h2>
-          <p className="lede-lg">Send one link. It opens in Simplified Chinese with the locked amount, the exact terms and an Accept button. Suppliers ask for deposits because they can't see the buyer's money. Now they can.</p>
+          <p className="lede-lg">Send one link. It opens in English or Simplified Chinese with the locked amount, the exact terms and an Accept button. Suppliers ask for deposits because they can't see the buyer's money. Now they can.</p>
         </div>
       </section>
 

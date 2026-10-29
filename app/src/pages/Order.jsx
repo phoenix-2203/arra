@@ -18,6 +18,7 @@ export default function Order({ id, wallet }) {
   const [view, setView] = useState(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState("");
+  const [shareLang, setShareLang] = useState("auto");
   const [lastTx, setLastTx] = useState("");
   const [partAmount, setPartAmount] = useState("");
   const [container, setContainer] = useState("");
@@ -113,7 +114,7 @@ export default function Order({ id, wallet }) {
   const A = t.actions;
   const bid = BigInt(o.id);
   const has = (a) => actions.includes(a);
-  const shareUrl = `${location.origin}/o/${o.id}?lang=zh`;
+  const shareUrl = `${location.origin}/o/${o.id}${shareLang === "auto" ? "" : `?lang=${shareLang}`}`;
 
   return (
     <div className="stack-lg" lang={lang}>
@@ -151,7 +152,12 @@ export default function Order({ id, wallet }) {
       {isNew && role === "buyer" && o.status === "Pending" ? (
         <div className="block stack">
           <h3>{t.share}</h3>
-          <p className="small muted">It opens in Chinese for them, with the terms, the locked amount and an Accept button.</p>
+          <p className="small muted">They see the terms, the locked amount and an Accept button. Pick the language it opens in:</p>
+          <div className="chips wrap">
+            {[["auto", "Their phone's language"], ["en", "English"], ["zh", "中文 Chinese"]].map(([v, label]) => (
+              <button key={v} type="button" className={`chip${shareLang === v ? " on" : ""}`} onClick={() => { setShareLang(v); setCopied(false); }}>{label}</button>
+            ))}
+          </div>
           <input readOnly value={shareUrl} onFocus={(e) => e.target.select()} className="num small" />
           <button className="secondary" onClick={() => navigator.clipboard?.writeText(shareUrl).then(() => setCopied(true))}>{copied ? t.copied : t.copy}</button>
         </div>
