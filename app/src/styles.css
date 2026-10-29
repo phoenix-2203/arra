@@ -249,7 +249,7 @@ h1 {
 button.money, .button.money { box-shadow: 0 0 22px var(--glow), 0 0 0 1px rgba(0, 0, 0, 0.08) inset; border-color: transparent; letter-spacing: 0.02em; }
 button.money:hover, .button.money:hover { box-shadow: 0 0 32px var(--glow); }
 button.secondary, .button.secondary { background: var(--accent); }
-:root[data-theme="light"] button.secondary { background: var(--surface); }
+:root[data-theme="light"] button.secondary, :root[data-theme="light"] .button.secondary { background: var(--surface); color: var(--text); }
 
 /* pay-from choice */
 fieldset.payfrom { margin: 0; min-width: 0; }
