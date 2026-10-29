@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { formatUnits, isAddress } from "viem";
+import { formatUnits, isAddress, parseEther } from "viem";
 import { api } from "../api.js";
-import { lockOrder, usdtBalance, cngnBalance, convertNairaToUsdt } from "../chain.js";
+import { lockOrder, usdtBalance, cngnBalance, convertNairaToUsdt, celoBalance, sendCelo, sendUsdt, GAS_ENOUGH } from "../chain.js";
+import { withToast } from "../toast.jsx";
 import { navigate } from "../App.jsx";
 import { toast } from "../toast.jsx";
 import Icon from "../Icon.jsx";
@@ -116,6 +117,10 @@ export default function NewOrder({ wallet }) {
   const [cngn, setCngn] = useState(null);
   const [payWith, setPayWith] = useState("usdt");
   const [fxRate, setFxRate] = useState(null);
+  // Gas for the supplier: sent from the buyer's own wallet right after the order is locked.
+  const [supGas, setSupGas] = useState(null);
+  const [myCelo, setMyCelo] = useState(null);
+  const [gasPick, setGasPick] = useState(null);
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
   const K = KINDS[f.kind];
   const setKind = (k) => setF({ ...f, kind: k, unit: KINDS[k].units[0], details: KINDS[k].details.slice(0, 2).map((label) => ({ label, value: "" })) });
@@ -128,7 +133,16 @@ export default function NewOrder({ wallet }) {
     if (!account) return;
     usdtBalance(account).then(setBalance).catch(() => {});
     cngnBalance(account).then(setCngn).catch(() => {});
+    celoBalance(account.toLowerCase()).then(setMyCelo).catch(() => {});
   }, [account]);
+
+  // Does the supplier's wallet have anything to pay network fees with?
+  useEffect(() => {
+    setSupGas(null);
+    setGasPick(null);
+    if (!isAddress(supplierAddr, { strict: false })) return;
+    celoBalance(supplierAddr.toLowerCase()).then(setSupGas).catch(() => {});
+  }, [supplierAddr]);
 
   // F9: check the payout address against this buyer's history.
   useEffect(() => {
@@ -190,6 +204,11 @@ export default function NewOrder({ wallet }) {
   const naira = payWith === "naira";
   const fxCngn = fxRate ? BigInt(fxRate.cngn) : null;
   const short = naira ? fxCngn !== null && cngn !== null && fxCngn > cngn : balance !== null && total > balance;
+  const needsGas = supGas !== null && supGas < GAS_ENOUGH;
+  const canCelo = (a) => myCelo !== null && myCelo >= parseEther(a) + parseEther("0.002");
+  const gasDefault = canCelo("0.02") ? "0.02" : !naira && balance !== null && balance >= total + 100_000n ? "usdt" : "none";
+  const gas = needsGas ? gasPick ?? gasDefault : "none";
+  const gasUsdt = gas === "usdt" ? 100_000n : 0n;
   const ngn = (v) => `₦${Number(formatUnits(v, 6)).toLocaleString("en-NG", { maximumFractionDigits: 0 })}`;
 
   async function lock() {
@@ -231,6 +250,17 @@ export default function NewOrder({ wallet }) {
         throw e;
       });
       current?.update({ kind: "ok", title: `Order #${id} locked. $${usd(total)} is safe in the vault`, body: "Send your supplier the link on the next screen.", spinner: false });
+      // Gas from the buyer's wallet. If it fails, the order still stands and the
+      // order page offers the same top-up again.
+      if (gas !== "none") {
+        setBusy("Sending your supplier a little gas. Confirm in your wallet.");
+        const to = supplierAddr.toLowerCase();
+        await withToast((cb) => (gas === "usdt" ? sendUsdt(to, "0.10", cb) : sendCelo(to, gas, cb)), {
+          confirm: "Send gas to your supplier. Confirm in your wallet",
+          pending: "Sending gas…",
+          done: `Sent ${gas === "usdt" ? "$0.10 USDT" : `${gas} CELO`} to your supplier for fees`,
+        }).catch(() => {});
+      }
       navigate(`/o/${id}?new=1`);
     } catch (e) {
       setError(e.shortMessage ?? e.message);
@@ -404,6 +434,21 @@ export default function NewOrder({ wallet }) {
             {naira && fxRate?.error ? <p className="note bad">Couldn't get a naira rate: {fxRate.error}</p> : null}
           </fieldset>
 
+          {needsGas ? (
+            <div className="block stack">
+              <div className="field">
+                <span className="field-label">Gas for your {K.payee.toLowerCase()}</span>
+                <small>Their wallet has no CELO for network fees, so they can't accept yet. Send a little from your wallet with this order. 0.02 CELO covers dozens of actions.</small>
+                <div className="chips wrap" role="radiogroup" aria-label="Gas">
+                  {[["0.02", "0.02 CELO", canCelo("0.02")], ["0.05", "0.05 CELO", canCelo("0.05")], ["usdt", "$0.10 USDT", !naira], ["none", "Don't send", true]].map(([v, text, ok]) => (
+                    <button key={v} type="button" role="radio" aria-checked={gas === v} disabled={!ok} className={gas === v ? "chip on" : "chip"} onClick={() => setGasPick(v)}>{text}</button>
+                  ))}
+                </div>
+                <small>{myCelo !== null && !canCelo("0.02") ? "You have no CELO, so CELO options are off. USDT works as gas only if they use MiniPay or Valora. " : "CELO works in every wallet. USDT works as gas only in MiniPay and Valora. "}It's sent right after the order is locked, as its own small transaction.</small>
+              </div>
+            </div>
+          ) : null}
+
           <div className="block stack">
             <div className="field">
               <span className="field-label">{K.payee} must accept within</span>
@@ -429,12 +474,13 @@ export default function NewOrder({ wallet }) {
           {!datesOk && !shipBy ? <p className="note bad">Go back and pick a {K.dateLabel.toLowerCase()} date.</p> : null}
           {tooBig ? <p className="note bad">While Arra is new, orders are capped at $50. Lower the quantity or split it into several orders.</p> : null}
           {short && !tooBig && !naira ? <p className="note bad">Your wallet has ${usd(balance)} USDT; this order needs ${usd(total)}. Choose naira above to convert the rest.</p> : null}
+          {!short && !tooBig && !naira && gasUsdt > 0n && balance !== null && total + gasUsdt > balance ? <p className="note bad">The order plus $0.10 gas is more than your ${usd(balance)} USDT. Pick a CELO option or "Don't send".</p> : null}
           {short && !tooBig && naira ? <p className="note bad">You need {ngn(fxCngn)} cNGN for this order and have {ngn(cngn)}.</p> : null}
           {error ? <p className="note bad">{error}</p> : null}
           {busy ? <p className="note">{busy}</p> : null}
           <div className="row">
             <button className="secondary" disabled={!!busy} onClick={() => setStep(2)}>Back</button>
-            <button className="money" disabled={!!busy || !datesOk || tooBig || short} onClick={lock}>{naira && needUsdt > 0n && fxCngn ? `Convert ${ngn(fxCngn)} and lock $${usd(total)}` : `Lock $${usd(total)}`}</button>
+            <button className="money" disabled={!!busy || !datesOk || tooBig || short || (!naira && balance !== null && total + gasUsdt > balance)} onClick={lock}>{naira && needUsdt > 0n && fxCngn ? `Convert ${ngn(fxCngn)} and lock $${usd(total)}` : `Lock $${usd(total)}`}{gas !== "none" ? " + send gas" : ""}</button>
           </div>
         </section>
       )}

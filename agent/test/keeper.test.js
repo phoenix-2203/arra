@@ -123,25 +123,3 @@ test("history: each order's steps in order, with times and transactions; homepag
   assert.equal(st.totalValue, "40000000");
   assert.equal(st.lockedNow, "8000000", "order 3 keeps 80% of $10 locked");
 });
-
-test("gas drip: tops up an empty supplier wallet once, within limits", async () => {
-  const { DripBook, runGasDrip } = await import("../src/gasDrip.js");
-  const { parseEther } = await import("viem");
-  const fresh = privateKeyToAccount(`0x${"ab".repeat(32)}`);
-  const t0 = await now();
-  await send(agent, token, mock.abi, "mint", [buyer.address, parseUnits("5", 6)]);
-  await send(buyer, token, mock.abi, "approve", [vault, parseUnits("5", 6)]);
-  await send(buyer, vault, vaultAbi, "createOrder", [fresh.address, parseUnits("5", 6), 2000, BigInt(t0 + 86400), BigInt(t0 + 5 * 86400), 86400, `0x${"44".repeat(32)}`]);
-  const book = new DripBook(null);
-  const settings = { amount: parseEther("0.01"), threshold: parseEther("0.002"), minUsd: parseUnits("1", 6), dailyMax: 5 };
-  const wallet = taggedWallet(agent, local, RPC);
-  const r = await runGasDrip({ client, wallet, vault, book, settings, now: await now(), log: () => {} });
-  assert.deepEqual(r.map((x) => x.id), [4], "only the new supplier with no gas; order 3's supplier already has gas");
-  assert.equal(await client.getBalance({ address: fresh.address }), parseEther("0.01"));
-  assert.equal(book.forOrder(4).orderId, 4);
-  const again = await runGasDrip({ client, wallet, vault, book, settings, now: await now(), log: () => {} });
-  assert.equal(again.length, 0, "each supplier gets gas once");
-  // The fresh supplier can now accept by itself.
-  await send(fresh, vault, vaultAbi, "accept", [4n]);
-  assert.equal((await readOrder(client, vault, 4)).status, "Active");
-});

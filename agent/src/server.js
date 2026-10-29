@@ -34,7 +34,7 @@ async function readJson(req) {
   }
 }
 
-export function createApp({ client, vault, dataDir, staticDir, now = () => Math.floor(Date.now() / 1000), textile = textileClient(), history = new LogIndex({ client, vault }), drips = null }) {
+export function createApp({ client, vault, dataDir, staticDir, now = () => Math.floor(Date.now() / 1000), textile = textileClient(), history = new LogIndex({ client, vault }) }) {
   let statsCache = null;
   // Claim tokens for firm quotes stay on the server; the browser only gets the rfqId.
   const claims = new Map();
@@ -70,12 +70,11 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
     if (name && o.status !== "Pending" && payees.check(o.buyer, name, o.supplier).status === "new") {
       payees.remember(o.buyer, name, o.supplier, `accepted order ${id}`);
     }
-    const gas = drips?.forOrder(id);
-    return { order: o, sheet, role, actions: nextActions(o, t, role), explanation: explain(o, t), now: t, gasSent: gas ? { hash: gas.hash, amount: gas.amount } : null };
+    return { order: o, sheet, role, actions: nextActions(o, t, role), explanation: explain(o, t), now: t };
   }
 
   const routes = {
-    "GET /api/health": async () => [200, { ok: true, vault, gasDrip: !!drips }],
+    "GET /api/health": async () => [200, { ok: true, vault }],
 
     // Live totals for the homepage (cached for a minute).
     "GET /api/stats": async () => {

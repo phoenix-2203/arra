@@ -85,7 +85,6 @@ export const STRINGS = {
       title: "Your supplier has no gas yet",
       buyerNone: "Every action on Celo costs a tiny network fee (gas). Their wallet is empty, so they can't accept yet. Send them a little: 0.02 CELO covers dozens of actions.",
       buyerHasUsdt: "Their wallet has USDT but no CELO. If they use MiniPay or Valora that's fine, the fee comes out of USDT. In MetaMask they need CELO, so send a little to be safe.",
-      buyerDripped: "Arra's agent already sent them a little CELO for fees. Nothing to do.",
       sendCelo: (a) => `Send ${a} CELO`,
       sendUsdt: "Send $0.10 USDT",
       which: "CELO works in every wallet. USDT works as gas only in MiniPay and Valora.",
@@ -94,7 +93,6 @@ export const STRINGS = {
       thanks: "Sent. Your supplier can now accept.",
       supplierNone: "Your wallet needs a tiny network fee (gas) to accept, less than one cent. Ask the buyer to send some from this page, or open this link in MiniPay, which pays fees from USDT.",
       supplierHasUsdt: "Your wallet has USDT but no CELO. Open this link in MiniPay or Valora to pay the fee in USDT, or ask the buyer to send a little CELO.",
-      dripped: "Arra sent your wallet a little CELO for network fees. You can accept now.",
     },
     timelineTitle: "What happened",
     timeline: {
@@ -196,7 +194,6 @@ export const STRINGS = {
       title: "供应商还没有手续费",
       buyerNone: "Celo 上每个操作都需要极少的网络手续费（gas）。对方钱包为空，暂时无法接单。请发送少量 CELO：0.02 CELO 足够几十次操作。",
       buyerHasUsdt: "对方钱包有 USDT 但没有 CELO。如果使用 MiniPay 或 Valora，手续费会从 USDT 扣除。若使用 MetaMask 则需要 CELO。",
-      buyerDripped: "Arra 代理已经为对方发送了少量 CELO 作为手续费，无需操作。",
       sendCelo: (a) => `发送 ${a} CELO`,
       sendUsdt: "发送 0.10 USDT",
       which: "CELO 适用于所有钱包。USDT 只能在 MiniPay 和 Valora 中作为手续费。",
@@ -205,7 +202,6 @@ export const STRINGS = {
       thanks: "已发送，供应商现在可以接单。",
       supplierNone: "接单需要极少的网络手续费（gas），不到一美分。请让买家在此页面发送一些，或在 MiniPay 中打开此链接（手续费从 USDT 扣除）。",
       supplierHasUsdt: "您的钱包有 USDT 但没有 CELO。请在 MiniPay 或 Valora 中打开此链接用 USDT 支付手续费，或请买家发送少量 CELO。",
-      dripped: "Arra 已向您的钱包发送少量 CELO 作为网络手续费，现在可以接单了。",
     },
     timelineTitle: "订单记录",
     timeline: {

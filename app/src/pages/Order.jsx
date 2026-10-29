@@ -10,8 +10,8 @@ import { short } from "../App.jsx";
 const usd = (v) => Number(formatUnits(BigInt(v), 6)).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const day = (ts, lang) => new Date(ts * 1000).toLocaleDateString(lang === "zh" ? "zh-CN" : "en-GB", { day: "numeric", month: "short", year: "numeric" });
 // A supplier needs a tiny network fee (gas) to accept and update the order.
-// The buyer can send some from here; Arra's agent may already have done it.
-function GasHelp({ o, role, account, gasSent, t }) {
+// The buyer can send some from their own wallet, right here.
+function GasHelp({ o, role, account, t }) {
   const [bal, setBal] = useState(null);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState("");
@@ -30,7 +30,7 @@ function GasHelp({ o, role, account, gasSent, t }) {
 
   if (role === "supplier") {
     if (isMiniPay() && hasUsdt) return null; // MiniPay pays the fee from USDT
-    return <p className="note">{gasSent ? g.dripped : hasUsdt ? g.supplierHasUsdt : g.supplierNone}</p>;
+    return <p className="note">{hasUsdt ? g.supplierHasUsdt : g.supplierNone}</p>;
   }
   if (role !== "buyer") return null;
 
@@ -54,8 +54,8 @@ function GasHelp({ o, role, account, gasSent, t }) {
   return (
     <div className="block stack gas-help">
       <h3>{g.title}</h3>
-      <p className="small muted">{gasSent ? g.buyerDripped : hasUsdt ? g.buyerHasUsdt : g.buyerNone}</p>
-      {!gasSent && !sent ? (
+      <p className="small muted">{hasUsdt ? g.buyerHasUsdt : g.buyerNone}</p>
+      {!sent ? (
         <>
           <div className="chips wrap">
             {celoOpts.map((a) => (
@@ -225,7 +225,7 @@ export default function Order({ id, wallet }) {
         </div>
       ) : null}
 
-      {["Pending", "Active", "Disputed"].includes(o.status) ? <GasHelp o={o} role={role} account={account} gasSent={view.gasSent} t={t} /> : null}
+      {["Pending", "Active", "Disputed"].includes(o.status) ? <GasHelp o={o} role={role} account={account} t={t} /> : null}
 
       <section className="stack">
         {account ? <p className="small muted">{t.youAre[role]}</p> : null}
