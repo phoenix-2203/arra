@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { connect, hasWallet, isMiniPay, VAULT, EXPLORER } from "./chain.js";
+import { connect, hasWallet, isMiniPay, setSigner, VAULT, EXPLORER } from "./chain.js";
 import { Wordmark } from "./Adire.jsx";
 import Home from "./pages/Home.jsx";
 import Landing from "./pages/Landing.jsx";
@@ -78,8 +78,20 @@ export default function App() {
       doConnect();
       if (location.pathname === "/") navigate("/app");
     }
+    // A wallet that already approved Arra reconnects quietly on every visit.
+    if (hasWallet() && !isMiniPay()) {
+      window.ethereum.request({ method: "eth_accounts" }).then((accs) => {
+        if (accs?.[0]) {
+          setSigner(accs[0]);
+          setAccount(accs[0]);
+        }
+      }).catch(() => {});
+    }
     if (hasWallet() && window.ethereum.on) {
-      const onChange = (accs) => setAccount(accs?.[0] ?? null);
+      const onChange = (accs) => {
+        setSigner(accs?.[0] ?? null);
+        setAccount(accs?.[0] ?? null);
+      };
       window.ethereum.on("accountsChanged", onChange);
       return () => window.ethereum.removeListener?.("accountsChanged", onChange);
     }

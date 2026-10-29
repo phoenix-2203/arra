@@ -42,13 +42,53 @@ let wallet;
 export async function connect() {
   if (!hasWallet()) throw new Error("No wallet found. Open Arra inside MiniPay or a wallet browser.");
   const [address] = await window.ethereum.request({ method: "eth_requestAccounts" });
+  await onCelo().catch(() => {});
+  setSigner(address);
+  return address;
+}
+
+const CELO_PARAMS = {
+  chainId: "0xa4ec",
+  chainName: "Celo",
+  nativeCurrency: { name: "CELO", symbol: "CELO", decimals: 18 },
+  rpcUrls: ["https://forno.celo.org"],
+  blockExplorerUrls: ["https://celoscan.io"],
+};
+
+/** Puts the wallet on Celo, adding the network first if the wallet doesn't know it (e.g. MetaMask). */
+async function onCelo() {
+  if (isMiniPay()) return; // always on Celo
+  const id = await window.ethereum.request({ method: "eth_chainId" }).catch(() => null);
+  if (id && parseInt(id, 16) === 42220) return;
   try {
     await window.ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: "0xa4ec" }] });
-  } catch {
-    /* MiniPay is always on Celo; other wallets may refuse, the send will then say why */
+  } catch (e) {
+    if (e?.code === 4902 || /unrecognized|not added|unknown chain/i.test(e?.message ?? "")) {
+      await window.ethereum.request({ method: "wallet_addEthereumChain", params: [CELO_PARAMS] });
+    } else if (e?.code === 4001) {
+      throw new Error("Switch your wallet to the Celo network to continue.");
+    }
   }
-  wallet = createWalletClient({ account: address, chain: celo, transport: custom(window.ethereum) }).extend(withAttribution(TAG));
-  return address;
+  const now = await window.ethereum.request({ method: "eth_chainId" }).catch(() => null);
+  if (now && parseInt(now, 16) !== 42220) throw new Error("Your wallet is on another network. Switch it to Celo, then try again.");
+}
+
+/** (Re)builds the signer for this address, e.g. after the wallet switches account. */
+export function setSigner(address) {
+  wallet = address && hasWallet() ? createWalletClient({ account: address, chain: celo, transport: custom(window.ethereum) }).extend(withAttribution(TAG)) : null;
+}
+
+// Some mobile wallets connect on page load without the app's Connect button, so
+// the page knows the address but the signer was never set up. Set it up on
+// demand from whatever account the wallet is using now.
+async function ensureWallet() {
+  if (!hasWallet()) throw new Error("No wallet found. Open Arra inside MiniPay or a wallet browser.");
+  let [address] = await window.ethereum.request({ method: "eth_accounts" }).catch(() => []);
+  if (!address) [address] = await window.ethereum.request({ method: "eth_requestAccounts" });
+  if (!address) throw new Error("Connect your wallet first.");
+  if (!wallet || wallet.account.address.toLowerCase() !== address.toLowerCase()) setSigner(address);
+  await onCelo();
+  return wallet;
 }
 
 // MiniPay chooses the fee currency itself (users never hold CELO) and only takes
@@ -57,7 +97,7 @@ export async function connect() {
 const feeOpts = () => ({});
 
 async function write(address, abi, functionName, args, { onSent } = {}) {
-  if (!wallet) throw new Error("Connect your wallet first.");
+  await ensureWallet();
   await simulateSoon({ account: wallet.account, address, abi, functionName, args });
   const hash = await wallet.writeContract({ address, abi, functionName, args, ...feeOpts() });
   onSent?.(hash);
@@ -73,7 +113,7 @@ export const GAS_ENOUGH = parseEther("0.002");
 
 /** Sends a little CELO to someone so they can pay network fees. */
 export async function sendCelo(to, amount, { onSent } = {}) {
-  if (!wallet) throw new Error("Connect your wallet first.");
+  await ensureWallet();
   const hash = await wallet.sendTransaction({ to, value: parseEther(String(amount)), ...feeOpts() });
   onSent?.(hash);
   const receipt = await reader.waitForTransactionReceipt({ hash, retryCount: 20 });
@@ -93,7 +133,7 @@ export async function lockOrder({ buyer, supplier, total, depositBps, acceptBy, 
     await write(USDT, erc20, "approve", [VAULT, total], { onSent: (h) => onSent("approve", h) });
   }
   onStep("lock");
-  if (!wallet) throw new Error("Connect your wallet first.");
+  await ensureWallet();
   const args = [supplier, total, depositBps, BigInt(acceptBy), BigInt(shipBy), disputeWindow, ref];
   await simulateSoon({ account: wallet.account, address: VAULT, abi: vaultAbi, functionName: "createOrder", args });
   const hash = await wallet.writeContract({ address: VAULT, abi: vaultAbi, functionName: "createOrder", args, ...feeOpts() });
@@ -138,7 +178,7 @@ async function signTakerProof(taker) {
  * onStep: "quote" | "sign" | "approve" | "swap". Returns { hash, ngnPerUsd, takerPays }.
  */
 export async function convertNairaToUsdt(taker, usd, api, onStep = () => {}) {
-  if (!wallet) throw new Error("Connect your wallet first.");
+  await ensureWallet();
   onStep("quote");
   let q;
   try {
