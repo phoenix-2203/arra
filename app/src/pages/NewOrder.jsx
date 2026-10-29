@@ -4,6 +4,7 @@ import { api } from "../api.js";
 import { lockOrder, usdtBalance, cngnBalance, convertNairaToUsdt } from "../chain.js";
 import { navigate } from "../App.jsx";
 import { toast } from "../toast.jsx";
+import Icon from "../Icon.jsx";
 
 const MAX_ORDER = 50_000_000n; // $50 cap while Arra is new (set in the vault)
 const DAY = 86400;
@@ -11,33 +12,41 @@ const DAY = 86400;
 // What kind of deal: the wording and required fields adapt; the contract is the same.
 const KINDS = {
   goods: {
-    label: "Goods shipped to me", hint: "Imports, and anything sent by sea, air or courier",
+    label: "Goods shipped to me", short: "Shipped goods", hint: "Imports and anything sent by sea, air or courier", icon: "ship",
     payee: "Supplier", payeeName: "Supplier's business name", namePh: "Guangzhou Hengli Textiles",
-    product: "Product", productPh: "Men's cotton T-shirts, crew neck", qtyPh: "500", unitPh: "pieces", pricePh: "2.35",
-    specsPh: "180 gsm, 100% combed cotton\nSizes: 150 M, 200 L, 150 XL\nColour: Pantone 19-4052 navy",
-    packaging: true, checkLabel: "How you'll check the goods (optional)", checkPh: "Photos of 5 random cartons before shipping",
-    dateLabel: "Ship by", terms: "Delivery terms", termsPh: "FOB Guangzhou", notDone: "Not shipped by",
-    depositHint: "Chinese suppliers usually ask for 30%.",
+    product: "What are you buying?", productPh: "Men's cotton T-shirts, crew neck", qtyPh: "500", units: ["pieces", "cartons", "kg", "metres", "sets", "pairs", "dozen"],
+    pricePh: "2.35", details: ["Size", "Colour", "Material", "Weight", "Model", "Per carton"],
+    detailPh: { Size: "150 M, 200 L, 150 XL", Colour: "Navy, Pantone 19-4052", Material: "100% combed cotton, 180 gsm", Weight: "Under 15 kg per carton", Model: "SKU TS-180-NV", "Per carton": "50 pieces, each in a polybag" },
+    checkLabel: "How you'll check the goods", checkPh: "Photos of 5 random cartons before shipping",
+    dateLabel: "Ship by", notDone: "Not shipped by", depositHint: "Chinese suppliers usually ask for 30%.",
   },
   custom: {
-    label: "Made to order", hint: "Tailoring, furniture, fabrication, event decor",
+    label: "Made to order", short: "Made to order", hint: "Tailoring, furniture, fabrication, event decor", icon: "sheet",
     payee: "Maker", payeeName: "Maker's business name", namePh: "Ade's Tailoring",
-    product: "What's being made", productPh: "Agbada, 3-piece, aso-oke", qtyPh: "1", unitPh: "set", pricePh: "35",
-    specsPh: "Chest 42 in, length 56 in\nNavy aso-oke with gold embroidery\nFitting on 20 November",
-    packaging: false, checkLabel: "How you'll check it (optional)", checkPh: "Fitting before collection",
-    dateLabel: "Ready by", terms: "Collection or delivery (optional)", termsPh: "Delivered to Lekki Phase 1", notDone: "Not delivered by",
-    depositHint: "Makers often ask for half up front to buy materials.",
+    product: "What's being made?", productPh: "Agbada, 3-piece, aso-oke", qtyPh: "1", units: ["piece", "set", "pair", "metres"],
+    pricePh: "35", details: ["Measurements", "Colour", "Material", "Finish", "Fitting date"],
+    detailPh: { Measurements: "Chest 42 in, length 56 in", Colour: "Navy with gold embroidery", Material: "Aso-oke", Finish: "Hand-stitched hems", "Fitting date": "20 November" },
+    checkLabel: "How you'll check it", checkPh: "Fitting before collection",
+    dateLabel: "Ready by", notDone: "Not delivered by", depositHint: "Makers often ask for half up front to buy materials.",
   },
   service: {
-    label: "A service or project", hint: "Freelance work, building projects, events, repairs",
+    label: "A service or project", short: "Service", hint: "Freelance work, building projects, events, repairs", icon: "code",
     payee: "Provider", payeeName: "Provider's name", namePh: "Tunde Studio",
-    product: "What's being delivered", productPh: "Logo and brand kit", qtyPh: "1", unitPh: "project", pricePh: "40",
-    specsPh: "3 logo concepts\n2 rounds of changes\nSVG and PNG files",
-    packaging: false, checkLabel: "How you'll check it (optional)", checkPh: "Review call before final files",
-    dateLabel: "Deliver by", terms: null, notDone: "Not delivered by",
-    depositHint: "Use the balance as milestones: release part at each stage.",
+    product: "What's being delivered?", productPh: "Logo and brand kit", qtyPh: "1", units: ["project", "hours", "days", "items"],
+    pricePh: "40", details: ["Deliverables", "Revisions", "File format", "Meetings"],
+    detailPh: { Deliverables: "3 logo concepts", Revisions: "2 rounds of changes", "File format": "SVG and PNG", Meetings: "Weekly 30-minute call" },
+    checkLabel: "How you'll check it", checkPh: "Review call before final files",
+    dateLabel: "Deliver by", notDone: "Not delivered by", depositHint: "Use the balance as milestones: release part at each stage.",
   },
 };
+
+// Plain-language shipping terms for imports (the code in brackets is what suppliers expect).
+const TERMS = [
+  ["FOB", "Supplier loads it onto the ship at their port"],
+  ["CIF", "Supplier pays shipping and insurance to my port"],
+  ["EXW", "I collect it from the supplier's factory"],
+  ["DDP", "Delivered to my door, duties paid"],
+];
 
 const blankSheet = {
   kind: "goods",
@@ -46,11 +55,13 @@ const blankSheet = {
   quantity: "",
   unit: "pieces",
   unitPriceUsd: "",
-  specs: "",
+  details: [{ label: "Size", value: "" }, { label: "Material", value: "" }],
   packaging: "",
   inspection: "",
   shipBy: "",
-  incoterm: "",
+  term: "FOB",
+  port: "",
+  handover: "",
 };
 
 // Form fields -> the order sheet the agent fingerprints.
@@ -62,17 +73,31 @@ function toSheet(f) {
     quantity: Number(f.quantity),
     unit: f.unit.trim(),
     unitPriceUsd: f.unitPriceUsd.trim(),
-    specs: f.specs.split("\n").map((x) => x.trim()).filter(Boolean),
+    specs: f.details.filter((d) => d.value.trim()).map((d) => (d.label ? `${d.label}: ${d.value.trim()}` : d.value.trim())),
     shipBy: f.shipBy,
   };
+  if (f.kind === "goods") {
+    const [code, words] = TERMS.find(([c]) => c === f.term) ?? TERMS[0];
+    s.incoterm = `${code}${f.port.trim() ? ` ${f.port.trim()}` : ""} (${words.toLowerCase()})`;
+  } else if (f.handover.trim()) s.incoterm = f.handover.trim();
   if (f.packaging.trim()) s.packaging = f.packaging.trim();
-  if (f.incoterm.trim()) s.incoterm = f.incoterm.trim();
   if (f.inspection.trim()) s.inspection = f.inspection.trim();
   return s;
 }
 
-const FIELD_NAMES = { product: "Product", quantity: "Quantity", unit: "Unit", unitPriceUsd: "Unit price", specs: "Specifications", packaging: "Packaging", shipBy: "Ship-by date", incoterm: "Delivery terms", inspection: "Inspection" };
-const fieldName = (f) => FIELD_NAMES[f] ?? (f.startsWith("specs[") ? `Specification line ${Number(f.slice(6, -1)) + 1}` : f);
+const FIELD_NAMES = { product: "What you're buying", quantity: "Quantity", unit: "Unit", unitPriceUsd: "Price each", specs: "Details", packaging: "Packaging", shipBy: "Date", incoterm: "Shipping terms", inspection: "How you'll check" };
+const fieldName = (f) => FIELD_NAMES[f] ?? (f.startsWith("specs[") ? `Detail ${Number(f.slice(6, -1)) + 1}` : f);
+const isoIn = (days) => new Date(Date.now() + days * DAY * 1000).toISOString().slice(0, 10);
+
+function Chips({ value, options, onChange, label }) {
+  return (
+    <div className="chips wrap" role="radiogroup" aria-label={label}>
+      {options.map(([v, text]) => (
+        <button key={v} type="button" role="radio" aria-checked={value === v} className={value === v ? "chip on" : "chip"} onClick={() => onChange(v)}>{text}</button>
+      ))}
+    </div>
+  );
+}
 
 export default function NewOrder({ wallet }) {
   const { account } = wallet;
@@ -93,6 +118,11 @@ export default function NewOrder({ wallet }) {
   const [fxRate, setFxRate] = useState(null);
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
   const K = KINDS[f.kind];
+  const setKind = (k) => setF({ ...f, kind: k, unit: KINDS[k].units[0], details: KINDS[k].details.slice(0, 2).map((label) => ({ label, value: "" })) });
+  const setDetail = (i, value) => setF({ ...f, details: f.details.map((d, j) => (j === i ? { ...d, value } : d)) });
+  const addDetail = (label) => setF({ ...f, details: [...f.details, { label, value: "" }] });
+  const removeDetail = (i) => setF({ ...f, details: f.details.filter((_, j) => j !== i) });
+  const liveTotal = /^\d+$/.test(f.quantity) && /^\d+(\.\d{1,6})?$/.test(f.unitPriceUsd) ? Number(f.quantity) * Number(f.unitPriceUsd) : null;
 
   useEffect(() => {
     if (!account) return;
@@ -199,103 +229,152 @@ export default function NewOrder({ wallet }) {
     }
   }
 
+  const unusedDetails = K.details.filter((d) => !f.details.some((x) => x.label === d));
+
   return (
     <div className="stack-lg narrow">
       <div className="stack">
         <h1>New order</h1>
         <ol className="stepper" aria-label="Steps">
-          {["Who you pay", "Order sheet", "Lock money"].map((s, i) => (
-            <li key={s} className={step === i + 1 ? "on" : ""} aria-current={step === i + 1 ? "step" : undefined}>{i + 1} {s}</li>
+          {["Who you pay", "What you're buying", "Lock money"].map((t, i) => (
+            <li key={t} className={step === i + 1 ? "on" : step > i + 1 ? "done" : ""} aria-current={step === i + 1 ? "step" : undefined}>{i + 1} {t}</li>
           ))}
         </ol>
       </div>
 
       {step === 1 && (
         <section className="stack">
-          <fieldset className="block stack payfrom">
-            <legend>What kind of deal?</legend>
+          <div className="kind-cards" role="radiogroup" aria-label="What kind of deal?">
             {Object.entries(KINDS).map(([k, v]) => (
-              <label key={k} className="choice">
-                <input type="radio" name="kind" checked={f.kind === k} onChange={() => setF({ ...f, kind: k, unit: v.unitPh })} />
-                <span><strong>{v.label}</strong><small>{v.hint}</small></span>
-              </label>
+              <button key={k} type="button" role="radio" aria-checked={f.kind === k} className={f.kind === k ? "kind-card on" : "kind-card"} onClick={() => setKind(k)}>
+                <Icon name={v.icon} size={22} />
+                <strong>{v.short}</strong>
+                <small>{v.hint}</small>
+              </button>
             ))}
-          </fieldset>
+          </div>
           <label className="field">
             <span>{K.payeeName}</span>
             <input value={f.supplier} onChange={set("supplier")} placeholder={K.namePh} autoComplete="organization" />
           </label>
           <label className="field">
-            <span>{K.payee}'s Celo wallet address</span>
-            <input value={supplierAddr} onChange={(e) => setSupplierAddr(e.target.value.trim())} placeholder="0x…" spellCheck="false" autoCapitalize="off" className="num" />
-            <small>They must accept the order from this same wallet, which proves it's theirs before any money reaches them.</small>
+            <span>{K.payee}'s wallet address on Celo</span>
+            <div className="with-btn">
+              <input value={supplierAddr} onChange={(e) => setSupplierAddr(e.target.value.trim())} placeholder="0x…" spellCheck="false" autoCapitalize="off" className="num" />
+              {navigator.clipboard?.readText ? (
+                <button type="button" className="secondary small-btn" onClick={() => navigator.clipboard.readText().then((t) => setSupplierAddr(t.trim())).catch(() => {})}>Paste</button>
+              ) : null}
+            </div>
+            <small>Ask them to send it to you. They'll accept the order from this same wallet, which proves it's really theirs.</small>
           </label>
           {supplierAddr && !isAddress(supplierAddr) ? <p className="note bad">That isn't a complete wallet address. It starts with 0x and has 42 characters.</p> : null}
-          {isAddress(supplierAddr) && supplierAddr.toLowerCase() === account.toLowerCase() ? <p className="note bad">That's your own wallet. Use the supplier's.</p> : null}
+          {isAddress(supplierAddr) && supplierAddr.toLowerCase() === account.toLowerCase() ? <p className="note bad">That's your own wallet. Use the {K.payee.toLowerCase()}'s.</p> : null}
           {payee?.status === "new" ? <p className="note">{payee.message}</p> : null}
           {payee?.status === "known" ? <p className="note ok">{payee.message}</p> : null}
           {payee?.status === "changed" ? (
             <div className="note bad stack">
-              <p><strong>New address for a known supplier.</strong> {payee.message}</p>
+              <p><strong>New address for a known {K.payee.toLowerCase()}.</strong> {payee.message}</p>
               <label style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                 <input type="checkbox" checked={phoneConfirmed} onChange={(e) => setPhoneConfirmed(e.target.checked)} style={{ width: 20, marginTop: 3 }} />
                 <span>I called them on a number I already had, and they confirmed this new address.</span>
               </label>
             </div>
           ) : null}
-          <button disabled={!supplierOk} onClick={() => setStep(2)}>Next: order sheet</button>
+          <button disabled={!supplierOk} onClick={() => setStep(2)}>Next</button>
         </section>
       )}
 
       {step === 2 && (
         <section className="stack">
-          <p className="muted small">Write it so a stranger could check the result against it. This exact sheet is fingerprinted into the order, so neither side can change it later.</p>
           <label className="field"><span>{K.product}</span><input value={f.product} onChange={set("product")} placeholder={K.productPh} /></label>
-          <div className="row">
-            <label className="field"><span>Quantity</span><input inputMode="numeric" value={f.quantity} onChange={set("quantity")} placeholder={K.qtyPh} /></label>
-            <label className="field"><span>Unit</span><input value={f.unit} onChange={set("unit")} placeholder={K.unitPh} /></label>
+          <div className="qty-row">
+            <label className="field"><span>How many</span><input inputMode="numeric" value={f.quantity} onChange={(e) => setF({ ...f, quantity: e.target.value.replace(/[^\d]/g, "") })} placeholder={K.qtyPh} /></label>
+            <label className="field"><span>Unit</span>
+              <select value={f.unit} onChange={set("unit")}>{K.units.map((u) => <option key={u} value={u}>{u}</option>)}</select>
+            </label>
+            <label className="field"><span>Price each ($)</span><input inputMode="decimal" value={f.unitPriceUsd} onChange={(e) => setF({ ...f, unitPriceUsd: e.target.value.replace(/[^\d.]/g, "") })} placeholder={K.pricePh} /></label>
           </div>
-          <label className="field"><span>Price per unit (USD)</span><input inputMode="decimal" value={f.unitPriceUsd} onChange={set("unitPriceUsd")} placeholder={K.pricePh} /></label>
-          <label className="field">
-            <span>Specifications</span>
-            <textarea value={f.specs} onChange={set("specs")} placeholder={K.specsPh} />
-            <small>One per line. Use numbers where you can: sizes, weights, materials, counts, dates.</small>
-          </label>
-          {K.packaging ? <label className="field"><span>Packaging</span><input value={f.packaging} onChange={set("packaging")} placeholder="50 per carton, each in a polybag" /></label> : null}
-          <label className="field"><span>{K.checkLabel}</span><input value={f.inspection} onChange={set("inspection")} placeholder={K.checkPh} /></label>
-          <div className={K.terms ? "row" : ""}>
-            <label className="field"><span>{K.dateLabel}</span><input type="date" value={f.shipBy} onChange={set("shipBy")} /></label>
-            {K.terms ? <label className="field"><span>{K.terms}</span><input value={f.incoterm} onChange={set("incoterm")} placeholder={K.termsPh} /></label> : null}
+          {liveTotal !== null ? <p className="live-total num">Total <strong>${liveTotal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></p> : null}
+
+          <div className="field">
+            <span className="field-label">Details the {K.payee.toLowerCase()} must match</span>
+            <div className="details">
+              {f.details.map((d, i) => (
+                <div key={i} className="detail-row">
+                  <span className="detail-label">{d.label || "Detail"}</span>
+                  <input value={d.value} onChange={(e) => setDetail(i, e.target.value)} placeholder={K.detailPh[d.label] ?? "Be specific: numbers, colours, materials"} aria-label={d.label || "Detail"} />
+                  <button type="button" className="detail-x" aria-label={`Remove ${d.label || "detail"}`} onClick={() => removeDetail(i)}>×</button>
+                </div>
+              ))}
+            </div>
+            <div className="chips wrap add-chips">
+              {unusedDetails.map((d) => <button key={d} type="button" className="chip" onClick={() => addDetail(d)}>+ {d}</button>)}
+              <button type="button" className="chip" onClick={() => addDetail("")}>+ Other</button>
+            </div>
+            <small>Use numbers and exact words. "Good quality" can't be checked; "180 gsm cotton" can.</small>
           </div>
-          {review && !review.ready ? (
+
+          <div className="field">
+            <span className="field-label">{K.dateLabel}</span>
+            <Chips label={K.dateLabel} value={[7, 14, 30, 60].map(isoIn).includes(f.shipBy) ? f.shipBy : null} onChange={(v) => setF({ ...f, shipBy: v })} options={[[isoIn(7), "1 week"], [isoIn(14), "2 weeks"], [isoIn(30), "1 month"], [isoIn(60), "2 months"]]} />
+            <input type="date" value={f.shipBy} onChange={set("shipBy")} aria-label={`${K.dateLabel}, exact date`} />
+          </div>
+
+          {f.kind === "goods" ? (
+            <div className="field">
+              <span className="field-label">Who pays for shipping?</span>
+              <div className="term-list" role="radiogroup" aria-label="Shipping terms">
+                {TERMS.map(([code, words]) => (
+                  <label key={code} className={f.term === code ? "term on" : "term"}>
+                    <input type="radio" name="term" checked={f.term === code} onChange={() => setF({ ...f, term: code })} />
+                    <span>{words}</span><em>{code}</em>
+                  </label>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          <details className="more">
+            <summary>More details (optional)</summary>
+            <div className="stack">
+              {f.kind === "goods" ? <label className="field"><span>Port or city</span><input value={f.port} onChange={set("port")} placeholder="Guangzhou" /></label> : null}
+              {f.kind === "custom" ? <label className="field"><span>Collection or delivery</span><input value={f.handover} onChange={set("handover")} placeholder="Delivered to Lekki Phase 1" /></label> : null}
+              {f.kind !== "service" ? <label className="field"><span>Packaging</span><input value={f.packaging} onChange={set("packaging")} placeholder="50 per carton, each in a polybag" /></label> : null}
+              <label className="field"><span>{K.checkLabel}</span><input value={f.inspection} onChange={set("inspection")} placeholder={K.checkPh} /></label>
+            </div>
+          </details>
+
+          {review && !review.ready && (f.product || f.quantity || f.unitPriceUsd) ? (
             <div className="note bad">
-              <p style={{ marginBottom: 6 }}><strong>Fix these before locking money:</strong></p>
+              <p style={{ marginBottom: 6 }}><strong>Almost there:</strong></p>
               <ul className="issues">
-                {review.issues.map((i, k) => <li key={k}>{fieldName(i.field)}: {i.problem}</li>)}
+                {review.issues.map((i, k) => <li key={k}>{fieldName(i.field)}: {i.problem === "missing" ? "please fill this in" : i.problem}</li>)}
               </ul>
             </div>
           ) : null}
-          {review?.ready ? <p className="note ok">Clear and specific. Order total ${usd(BigInt(review.totalUsdt))}.</p> : null}
+          {review?.ready ? <p className="note ok">Clear and specific. This sheet will be fingerprinted with the order, so neither side can change it later.</p> : null}
           <div className="row">
             <button className="secondary" onClick={() => setStep(1)}>Back</button>
-            <button disabled={!review?.ready} onClick={() => setStep(3)}>Next: lock money</button>
+            <button disabled={!review?.ready} onClick={() => setStep(3)}>Next</button>
           </div>
         </section>
       )}
 
       {step === 3 && review?.ready && (
         <section className="stack">
-          <div className="block stack">
+          <div className="block stack summary">
+            <p className="muted small">{f.quantity} {f.unit} of {f.product}, from {f.supplier}</p>
             <div className="row">
-              <div><p className="muted small">Deposit to {f.supplier}</p><p className="num" style={{ fontSize: 22, fontWeight: 700 }}>${usd(deposit)}</p></div>
-              <div><p className="muted small">Balance kept locked</p><p className="num" style={{ fontSize: 22, fontWeight: 700 }}>${usd(total - deposit)}</p></div>
+              <div><p className="muted small">Deposit when they accept</p><p className="num big-num">${usd(deposit)}</p></div>
+              <div><p className="muted small">Kept locked until {f.kind === "goods" ? "shipping" : "delivery"}</p><p className="num big-num hl">${usd(total - deposit)}</p></div>
             </div>
-            <label className="field">
-              <span>Deposit: {depositPct}%</span>
-              <input type="range" min="0" max="90" step="5" value={depositPct} onChange={(e) => setDepositPct(Number(e.target.value))} />
-              <small>Paid when they accept. {K.depositHint} At least 10% always stays locked.</small>
-            </label>
+            <div className="field">
+              <span className="field-label">Deposit</span>
+              <Chips label="Deposit" value={depositPct} onChange={setDepositPct} options={[[0, "None"], [20, "20%"], [30, "30%"], [50, "50%"]]} />
+              <small>{K.depositHint}</small>
+            </div>
           </div>
+
           <fieldset className="block stack payfrom">
             <legend>Pay from</legend>
             <label className="choice">
@@ -314,26 +393,24 @@ export default function NewOrder({ wallet }) {
             ) : null}
             {naira && fxRate?.error ? <p className="note bad">Couldn't get a naira rate: {fxRate.error}</p> : null}
           </fieldset>
-          <div className="row">
-            <label className="field">
-              <span>Supplier must accept within</span>
-              <select value={acceptDays} onChange={(e) => setAcceptDays(Number(e.target.value))}>
-                {[1, 2, 3, 5, 7, 14].map((d) => <option key={d} value={d}>{d} day{d > 1 ? "s" : ""}</option>)}
-              </select>
-            </label>
-            <label className="field">
-              <span>Your time to check goods</span>
-              <select value={checkDays} onChange={(e) => setCheckDays(Number(e.target.value))}>
-                {[1, 3, 7, 14, 21, 30].map((d) => <option key={d} value={d}>{d} day{d > 1 ? "s" : ""}</option>)}
-              </select>
-            </label>
+
+          <div className="block stack">
+            <div className="field">
+              <span className="field-label">{K.payee} must accept within</span>
+              <Chips label="Accept within" value={acceptDays} onChange={setAcceptDays} options={[[1, "1 day"], [3, "3 days"], [7, "7 days"]]} />
+            </div>
+            <div className="field">
+              <span className="field-label">Your time to check it after {f.kind === "goods" ? "shipping" : "delivery"}</span>
+              <Chips label="Check period" value={checkDays} onChange={setCheckDays} options={[[3, "3 days"], [7, "7 days"], [14, "14 days"]]} />
+            </div>
+            <ul className="small muted stack" style={{ paddingLeft: 18, margin: 0 }}>
+              <li>Not accepted in {acceptDays} day{acceptDays > 1 ? "s" : ""}: all ${usd(total)} comes back to you.</li>
+              <li>{K.notDone} {new Date(`${f.shipBy}T12:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}: the ${usd(total - deposit)} balance comes back to you.</li>
+              <li>No problem raised within {checkDays} days: the balance pays the {K.payee.toLowerCase()}.</li>
+            </ul>
           </div>
-          <ul className="small muted stack" style={{ paddingLeft: 18, margin: 0 }}>
-            <li>Not accepted in {acceptDays} day{acceptDays > 1 ? "s" : ""}: all ${usd(total)} comes back to you.</li>
-            <li>{K.notDone} {f.shipBy}: the ${usd(total - deposit)} balance comes back to you.</li>
-            <li>No problem raised within {checkDays} day{checkDays > 1 ? "s" : ""} of shipping: the balance pays the supplier.</li>
-          </ul>
-          {!datesOk ? <p className="note bad">The ship-by date must be after the accept deadline and within 180 days.</p> : null}
+
+          {!datesOk ? <p className="note bad">The {K.dateLabel.toLowerCase()} date must be after the accept deadline and within 180 days.</p> : null}
           {tooBig ? <p className="note bad">While Arra is new, orders are capped at $50. Lower the quantity or split it into several orders.</p> : null}
           {short && !tooBig && !naira ? <p className="note bad">Your wallet has ${usd(balance)} USDT; this order needs ${usd(total)}. Choose naira above to convert the rest.</p> : null}
           {short && !tooBig && naira ? <p className="note bad">You need {ngn(fxCngn)} cNGN for this order and have {ngn(cngn)}.</p> : null}
