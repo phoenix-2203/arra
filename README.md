@@ -122,6 +122,7 @@ Each one answers a documented way these deals fail.
 10. **Bilingual supplier page (F10).** The supplier's link opens in English or Simplified Chinese (the buyer picks, or it follows the supplier's phone language) with the locked amount, the terms and an Accept button.
 11. **Rate locked on day one (F11).** Pay from naira: Textile FX converts cNGN into exactly the USDT the order needs at one firm rate, so a weaker naira next month can't hurt.
 12. **Onchain timeline.** Every step (locked, accepted, shipped, released) is read from the vault's events with its time and transaction link.
+13. **No gas, no problem.** A supplier with an empty wallet can't pay the network fee to accept. Arra spots this: the buyer can send 0.02 to 0.1 CELO (or $0.10 USDT for MiniPay and Valora) in one tap from the order page, and the agent can top up new suppliers itself with a capped gas drip.
 
 ## Not just imports
 

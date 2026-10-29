@@ -1,7 +1,7 @@
 // Wallet + vault calls from the browser. Works in MiniPay (fees in USDT, no
 // CELO needed) and in other wallets. Every transaction carries Arra's
 // attribution tag so the activity is credited to the project.
-import { createPublicClient, createWalletClient, custom, http, parseUnits, parseEventLogs } from "viem";
+import { createPublicClient, createWalletClient, custom, http, parseUnits, parseEther, parseEventLogs } from "viem";
 import { celo } from "viem/chains";
 import { withAttribution } from "@celo/attribution-tags";
 import vaultAbi from "./vaultAbi.json";
@@ -16,6 +16,7 @@ export const toUnits = (usd) => parseUnits(String(usd), 6);
 const erc20 = [
   { type: "function", name: "allowance", stateMutability: "view", inputs: [{ type: "address" }, { type: "address" }], outputs: [{ type: "uint256" }] },
   { type: "function", name: "approve", stateMutability: "nonpayable", inputs: [{ type: "address" }, { type: "uint256" }], outputs: [{ type: "bool" }] },
+  { type: "function", name: "transfer", stateMutability: "nonpayable", inputs: [{ type: "address" }, { type: "uint256" }], outputs: [{ type: "bool" }] },
   { type: "function", name: "balanceOf", stateMutability: "view", inputs: [{ type: "address" }], outputs: [{ type: "uint256" }] },
 ];
 
@@ -64,6 +65,24 @@ async function write(address, abi, functionName, args, { onSent } = {}) {
   if (receipt.status !== "success") throw new Error("The transaction failed onchain.");
   return hash;
 }
+
+// ---- Gas help: a supplier needs a tiny network fee to accept ----
+export const celoBalance = (who) => reader.getBalance({ address: who });
+// Below this, a wallet that pays fees in CELO can't reliably send a transaction.
+export const GAS_ENOUGH = parseEther("0.002");
+
+/** Sends a little CELO to someone so they can pay network fees. */
+export async function sendCelo(to, amount, { onSent } = {}) {
+  if (!wallet) throw new Error("Connect your wallet first.");
+  const hash = await wallet.sendTransaction({ to, value: parseEther(String(amount)), ...feeOpts() });
+  onSent?.(hash);
+  const receipt = await reader.waitForTransactionReceipt({ hash, retryCount: 20 });
+  if (receipt.status !== "success") throw new Error("The transfer failed onchain.");
+  return hash;
+}
+
+/** Sends a little USDT; MiniPay and Valora can pay fees with it. */
+export const sendUsdt = (to, usd, opts) => write(USDT, erc20, "transfer", [to, toUnits(usd)], opts);
 
 export const usdtBalance = (who) => reader.readContract({ address: USDT, abi: erc20, functionName: "balanceOf", args: [who] });
 

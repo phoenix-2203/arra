@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { formatUnits, keccak256, toBytes } from "viem";
+import { formatUnits, keccak256, parseEther, toBytes } from "viem";
 import { api } from "../api.js";
-import { vaultCall, toUnits, EXPLORER } from "../chain.js";
+import { vaultCall, toUnits, EXPLORER, celoBalance, usdtBalance, sendCelo, sendUsdt, isMiniPay, GAS_ENOUGH } from "../chain.js";
 import { Cloth } from "../Adire.jsx";
 import { withToast } from "../toast.jsx";
 import { STRINGS, initialLang, saveLang } from "../i18n.js";
@@ -9,6 +9,68 @@ import { short } from "../App.jsx";
 
 const usd = (v) => Number(formatUnits(BigInt(v), 6)).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const day = (ts, lang) => new Date(ts * 1000).toLocaleDateString(lang === "zh" ? "zh-CN" : "en-GB", { day: "numeric", month: "short", year: "numeric" });
+// A supplier needs a tiny network fee (gas) to accept and update the order.
+// The buyer can send some from here; Arra's agent may already have done it.
+function GasHelp({ o, role, account, gasSent, t }) {
+  const [bal, setBal] = useState(null);
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState("");
+  const g = t.gas;
+  // Lower-case so an address with odd capital letters is still accepted.
+  const supplier = o.supplier.toLowerCase();
+  const refresh = useCallback(() => {
+    const reads = [celoBalance(supplier), usdtBalance(supplier)];
+    if (role === "buyer" && account) reads.push(celoBalance(account.toLowerCase()), usdtBalance(account.toLowerCase()));
+    Promise.all(reads).then(([sc, su, mc = 0n, mu = 0n]) => setBal({ sc, su, mc, mu })).catch(() => {});
+  }, [supplier, role, account]);
+  useEffect(() => { refresh(); }, [refresh, o.status]);
+
+  if (!bal || bal.sc >= GAS_ENOUGH) return null;
+  const hasUsdt = bal.su >= 50_000n; // $0.05
+
+  if (role === "supplier") {
+    if (isMiniPay() && hasUsdt) return null; // MiniPay pays the fee from USDT
+    return <p className="note">{gasSent ? g.dripped : hasUsdt ? g.supplierHasUsdt : g.supplierNone}</p>;
+  }
+  if (role !== "buyer") return null;
+
+  async function give(kind, amount) {
+    setSending(true);
+    try {
+      const hash = await withToast((cb) => (kind === "celo" ? sendCelo(supplier, amount, cb) : sendUsdt(supplier, amount, cb)), {
+        confirm: t.toast.confirm,
+        pending: t.toast.pending,
+        done: g.done(kind === "celo" ? `${amount} CELO` : `$${amount} USDT`),
+      });
+      setSent(hash);
+      setTimeout(refresh, 1500);
+    } catch {
+      /* the toast already says what happened */
+    } finally {
+      setSending(false);
+    }
+  }
+  const celoOpts = ["0.02", "0.05", "0.1"];
+  return (
+    <div className="block stack gas-help">
+      <h3>{g.title}</h3>
+      <p className="small muted">{gasSent ? g.buyerDripped : hasUsdt ? g.buyerHasUsdt : g.buyerNone}</p>
+      {!gasSent && !sent ? (
+        <>
+          <div className="chips wrap">
+            {celoOpts.map((a) => (
+              <button key={a} type="button" className="chip" disabled={sending || bal.mc < parseEther(a) + parseEther("0.002")} onClick={() => give("celo", a)}>{g.sendCelo(a)}</button>
+            ))}
+            <button type="button" className="chip" disabled={sending || bal.mu < 100_000n} onClick={() => give("usdt", "0.10")}>{g.sendUsdt}</button>
+          </div>
+          <p className="small muted">{bal.mc < parseEther("0.022") ? g.noCelo : g.which}</p>
+        </>
+      ) : null}
+      {sent ? <p className="note ok">{g.thanks}</p> : null}
+    </div>
+  );
+}
+
 const STEP_OF = { Pending: 1, Active: 2, Shipped: 3, Disputed: 3, Released: 4, Settled: 4, Refunded: 0 };
 
 export default function Order({ id, wallet }) {
@@ -162,6 +224,8 @@ export default function Order({ id, wallet }) {
           <button className="secondary" onClick={() => navigator.clipboard?.writeText(shareUrl).then(() => setCopied(true))}>{copied ? t.copied : t.copy}</button>
         </div>
       ) : null}
+
+      {["Pending", "Active", "Disputed"].includes(o.status) ? <GasHelp o={o} role={role} account={account} gasSent={view.gasSent} t={t} /> : null}
 
       <section className="stack">
         {account ? <p className="small muted">{t.youAre[role]}</p> : null}
