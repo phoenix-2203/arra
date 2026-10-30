@@ -55,16 +55,16 @@ const balance = (who) => client.readContract({ address: token, abi: mock.abi, fu
 test("keeper refunds an order the supplier never accepted, then pays out a shipped one", async () => {
   const t0 = await now();
   // Order 1: never accepted.
-  await send(buyer, vault, vaultAbi, "createOrder", [supplier.address, parseUnits("10", 6), 3000, BigInt(t0 + 86400), BigInt(t0 + 10 * 86400), 86400, `0x${"11".repeat(32)}`]);
+  await send(buyer, vault, vaultAbi, "createOrder", [supplier.address, parseUnits("10", 6), 3000, BigInt(t0 + 86400), BigInt(t0 + 10 * 86400), 86400, 0, `0x${"11".repeat(32)}`]);
   // Order 2: accepted and shipped.
-  await send(buyer, vault, vaultAbi, "createOrder", [supplier.address, parseUnits("20", 6), 3000, BigInt(t0 + 86400), BigInt(t0 + 10 * 86400), 86400, `0x${"22".repeat(32)}`]);
+  await send(buyer, vault, vaultAbi, "createOrder", [supplier.address, parseUnits("20", 6), 3000, BigInt(t0 + 86400), BigInt(t0 + 10 * 86400), 86400, 0, `0x${"22".repeat(32)}`]);
   await send(supplier, vault, vaultAbi, "accept", [2n]);
   await send(supplier, vault, vaultAbi, "markShipped", [2n, `0x${"00".repeat(32)}`]);
 
   let o1 = await readOrder(client, vault, 1);
   assert.equal(o1.status, "Pending");
   assert.deepEqual(nextActions(o1, await now(), "supplier"), ["accept", "decline"]);
-  assert.deepEqual(nextActions(o1, await now(), "buyer"), ["cancel"]);
+  assert.deepEqual(nextActions(o1, await now(), "buyer"), ["cancel", "extendDeadlines"]);
   assert.match(explain(o1, await now()), /Waiting for the supplier/);
   assert.equal((await findDue(client, vault, await now())).length, 0, "nothing due yet");
   assert.equal(await readOrder(client, vault, 99), null);
@@ -91,7 +91,7 @@ test("split offers show up as an action for the other side only", async () => {
   const t0 = await now();
   await send(agent, token, mock.abi, "mint", [buyer.address, parseUnits("10", 6)]);
   await send(buyer, token, mock.abi, "approve", [vault, parseUnits("10", 6)]);
-  await send(buyer, vault, vaultAbi, "createOrder", [supplier.address, parseUnits("10", 6), 2000, BigInt(t0 + 86400), BigInt(t0 + 5 * 86400), 86400, `0x${"33".repeat(32)}`]);
+  await send(buyer, vault, vaultAbi, "createOrder", [supplier.address, parseUnits("10", 6), 2000, BigInt(t0 + 86400), BigInt(t0 + 5 * 86400), 86400, 0, `0x${"33".repeat(32)}`]);
   await send(supplier, vault, vaultAbi, "accept", [3n]);
   await send(supplier, vault, vaultAbi, "proposeSplit", [3n, parseUnits("6", 6)]);
   const o = await readOrder(client, vault, 3);
@@ -142,7 +142,7 @@ test("activity: paying the last of the balance in parts is counted once", async 
   const t0 = await now();
   await send(agent, token, mock.abi, "mint", [buyer.address, parseUnits("10", 6)]);
   await send(buyer, token, mock.abi, "approve", [vault, parseUnits("10", 6)]);
-  await send(buyer, vault, vaultAbi, "createOrder", [supplier.address, parseUnits("10", 6), 2000, BigInt(t0 + 86400), BigInt(t0 + 5 * 86400), 86400, `0x${"55".repeat(32)}`]);
+  await send(buyer, vault, vaultAbi, "createOrder", [supplier.address, parseUnits("10", 6), 2000, BigInt(t0 + 86400), BigInt(t0 + 5 * 86400), 86400, 0, `0x${"55".repeat(32)}`]);
   const id = BigInt((await client.readContract({ address: vault, abi: vaultAbi, functionName: "nextId" })) - 1n);
   await send(supplier, vault, vaultAbi, "accept", [id]);
   await send(buyer, vault, vaultAbi, "releasePart", [id, parseUnits("3", 6)]);
@@ -166,7 +166,7 @@ test("two vault versions served as one Arra: numbers continue, keeper fee, combi
   const t0 = await now();
   await send(agent, token, mock.abi, "mint", [buyer.address, parseUnits("5", 6)]);
   await send(buyer, token, mock.abi, "approve", [v3, parseUnits("5", 6)]);
-  await send(buyer, v3, vaultAbi, "createOrder", [supplier.address, parseUnits("5", 6), 2000, BigInt(t0 + 3600), BigInt(t0 + 86400), 86400, `0x${"66".repeat(32)}`]);
+  await send(buyer, v3, vaultAbi, "createOrder", [supplier.address, parseUnits("5", 6), 2000, BigInt(t0 + 3600), BigInt(t0 + 86400), 86400, 0, `0x${"66".repeat(32)}`]);
   assert.equal(await set.count(), before, "the new vault's first order continues the numbering");
   assert.equal(set.vaultFor(before), v3);
   assert.equal(set.vaultFor(1), vault);
@@ -204,4 +204,44 @@ test("track record: what each wallet has done as supplier and buyer", async () =
   const none = await idx.record("0x000000000000000000000000000000000000dEaD");
   assert.equal(none.asSupplier.accepted, 0);
   assert.equal(none.asSupplier.firstAt, null);
+});
+
+test("v4 next to an older vault: each read with its own interface; keeper ends an ignored dispute", async () => {
+  const { readOrder: read, legacyAbi, nextActions: next, dueAction: due } = await import("../src/vault.js");
+  const legacy = JSON.parse(readFileSync(new URL("../abi/ArraVault.v3.json", import.meta.url)));
+  const deploy = async (art, first) => (await client.waitForTransactionReceipt({
+    hash: await as(agent).deployContract({ abi: art.abi, bytecode: art.bytecode, args: [token, parseUnits("50", 6), agent.address, first, 10_000n] }),
+  })).contractAddress;
+  const v3 = await deploy(legacy, 100n);
+  const v4 = await deploy(vaultArtifact, 200n);
+  await send(agent, token, mock.abi, "mint", [buyer.address, parseUnits("20", 6)]);
+  await send(buyer, token, mock.abi, "approve", [v3, parseUnits("10", 6)]);
+  await send(buyer, token, mock.abi, "approve", [v4, parseUnits("10", 6)]);
+  const t0 = await now();
+  await send(buyer, v3, legacyAbi, "createOrder", [supplier.address, parseUnits("5", 6), 2000, BigInt(t0 + 3600), BigInt(t0 + 86400), 86400, `0x${"77".repeat(32)}`]);
+  await send(buyer, v4, vaultAbi, "createOrder", [supplier.address, parseUnits("10", 6), 3000, BigInt(t0 + 3600), BigInt(t0 + 86400), 86400, 30 * 86400, `0x${"88".repeat(32)}`]);
+  const old = await read(client, v3, 100);
+  assert.equal(old.total, "5000000");
+  assert.equal(old.v4, false, "older vault detected by itself");
+  let o = await read(client, v4, 200);
+  assert.equal(o.v4, true);
+  assert.equal(o.transit, 30 * 86400);
+  assert.ok(next(o, await now(), "buyer").includes("extendDeadlines"));
+
+  await send(supplier, v4, vaultAbi, "accept", [200n]);
+  await send(supplier, v4, vaultAbi, "markShipped", [200n, `0x${"00".repeat(32)}`]);
+  o = await read(client, v4, 200);
+  assert.ok(next(o, await now(), "buyer").includes("confirmArrival"));
+  await send(buyer, v4, vaultAbi, "confirmArrival", [200n]);
+  await send(buyer, v4, vaultAbi, "dispute", [200n]);
+  await send(buyer, v4, vaultAbi, "proposeSplit", [200n, parseUnits("1", 6)]); // buyer offers $1 of the $7; supplier goes silent
+  assert.equal(due(await read(client, v4, 200), await now()), null);
+  await warp(7 * 86400 + 60);
+  o = await read(client, v4, 200);
+  assert.equal(due(o, await now()), "resolveDispute");
+  const before = await balance(buyer.address);
+  const res = await runKeeper({ client, wallet: taggedWallet(agent, local, RPC), vault: v4, now: await now(), log: () => {} });
+  assert.deepEqual(res.map((r) => [r.id, r.action, r.status]), [[200, "resolveDispute", "success"]]);
+  assert.equal((await read(client, v4, 200)).status, "Settled");
+  assert.equal(await balance(buyer.address) - before, parseUnits("6", 6) - 10_000n, "silence lost: buyer gets $6 minus the keeper's cent");
 });

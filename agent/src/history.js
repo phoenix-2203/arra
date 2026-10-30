@@ -4,7 +4,7 @@
 import { vaultAbi, readOrder, orderCount } from "./vault.js";
 
 const EVENTS = vaultAbi.filter((e) => e.type === "event");
-const ORDER_EVENTS = new Set(["OrderCreated", "OrderAccepted", "OrderShipped", "OrderDisputed", "PartReleased", "SplitProposed", "SplitSettled", "BalanceReleased", "BalanceRefunded", "KeeperPaid"]);
+const ORDER_EVENTS = new Set(["OrderCreated", "OrderAccepted", "OrderShipped", "OrderDisputed", "PartReleased", "SplitProposed", "SplitSettled", "BalanceReleased", "BalanceRefunded", "KeeperPaid", "OrderArrived", "DeadlinesExtended", "DisputeResolved"]);
 
 export class LogIndex {
   constructor({ client, vault, fromBlock, chunk = 4_000n, lag = 2n }) {
