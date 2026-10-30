@@ -155,6 +155,17 @@ The same contract protects any deal with a deposit and a balance. When creating 
 | First Textile FX swap, 1 USDT → 1,381.23 cNGN (tagged) | [`0xd1c5fd…e906`](https://celoscan.io/tx/0xd1c5fd631c02af304388e1040e1ad9726220547ba2658740ba425c3d7063e906) |
 | Agent wallet | [`0xF4Fa…7053`](https://celoscan.io/address/0xF4Fa62d294E5BcB514D27612998D7459c5D97053) |
 
+### Vault versions: upgrading without touching anyone's money
+
+A deployed contract can never be changed, and Arra's vault deliberately has no upgrade switch (one would let whoever holds the key swap in code that takes the funds). So an upgrade is a new vault:
+
+| Version | What changed | Orders |
+|---|---|---|
+| v2 `0x3da5…7bb3` | The original | #1 onwards; now finishing its open orders, no new ones |
+| v3 | **Self-funding keeper:** whoever triggers a due refund or payout (normally Arra's agent) gets a fixed **$0.01** from that order, so the agent pays its own network fees. A buyer or supplier who does it themselves pays nothing. | Continues the numbering where v2 stopped |
+
+The app and API treat every version as one Arra: order numbers never overlap, every old link still works, History, receipts and totals combine all vaults, and the keeper watches all of them. Money in an open v2 order stays in v2 and finishes there, exactly as its rules say.
+
 ## Screens
 
 | Supplier's page, in Chinese | Buyer settling with a split | Paying from naira |
@@ -198,7 +209,7 @@ agent.json   ERC-8004 agent card
 ## Safety
 
 - **No admin access to money.** The owner can only pause new orders and change the per-order cap. Existing orders always run to completion.
-- **Every exit is to the buyer or the supplier.** 34 contract tests, including fuzzing and invariant runs (thousands of random calls) checking that the vault always holds exactly the sum of open balances and that money never goes anywhere else.
+- **Every exit is to the buyer or the supplier** (plus, from v3, a fixed one-cent keeper fee; see below). 44 contract tests, including fuzzing and invariant runs (thousands of random calls) checking that the vault always holds exactly the sum of open balances and that money never goes anywhere else.
 - **Defensive checks.** Fee-on-transfer tokens are rejected, deposits are capped at 90% so at least 10% always stays locked, deadlines are bounded (ship within 180 days, check period 1–30 days), and re-entry is blocked.
 - **Small by design while new.** Orders are capped at $50 each during the pilot.
 - **Keys stay with their owners.** Scripts preview by default and only send with `--send`; private keys live only in local `.env` files.
@@ -239,7 +250,6 @@ Server setup on a VPS: `bash deploy/setup.sh` (installs, builds and runs Arra as
 - Optional named arbitrator (for example a market association leader) who can only split funds between the two parties.
 - Paid tracking lookups and inspector approval as a release step.
 - Raising the per-order cap as the contract builds a track record.
-- **Self-funding keeper:** the vault pays a fixed one-cent fee from the order to whoever triggers a due refund or payout, so the agent never needs topping up.
 - **Dispute timeout:** after 30 days in dispute with one side silent, a default split the keeper can trigger.
 
 ---

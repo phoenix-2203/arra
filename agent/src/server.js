@@ -85,7 +85,7 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
   const routes = {
     "GET /api/health": async () => {
       // keeperFee: what the agent takes if it has to trigger a refund or payout (v3 vaults; 0 before).
-      keeperFee ??= await client.readContract({ address: vaults.current, abi: vaultAbi, functionName: "keeperFee" }).then(String).catch(() => "0");
+      keeperFee ??= await client.readContract({ address: vaults.current, abi: vaultAbi, functionName: "keeperFee" }).then((v) => (/^\d+$/.test(String(v)) ? String(v) : "0")).catch(() => "0");
       return [200, { ok: true, vault: vaults.current, vaults: vaults.addresses, keeperFee }];
     },
 
