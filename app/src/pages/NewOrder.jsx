@@ -125,6 +125,10 @@ export default function NewOrder({ wallet }) {
   const [supplierAddr, setSupplierAddr] = useState("");
   const [payee, setPayee] = useState(null);
   const [phoneConfirmed, setPhoneConfirmed] = useState(false);
+  // Supplier invite: their wallet fills the address, so nobody copies one from a chat.
+  const [invite, setInvite] = useState(null); // { code, address }
+  const [inviteErr, setInviteErr] = useState("");
+  const [inviteCopied, setInviteCopied] = useState(false);
   const [review, setReview] = useState(null);
   const [depositPct, setDepositPct] = useState(30);
   const [acceptDays, setAcceptDays] = useState(3);
@@ -154,6 +158,19 @@ export default function NewOrder({ wallet }) {
   const K = KINDS[f.kind];
   // Rotate the example every few seconds until they start typing what they're buying.
   const [exIdx, setExIdx] = useState(0);
+  // Wait for the supplier to open the invite and connect their wallet.
+  useEffect(() => {
+    if (!invite?.code || invite.address) return;
+    const t = setInterval(() => {
+      api.invite(invite.code).then((v) => {
+        if (v.address) {
+          setInvite((x) => ({ ...x, address: v.address }));
+          setSupplierAddr(v.address);
+        }
+      }).catch(() => {});
+    }, 3000);
+    return () => clearInterval(t);
+  }, [invite?.code, invite?.address]);
   useEffect(() => {
     if (step !== 2 || f.product) return;
     const t = setInterval(() => setExIdx((i) => i + 1), 3200);
@@ -334,6 +351,26 @@ export default function NewOrder({ wallet }) {
             <span>{K.payeeName}</span>
             <input value={f.supplier} onChange={set("supplier")} placeholder={K.namePh} autoComplete="organization" />
           </label>
+          <div className="block stack">
+            <p className="small"><strong>Safest: let your {K.payee.toLowerCase()} send their wallet.</strong> Send them a link; when they open it and connect their wallet, the address fills in here by itself. Scammers can't slip in a look-alike address.</p>
+            {!invite ? (
+              <button type="button" className="secondary" disabled={!f.supplier.trim()} onClick={() => { setInviteErr(""); api.createInvite(account, f.supplier).then(({ code }) => setInvite({ code, address: null })).catch((e) => setInviteErr(e.message)); }}>
+                {f.supplier.trim() ? `Create an invite link for ${f.supplier.trim()}` : `Add the ${K.payee.toLowerCase()}'s name first`}
+              </button>
+            ) : invite.address ? (
+              <p className="note ok">Received from your {K.payee.toLowerCase()}: <span className="num">{invite.address.slice(0, 6)}…<strong>{invite.address.slice(-4)}</strong></span>. Call them and check it ends in <strong className="num">{invite.address.slice(-4)}</strong>.</p>
+            ) : (
+              <div className="stack">
+                <input readOnly value={`${location.origin}/invite/${invite.code}`} onFocus={(e) => e.target.select()} className="num small" />
+                <div className="row-gap">
+                  <button type="button" className="secondary auto" onClick={() => navigator.clipboard?.writeText(`${location.origin}/invite/${invite.code}`).then(() => setInviteCopied(true))}>{inviteCopied ? "Copied" : "Copy link"}</button>
+                  <a className="button secondary auto" href={`https://wa.me/?text=${encodeURIComponent(`Please open this link and connect the wallet you want to be paid in for my order: ${location.origin}/invite/${invite.code}`)}`} target="_blank" rel="noreferrer">Send on WhatsApp</a>
+                </div>
+                <p className="small muted">Waiting for them to connect their wallet…</p>
+              </div>
+            )}
+            {inviteErr ? <p className="note bad">{inviteErr}</p> : null}
+          </div>
           <label className="field">
             <span>{K.payee}'s wallet address on Celo</span>
             <div className="with-btn">
@@ -342,8 +379,11 @@ export default function NewOrder({ wallet }) {
                 <button type="button" className="secondary small-btn" onClick={() => navigator.clipboard.readText().then((t) => setSupplierAddr(t.trim())).catch(() => {})}>Paste</button>
               ) : null}
             </div>
-            <small>Ask them to send it to you. They'll accept the order from this same wallet, which proves it's really theirs.</small>
+            <small>Or paste it if they sent it to you. They'll accept the order from this same wallet, which proves it's really theirs.</small>
           </label>
+          {supplierAddr && isAddress(supplierAddr) && !invite?.address ? (
+            <p className="note">Typed or pasted addresses can be swapped by scammers for one that looks almost the same. Before you lock money, read the last 6 characters, <strong className="num">{supplierAddr.slice(-6)}</strong>, to your {K.payee.toLowerCase()} on a call.</p>
+          ) : null}
           {supplierAddr && !isAddress(supplierAddr) ? <p className="note bad">That isn't a complete wallet address. It starts with 0x and has 42 characters.</p> : null}
           {isAddress(supplierAddr) && supplierAddr.toLowerCase() === account.toLowerCase() ? <p className="note bad">That's your own wallet. Use the {K.payee.toLowerCase()}'s.</p> : null}
           {payee?.status === "new" ? <p className="note">{payee.message}</p> : null}

@@ -8,6 +8,7 @@ import NewOrder from "./pages/NewOrder.jsx";
 import Order from "./pages/Order.jsx";
 import History from "./pages/History.jsx";
 import Receipt from "./pages/Receipt.jsx";
+import Invite from "./pages/Invite.jsx";
 
 export const short = (a) => (a ? `${a.slice(0, 6)}…${a.slice(-4)}` : "");
 
@@ -105,6 +106,7 @@ export default function App() {
 
   // Orders open by their private link code (or, for old links, their number).
   const order = path.match(/^\/o\/([A-Za-z0-9]{1,10})/);
+  const invite = path.match(/^\/invite\/([A-Za-z0-9]{12})$/);
   const receipt = path.match(/^\/o\/([A-Za-z0-9]{1,10})\/receipt$/);
   const wallet = { account, connect: doConnect, connectError };
   const landing = path === "/";
@@ -130,7 +132,7 @@ export default function App() {
         </div>
       </header>
       <main>
-        {receipt ? <Receipt id={receipt[1]} wallet={wallet} /> : order ? <Order id={order[1]} wallet={wallet} /> : path === "/new" ? <NewOrder wallet={wallet} /> : path === "/history" ? <History wallet={wallet} /> : landing ? <Landing wallet={wallet} /> : <Home wallet={wallet} />}
+        {invite ? <Invite code={invite[1]} wallet={wallet} /> : receipt ? <Receipt id={receipt[1]} wallet={wallet} /> : order ? <Order id={order[1]} wallet={wallet} /> : path === "/new" ? <NewOrder wallet={wallet} /> : path === "/history" ? <History wallet={wallet} /> : landing ? <Landing wallet={wallet} /> : <Home wallet={wallet} />}
       </main>
       <Toasts />
       <footer className="foot">

@@ -13,6 +13,7 @@ import { textileClient, ngnPerUsd, rampSupportsCelo, TextileError } from "./text
 import { LogIndex } from "./history.js";
 import { VaultSet } from "./vaults.js";
 import { OrderLinks, LINK_RE } from "./links.js";
+import { Invites } from "./invites.js";
 import { orderPreviewPng } from "./ogImage.js";
 
 const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml", ".png": "image/png", ".json": "application/json", ".ico": "image/x-icon", ".webmanifest": "application/manifest+json" };
@@ -66,6 +67,7 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
   // Container numbers: the vault stores only their fingerprint. Anyone may tell the
   // server the number, and it's kept only if it matches that fingerprint, so the
   // buyer can see and track it.
+  const invites = new Invites(join(dataDir, "invites"));
   const trackingDir = join(dataDir, "tracking");
   mkdirSync(trackingDir, { recursive: true });
   const trackingPath = (id) => join(trackingDir, `${Number(id)}.json`);
@@ -117,6 +119,9 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
       writeFileSync(sheetPath(ref), JSON.stringify({ sheet: body.sheet, canonical: canonicalSheet(body.sheet) }, null, 2));
       return [200, { ref }];
     },
+
+    // Supplier invites (no copied addresses).
+    "POST /api/invites": async (body) => [200, { code: invites.create(body.buyer, body.name) }],
 
     // F9
     "POST /api/payee/check": async (body) => {
@@ -244,6 +249,17 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
           const id = await toId(m[1]);
           const view = id ? await orderView(id, url.searchParams.get("as")) : null;
           return view ? send(res, 200, view) : send(res, 404, { error: "No such order" });
+        }
+        const inv = url.pathname.match(/^\/api\/invites\/([A-Za-z0-9]{12})(\/claim)?$/);
+        if (inv) {
+          if (req.method === "GET" && !inv[2]) {
+            const v = invites.get(inv[1]);
+            return v ? send(res, 200, v) : send(res, 404, { error: "This invite doesn't exist" });
+          }
+          if (req.method === "POST" && inv[2]) {
+            const body = await readJson(req);
+            return send(res, 200, invites.claim(inv[1], body.address));
+          }
         }
         const tr = url.pathname.match(/^\/api\/orders\/([A-Za-z0-9]{1,10})\/tracking$/);
         if (tr && req.method === "POST") {

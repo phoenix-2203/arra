@@ -24,5 +24,8 @@ api.fxQuote = (taker, usd, takerProof) => call("POST", "/api/fx/quote", { taker,
 api.fxSubmit = (rfqId, txHash) => call("POST", `/api/fx/${rfqId}/submit`, { txHash });
 api.stats = () => call("GET", "/api/stats");
 api.tracking = (id, number) => call("POST", `/api/orders/${id}/tracking`, { number });
+api.createInvite = (buyer, name) => call("POST", "/api/invites", { buyer, name });
+api.invite = (code) => call("GET", `/api/invites/${code}`);
+api.claimInvite = (code, address) => call("POST", `/api/invites/${code}/claim`, { address });
 api.activity = (address) => call("GET", `/api/activity?address=${address}`);
 api.timeline = (id) => call("GET", `/api/orders/${id}/timeline`);

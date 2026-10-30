@@ -199,3 +199,21 @@ test("container number: kept only if it matches the fingerprint the supplier rec
   assert.equal(view.tracking.number, "CSQU3054383", "the buyer can now see and track it");
   srv.close();
 });
+
+test("supplier invites: the supplier's own wallet fills the address; first claim keeps it", async () => {
+  const [st, { code }] = await post("/api/invites", { buyer: BUYER, name: "Shenzhen Brightway" });
+  assert.equal(st, 200);
+  assert.match(code, /^[2-9a-km-zA-HJ-NP-Z]{12}$/);
+  const [, before] = await get(`/api/invites/${code}`);
+  assert.equal(before.address, null);
+  assert.equal(before.name, "Shenzhen Brightway");
+  assert.equal((await post(`/api/invites/${code}/claim`, { address: BUYER }))[0], 400, "not the buyer's own wallet");
+  const [cs, claimed] = await post(`/api/invites/${code}/claim`, { address: SUPPLIER.toLowerCase() });
+  assert.equal(cs, 200);
+  assert.equal(claimed.address, SUPPLIER);
+  assert.equal((await post(`/api/invites/${code}/claim`, { address: SUPPLIER }))[0], 200, "same wallet again is fine");
+  assert.equal((await post(`/api/invites/${code}/claim`, { address: "0x3333333333333333333333333333333333333333" }))[0], 409, "a forwarded link can't swap the address");
+  assert.equal((await get(`/api/invites/${code}`))[1].address, SUPPLIER);
+  assert.equal((await post("/api/invites", { buyer: BUYER, name: "" }))[0], 400);
+  assert.equal((await get("/api/invites/abcdefghjkmn"))[0], 404);
+});
