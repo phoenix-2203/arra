@@ -8,7 +8,7 @@ import TrackRecord from "../TrackRecord.jsx";
 import Notes from "./Notes.jsx";
 import Problem from "./Problem.jsx";
 import { downloadIcs, deadlines } from "../calendar.js";
-import { STRINGS, initialLang, saveLang } from "../i18n.js";
+import { STRINGS, initialLang, saveLang, qtyText } from "../i18n.js";
 import { short, navigate } from "../App.jsx";
 
 const usd = (v) => Number(formatUnits(BigInt(v), 6)).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -182,8 +182,10 @@ export default function Order({ id, wallet }) {
         await new Promise((r) => setTimeout(r, 1200));
       }
       api.timeline(id).then((r) => setSteps(r.steps)).catch(() => {});
+      return hash;
     } catch (e) {
       if (!/reject|denied|cancel/i.test(e.shortMessage ?? e.message ?? "")) setError(e.shortMessage ?? e.message);
+      return null;
     } finally {
       setBusy("");
     }
@@ -203,6 +205,7 @@ export default function Order({ id, wallet }) {
       releasePart: `I've paid $${args?.[1] ? usd(args[1]) : ""} of the balance for ${n}.`,
       extendDeadlines: `I've given you more time on ${n}: the new ship-by date is ${args?.[2] ? day(Number(args[2]), "en") : ""}.`,
       proposeSplit: `I've offered a split on ${n}. Please look and accept or reply.`,
+      problem: `I've reported a problem with ${n} on Arra and offered how to split the balance. Please look and accept or reply with an offer.`,
       acceptSplit: `I've accepted the split on ${n}. It's settled.`,
       cancel: `${n} has been cancelled and the money returned.`,
     }[name];
@@ -211,9 +214,10 @@ export default function Order({ id, wallet }) {
   // Mark shipped, then tell the server the container number (it checks it against the
   // fingerprint now onchain) so the buyer can see and track it.
   async function shipWithTracking(number) {
-    await run("markShipped", [BigInt(o.id), keccak256(toBytes(number))]);
+    const tx = await run("markShipped", [BigInt(o.id), keccak256(toBytes(number))]);
+    if (!tx) return;
     for (let i = 0; i < 6; i++) {
-      if (await api.tracking(view.link, number).then(() => true).catch(() => false)) return load();
+      if (await api.tracking(view.link, number, tx).then(() => true).catch(() => false)) return load();
       await new Promise((r) => setTimeout(r, 2000));
     }
   }
@@ -227,6 +231,55 @@ export default function Order({ id, wallet }) {
   const bid = BigInt(o.id);
   const has = (a) => actions.includes(a);
   const shareUrl = `${location.origin}/o/${view.link}${shareLang === "auto" ? "" : `?lang=${shareLang}`}`;
+  const splitBox = (
+    <div className="block stack" key="split">
+      <label className="field">
+        <span>{A.proposeSplit}</span>
+        <input type="range" min="0" max="100" step="5" value={splitPct} onChange={(e) => setSplitPct(Number(e.target.value))} />
+        <small className="num">{t.splitOffer(usd(toSupplierSplit), usd(held - toSupplierSplit))}</small>
+      </label>
+      <button className="secondary" disabled={!!busy} onClick={() => run("proposeSplit", [bid, toSupplierSplit])}>{A.proposeSplit}</button>
+    </div>
+  );
+  // Secondary actions, shown under "More options".
+  const secondary = [];
+  if (has("release") && !(o.status === "Shipped" && !inTransit)) {
+    secondary.push(<button key="release" className={o.status === "Disputed" ? "money" : "secondary"} disabled={!!busy} onClick={() => run("release", [bid])}>{A.release} (${usd(o.held)})</button>);
+  }
+  if (has("releasePart")) {
+    secondary.push(
+      <div className="block stack" key="part">
+        <label className="field">
+          <span>{A.releasePart}</span>
+          <input inputMode="decimal" value={partAmount} onChange={(e) => setPartAmount(e.target.value)} placeholder={`Up to ${usd(o.held)}`} className="num" />
+          <small>{t.partHint}</small>
+        </label>
+        <button className="secondary" disabled={!!busy || !/^\d+(\.\d{1,6})?$/.test(partAmount) || toUnits(partAmount) === 0n || toUnits(partAmount) > held} onClick={() => run("releasePart", [bid, toUnits(partAmount)])}>
+          {A.releasePart}{partAmount ? ` ($${partAmount})` : ""}
+        </button>
+      </div>,
+    );
+  }
+  if (has("proposeSplit") && o.status !== "Disputed") secondary.push(splitBox);
+  if (has("dispute") && o.status !== "Shipped") secondary.push(<button key="dispute" className="danger" disabled={!!busy} onClick={() => run("dispute", [bid])}>{A.dispute}</button>);
+  if (has("extendDeadlines")) {
+    secondary.push(
+      <div className="block stack" key="extend">
+        <label className="field">
+          <span>{A.extendDeadlines}</span>
+          <input type="date" value={extendTo || extendDefault} min={new Date(Math.max(o.shipBy, now) * 1000).toISOString().slice(0, 10)} onChange={(e) => setExtendTo(e.target.value)} />
+          <small>{t.v4.extendHint}</small>
+        </label>
+        <button className="secondary" disabled={!!busy} onClick={() => {
+          const ship = Math.floor(Date.parse(`${extendTo || extendDefault}T23:59:59Z`) / 1000);
+          const accept = o.status === "Pending" ? Math.min(ship, Math.max(o.acceptBy, now + 86400)) : o.acceptBy;
+          run("extendDeadlines", [bid, BigInt(accept), BigInt(ship)]);
+        }}>{A.extendDeadlines}</button>
+      </div>,
+    );
+  }
+  if (has("cancel")) secondary.push(<button key="cancel" className="danger" disabled={!!busy} onClick={() => run("cancel", [bid])}>{A.cancel}</button>);
+  if (has("refundBuyer")) secondary.push(<button key="refund" className="danger" disabled={!!busy} onClick={() => run("cancel", [bid])}>{A.refundBuyer}</button>);
 
   return (
     <div className="stack-lg" lang={lang}>
@@ -265,7 +318,7 @@ export default function Order({ id, wallet }) {
 
       {lang === "en" && view.explanation ? <p>{view.explanation}</p> : null}
 
-      {isNew && role === "buyer" && o.status === "Pending" ? (
+      {role === "buyer" && o.status === "Pending" ? (
         <div className="block stack">
           <h3>{t.share}</h3>
           <p className="small muted">They see the terms, the locked amount and an Accept button. Pick the language it opens in:</p>
@@ -301,7 +354,7 @@ export default function Order({ id, wallet }) {
             </div>
           ) : goods ? <p className="small muted">{t.ship.noNumber}</p> : null}
           {role === "buyer" && inTransit && has("dispute") && problem === null ? <button className="secondary" disabled={!!busy} onClick={() => setProblem("notArrived")}>{t.ship.hold}</button> : null}
-          {role === "buyer" && problem !== null ? <Problem order={o} link={view.link} preset={problem || undefined} lang={lang} onCancel={() => setProblem(null)} onDone={() => { setProblem(null); load(); }} /> : null}
+          {role === "buyer" && problem !== null ? <Problem order={o} link={view.link} preset={problem || undefined} lang={lang} onCancel={() => setProblem(null)} onDone={() => { setProblem(null); setTell(tellText("problem")); load(); }} /> : null}
         </div>
       ) : null}
 
@@ -358,53 +411,19 @@ export default function Order({ id, wallet }) {
             <button className="money" disabled={!!busy} onClick={() => run("acceptSplit", [bid, BigInt(o.splitOffer.toSupplier)])}>{A.acceptSplit}</button>
           ) : null}
 
-          {has("release") && !(o.status === "Shipped" && !inTransit) ? <button className={o.splitOffer && has("acceptSplit") ? "secondary" : "money"} disabled={!!busy} onClick={() => run("release", [bid])}>{A.release} (${usd(o.held)})</button> : null}
-
-          {has("releasePart") ? (
-            <div className="block stack">
-              <label className="field">
-                <span>{A.releasePart}</span>
-                <input inputMode="decimal" value={partAmount} onChange={(e) => setPartAmount(e.target.value)} placeholder={`Up to ${usd(o.held)}`} className="num" />
-                <small>For example when the bill of lading arrives, then the rest on delivery.</small>
-              </label>
-              <button className="secondary" disabled={!!busy || !/^\d+(\.\d{1,6})?$/.test(partAmount) || toUnits(partAmount) === 0n || toUnits(partAmount) > held} onClick={() => run("releasePart", [bid, toUnits(partAmount)])}>
-                {A.releasePart}{partAmount ? ` ($${partAmount})` : ""}
-              </button>
-            </div>
-          ) : null}
-
-          {has("proposeSplit") ? (
-            <div className="block stack">
-              <label className="field">
-                <span>{A.proposeSplit}</span>
-                <input type="range" min="0" max="100" step="5" value={splitPct} onChange={(e) => setSplitPct(Number(e.target.value))} />
-                <small className="num">{t.splitOffer(usd(toSupplierSplit), usd(held - toSupplierSplit))}</small>
-              </label>
-              <button className="secondary" disabled={!!busy} onClick={() => run("proposeSplit", [bid, toSupplierSplit])}>{A.proposeSplit}</button>
-            </div>
-          ) : null}
-
-          {has("dispute") && o.status !== "Shipped" ? <button className="danger" disabled={!!busy} onClick={() => run("dispute", [bid])}>{A.dispute}</button> : null}
-          {has("extendDeadlines") ? (
-            <div className="block stack">
-              <label className="field">
-                <span>{A.extendDeadlines}</span>
-                <input type="date" value={extendTo || extendDefault} min={new Date(Math.max(o.shipBy, now) * 1000).toISOString().slice(0, 10)} onChange={(e) => setExtendTo(e.target.value)} />
-                <small>{t.v4.extendHint}</small>
-              </label>
-              <button className="secondary" disabled={!!busy} onClick={() => {
-                const ship = Math.floor(Date.parse(`${extendTo || extendDefault}T23:59:59Z`) / 1000);
-                const accept = o.status === "Pending" ? Math.min(ship, Math.max(o.acceptBy, now + 86400)) : o.acceptBy;
-                run("extendDeadlines", [bid, BigInt(accept), BigInt(ship)]);
-              }}>{A.extendDeadlines}</button>
-            </div>
-          ) : null}
-          {has("resolveDispute") ? <button disabled={!!busy} onClick={() => run("resolveDispute", [bid])}>{A.resolveDispute}</button> : null}
-          {has("claim") ? <button disabled={!!busy} onClick={() => run("claim", [bid])}>{A.claim}</button> : null}
-          {has("reclaim") ? <button disabled={!!busy} onClick={() => run("reclaim", [bid])}>{A.reclaim}</button> : null}
+          {has("resolveDispute") ? <button className="money" disabled={!!busy} onClick={() => run("resolveDispute", [bid])}>{A.resolveDispute}</button> : null}
+          {has("claim") ? <button className="money" disabled={!!busy} onClick={() => run("claim", [bid])}>{A.claim}</button> : null}
+          {has("reclaim") ? <button className="money" disabled={!!busy} onClick={() => run("reclaim", [bid])}>{A.reclaim}</button> : null}
+          {o.status === "Disputed" && has("proposeSplit") ? splitBox : null}
           {has("decline") ? <button className="danger" disabled={!!busy} onClick={() => run("cancel", [bid])}>{A.decline}</button> : null}
-          {has("cancel") ? <button className="danger" disabled={!!busy} onClick={() => run("cancel", [bid])}>{A.cancel}</button> : null}
-          {has("refundBuyer") ? <button className="danger" disabled={!!busy} onClick={() => run("cancel", [bid])}>{A.refundBuyer}</button> : null}
+
+          {/* Everything else, out of the way until it's needed. */}
+          {secondary.length ? (
+            <details className="more">
+              <summary>{t.moreOptions}</summary>
+              <div className="stack">{secondary}</div>
+            </details>
+          ) : null}
         </div>
 
         {busy ? <p className="note">{busy}</p> : null}
@@ -459,7 +478,7 @@ export default function Order({ id, wallet }) {
               {["product", "quantity", "unitPriceUsd", "specs", "packaging", "inspection", "shipBy", "incoterm"].filter((k) => s[k] !== undefined).map((k) => (
                 <div key={k}>
                   <dt>{t.fields[k]}</dt>
-                  <dd>{Array.isArray(s[k]) ? <ul>{s[k].map((x) => <li key={x}>{x}</li>)}</ul> : k === "quantity" ? `${s.quantity} ${s.unit}` : s[k]}</dd>
+                  <dd>{Array.isArray(s[k]) ? <ul>{s[k].map((x) => <li key={x}>{x}</li>)}</ul> : k === "quantity" ? qtyText(s.quantity, s.unit) : s[k]}</dd>
                 </div>
               ))}
             </dl>

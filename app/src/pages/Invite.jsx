@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { api } from "../api.js";
 import { hasWallet } from "../chain.js";
 import { short } from "../App.jsx";
-import { STRINGS, initialLang, saveLang } from "../i18n.js";
+import { STRINGS, initialLang, saveLang, qtyText } from "../i18n.js";
 
 const FIELDS = ["product", "quantity", "unitPriceUsd", "specs", "packaging", "inspection", "shipBy", "incoterm"];
 
@@ -78,7 +78,7 @@ export default function Invite({ code, wallet }) {
             {FIELDS.filter((k) => d[k] !== undefined && d[k] !== "").map((k) => (
               <div key={k}>
                 <dt>{S.fields[k]}</dt>
-                <dd>{Array.isArray(d[k]) ? <ul>{d[k].map((x) => <li key={x}>{x}</li>)}</ul> : k === "quantity" ? `${d.quantity} ${d.unit}` : d[k]}</dd>
+                <dd>{Array.isArray(d[k]) ? <ul>{d[k].map((x) => <li key={x}>{x}</li>)}</ul> : k === "quantity" ? qtyText(d.quantity, d.unit) : d[k]}</dd>
               </div>
             ))}
             <div><dt>{t.total}</dt><dd className="num"><strong>${total}</strong></dd></div>

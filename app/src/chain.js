@@ -237,14 +237,15 @@ export async function convertNairaToUsdt(taker, usd, api, onStep = () => {}) {
     onStep("approve");
     const a = q.transactions.approval;
     const h = await wallet.sendTransaction({ to: a.to, data: a.data, value: BigInt(a.value ?? 0), ...feeOpts() });
-    await reader.waitForTransactionReceipt({ hash: h });
+    const r = await reader.waitForTransactionReceipt({ hash: h, retryCount: 20 });
+    if (r.status !== "success") throw new Error("Allowing your cNGN failed onchain. Nothing was converted or locked.");
   }
   if (Date.now() > Date.parse(q.expiresAt)) throw new Error("The rate expired before you confirmed. Tap again for a fresh rate.");
   onStep("swap");
   const s = q.transactions.swap;
   const hash = await wallet.sendTransaction({ to: s.to, data: s.data, value: BigInt(s.value ?? 0), ...feeOpts() });
   api.fxSubmit(q.rfqId, hash).catch(() => {});
-  const receipt = await reader.waitForTransactionReceipt({ hash });
+  const receipt = await reader.waitForTransactionReceipt({ hash, retryCount: 20 });
   if (receipt.status !== "success") throw new Error("The conversion failed onchain. Nothing was locked.");
   return { hash, ngnPerUsd: q.ngnPerUsd, takerPays: q.takerPays };
 }

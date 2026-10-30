@@ -29,6 +29,8 @@ export const VAULTS = [
   // Orders #6 onwards. v3 paused for new orders in tx 0xe591147b3ff7a99390c799778dc4ad6242cb265abdd98c05a3a89b6c2b3873ff.
   { address: "0xa3b339624d21a055c6da036f8e6d219ff2c3c444", firstId: 6, deployTx: "0x0ffc4534d0e85619e0179d09b6f58f30a13a5bf18bce3464c58618b23da77799" },
 ];
+// Local testing only (fake chain): ARRA_LOCAL_VAULTS='[{"address":"0x…","firstId":1}]' replaces the list.
+if (process.env.ARRA_LOCAL_VAULTS) VAULTS.splice(0, VAULTS.length, ...JSON.parse(process.env.ARRA_LOCAL_VAULTS));
 // Where new orders go. ARRA_VAULT in .env only matters if it names a vault not listed above.
 const envVault = process.env.ARRA_VAULT?.toLowerCase();
 if (envVault && !VAULTS.some((v) => v.address.toLowerCase() === envVault)) {

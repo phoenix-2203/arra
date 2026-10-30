@@ -3,7 +3,6 @@ import { formatUnits } from "viem";
 import { api } from "../api.js";
 import { VAULT, EXPLORER, currentVault } from "../chain.js";
 import * as chain from "../chain.js";
-import { Cloth } from "../Adire.jsx";
 import Icon from "../Icon.jsx";
 import { navigate } from "../App.jsx";
 
@@ -117,19 +116,17 @@ const CASES = [
 ];
 
 const STEPS = [
-  ["sheet", "Write the order sheet", "Exact quantities, models, sizes and specs, whatever you're buying. Arra flags vague words like \"good quality\" and fingerprints the sheet so nobody can change it."],
-  ["lock", "Lock the money", "Pay in USDT or naira. Textile FX gives one firm rate for the whole order, so a weak naira next month can't hurt you."],
-  ["signature", "Supplier accepts", "They sign from their own wallet, proving it's theirs, and get the deposit instantly. The balance stays locked."],
-  ["ship", "They ship", "They enter the container number. Arra checks it's a real one before anyone relies on it."],
-  ["check", "You release", "Pay the balance in parts or all at once. If there's a problem, either side offers a split and the other accepts."],
+  ["lock", "Lock the money", "Write what you're buying and lock the total in USDT, or pay from naira at one firm Textile FX rate. It sits in a public contract, not with Arra."],
+  ["signature", "Supplier accepts", "They open your link (in English or Chinese), accept from their own wallet and get the deposit at once. The balance stays locked."],
+  ["check", "Pay when it's right", "When the goods ship or arrive, you pay the balance, all at once or in parts. If they never accept or never ship, it comes back to you automatically."],
 ];
 
 const FEATURES = [
-  ["signature", "Supplier signs to accept", "Money only moves to a wallet the supplier has proved they control. Redirected payments and wrong-network losses stop here."],
   ["coins", "Deposit paid on acceptance", "Suppliers get working capital the moment they accept, which is why they'll agree to use Arra."],
-  ["split", "One-tap settlement", "Disagree? Offer 80/20. The other side accepts and it settles in seconds, not 40 days."],
-  ["rate", "Rate locked on day one", "Convert the whole order once at a firm Textile FX rate. No surprise when the balance is due."],
-  ["container", "Fake tracking caught", "Container numbers carry a check digit. A made-up one is rejected instantly."],
+  ["clock", "Automatic refunds", "Not accepted or not shipped in time? The money goes back to you without asking anyone."],
+  ["rate", "Rate locked on day one", "Pay from naira once, at a firm Textile FX rate. A weaker naira next month can't touch it."],
+  ["signature", "The right wallet, proven", "Your supplier connects and accepts from their own wallet, so a look-alike address in a chat can't steal the payment."],
+  ["split", "Problems settle, not stall", "Report a problem with a photo and offer a split. An offer ignored for 7 days goes through; nothing stays stuck."],
   ["alarm", "Bank-detail change alarm", "If a known supplier suddenly wants paying somewhere new, Arra stops you until you've confirmed by phone."],
 ];
 
@@ -158,7 +155,7 @@ export default function Landing({ wallet }) {
         <div className="hero-copy">
           <h1 className="display">Pay the deposit. Keep the balance locked until it ships.</h1>
           <p className="lede-lg">
-            Arra is escrow for importers buying anything from China and abroad, from phones and solar panels to machine parts and clothes, and for any deal paid with a deposit and a balance. Your supplier gets their deposit the moment they accept. The rest waits in an open contract they can see but can't touch until the goods ship.
+            Escrow for any deal paid with a deposit and a balance, from phones and solar panels shipped from China to a table made in Lagos. Your supplier gets the deposit the moment they accept. The rest waits in an open contract until the goods ship, and comes back to you if they don't.
           </p>
           <div className="hero-cta">
             <a href="/new" className="button money" onClick={go("/new")}>Start an order</a>
@@ -189,7 +186,7 @@ export default function Landing({ wallet }) {
       </section>
 
       <section className="band" id="how">
-        <h2 className="section-title">How an order works</h2>
+        <h2 className="section-title">How it works</h2>
         <ol className="flow">
           {STEPS.map(([icon, title, body]) => (
             <li key={title}>
@@ -201,25 +198,8 @@ export default function Landing({ wallet }) {
         </ol>
       </section>
 
-      <section className="band split-band">
-        <div>
-          <h2 className="section-title">Release the balance in stages, like milestones.</h2>
-          <p className="lede-lg">Pay part when the bill of lading arrives and the rest on delivery. You never have to release everything at once to keep a supplier happy.</p>
-        </div>
-        <div className="mock adire" aria-label="Example order">
-          <Cloth />
-          <p className="label">Order total $500. Still locked for Guangzhou Hengli Textiles:</p>
-          <p className="amount">$150.00<small>USDT</small></p>
-          <ul className="milestones">
-            <li className="done"><Icon name="check" size={18} /><span>Deposit, 30%</span><em>$150 paid on acceptance</em></li>
-            <li className="done"><Icon name="check" size={18} /><span>Bill of lading received</span><em>$200 released</em></li>
-            <li><Icon name="clock" size={18} /><span>Goods delivered</span><em>$150 locked</em></li>
-          </ul>
-        </div>
-      </section>
-
       <section className="band">
-        <h2 className="section-title">Built around how imports really fail</h2>
+        <h2 className="section-title">Built around how these deals really fail</h2>
         <div className="features">
           {FEATURES.map(([icon, title, body]) => (
             <article key={title} className="feature">

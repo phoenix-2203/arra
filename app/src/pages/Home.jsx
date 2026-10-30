@@ -17,6 +17,17 @@ const NEXT = {
   buyer: { Pending: "Send your supplier the order link", Active: "Being made. Balance stays locked until shipping", Shipped: "Check the goods, then pay the balance", Disputed: "Offer or accept a split", Released: "Nothing left to do", Settled: "Nothing left to do", Refunded: "The money is back in your wallet" },
   supplier: { Pending: "Accept to receive your deposit", Active: "Ship, then add the container number", Shipped: "Paid automatically when the check period ends", Disputed: "Offer or accept a split", Released: "Nothing left to do", Settled: "Nothing left to do", Refunded: "Order closed" },
 };
+// For someone with no orders yet: the whole idea in three steps.
+export function HowSteps() {
+  return (
+    <ol className="how3">
+      <li><strong>Lock the money</strong><span>Write what you're buying and lock the total in USDT or naira. It sits in a public contract, not with Arra.</span></li>
+      <li><strong>Supplier accepts</strong><span>They open your link, accept from their wallet and get the deposit at once. The rest stays locked.</span></li>
+      <li><strong>Pay when it's right</strong><span>When the goods ship or arrive, you pay the balance. If they never accept or never ship, it comes back to you automatically.</span></li>
+    </ol>
+  );
+}
+
 const ACTION_NEEDED = { buyer: ["Shipped", "Disputed"], supplier: ["Pending", "Active", "Disputed"] };
 
 export default function Home({ wallet }) {
@@ -42,9 +53,10 @@ export default function Home({ wallet }) {
     return (
       <div className="narrow stack-lg center-col">
         <h1>Your orders</h1>
-        <p className="muted">Connect the wallet you use for Arra to see your orders and balances.</p>
+        <p className="muted">Connect the wallet you use for Arra to see your orders, or start your first one.</p>
         {hasWallet() ? <button onClick={wallet.connect}>Connect wallet</button> : <p className="note">Open this page inside MiniPay, or any wallet browser on Celo.</p>}
         {wallet.connectError ? <p className="note bad">{wallet.connectError}</p> : null}
+        <HowSteps />
       </div>
     );
   }
@@ -54,6 +66,8 @@ export default function Home({ wallet }) {
   const lockedForSuppliers = mine("buyer").filter(live).reduce((s, o) => s + BigInt(o.order.held), 0n);
   const waitingForMe = mine("supplier").filter(live).reduce((s, o) => s + BigInt(o.order.held), 0n);
   const list = mine(tab);
+  const none = orders !== null && orders.length === 0;
+  const both = mine("buyer").length > 0 && mine("supplier").length > 0;
 
   return (
     <div className="dash stack-lg">
@@ -62,10 +76,7 @@ export default function Home({ wallet }) {
           <h1>Your orders</h1>
           <p className="muted num">{short(account)}</p>
         </div>
-        <div className="row-gap">
-          <button className="secondary auto" onClick={() => navigate("/history")}><Icon name="clock" size={18} /> History</button>
-          <button className="money auto" onClick={() => navigate("/new")}><Icon name="plus" size={18} /> New order</button>
-        </div>
+        <button className="money auto" onClick={() => navigate("/new")}><Icon name="plus" size={18} /> New order</button>
       </div>
 
       <section className="balances" aria-label="Balances">
@@ -73,35 +84,45 @@ export default function Home({ wallet }) {
           <span>USDT in wallet</span>
           <strong className="num">{usdt !== null ? usd(usdt) : "…"}</strong>
         </div>
-        <div className="bal">
-          <span>Naira (cNGN) in wallet</span>
-          <strong className="num">{cngn !== null ? `₦${Math.round(u(cngn)).toLocaleString("en-NG")}` : "…"}</strong>
-        </div>
-        <div className="bal hl">
-          <span>Locked for your suppliers</span>
-          <strong className="num">{orders ? usd(lockedForSuppliers) : "…"}</strong>
-        </div>
-        <div className="bal">
-          <span>Waiting for you as a supplier</span>
-          <strong className="num">{orders ? usd(waitingForMe) : "…"}</strong>
-        </div>
+        {cngn !== null && cngn > 0n ? (
+          <div className="bal">
+            <span>Naira (cNGN) in wallet</span>
+            <strong className="num">₦{Math.round(u(cngn)).toLocaleString("en-NG")}</strong>
+          </div>
+        ) : null}
+        {lockedForSuppliers > 0n ? (
+          <div className="bal hl">
+            <span>Locked for your suppliers</span>
+            <strong className="num">{usd(lockedForSuppliers)}</strong>
+          </div>
+        ) : null}
+        {waitingForMe > 0n ? (
+          <div className="bal">
+            <span>Waiting for you as a supplier</span>
+            <strong className="num">{usd(waitingForMe)}</strong>
+          </div>
+        ) : null}
       </section>
-
-      <div className="tabs" role="tablist">
-        {[["buyer", "Buying"], ["supplier", "Supplying"]].map(([k, label]) => (
-          <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? "tab on" : "tab"} onClick={() => setTab(k)}>
-            {label} <span className="count num">{mine(k).length}</span>
-          </button>
-        ))}
-      </div>
 
       {error ? <p className="note bad">{error}</p> : null}
       {orders === null && !error ? <p className="muted">Loading your orders…</p> : null}
-      {orders && list.length === 0 ? (
-        <div className="empty">
-          <Icon name={tab === "buyer" ? "lock" : "signature"} size={30} />
-          <p>{tab === "buyer" ? "No orders yet. Lock your first one in a few minutes." : "When a buyer sends you an Arra order, open their link and accept it from this wallet. It will show up here."}</p>
-          {tab === "buyer" ? <button className="money auto" onClick={() => navigate("/new")}>Start an order</button> : null}
+
+      {none ? (
+        <div className="stack">
+          <h2>How it works</h2>
+          <HowSteps />
+          <button className="money" onClick={() => navigate("/new")}>Start your first order</button>
+          <p className="small muted">Supplying? When a buyer sends you an Arra link, open it and accept from this wallet. It will show up here.</p>
+        </div>
+      ) : null}
+
+      {both ? (
+        <div className="tabs" role="tablist">
+          {[["buyer", "Buying"], ["supplier", "Supplying"]].map(([k, label]) => (
+            <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? "tab on" : "tab"} onClick={() => setTab(k)}>
+              {label} <span className="count num">{mine(k).length}</span>
+            </button>
+          ))}
         </div>
       ) : null}
 

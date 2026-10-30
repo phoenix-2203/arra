@@ -4,7 +4,7 @@ import { createServer as httpServer } from "node:http";
 import { gzipSync } from "node:zlib";
 import { readFileSync, writeFileSync, existsSync, mkdirSync, statSync } from "node:fs";
 import { join, extname, normalize } from "node:path";
-import { isAddress, keccak256, toBytes } from "viem";
+import { isAddress, keccak256, toBytes, parseEventLogs } from "viem";
 import { reviewSheet, sheetRef, sheetTotal, canonicalSheet } from "./orderSheet.js";
 import { PayeeBook } from "./payeeBook.js";
 import { checkContainerNumber } from "./container.js";
@@ -66,6 +66,10 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
       return await fn();
     } catch (e) {
       if (e instanceof TextileError) return [e.status === 401 ? 401 : 502, { error: e.message, code: e.code ?? null }];
+      // Textile unreachable (network): say so plainly instead of a generic error.
+      if (!e.status && /fetch failed|ENOTFOUND|ECONN|ETIMEDOUT|network/i.test(`${e.message} ${e.cause?.code ?? ""}`)) {
+        return [502, { error: "Naira rates are unavailable right now. Try again in a minute, or pay with USDT." }];
+      }
       throw e;
     }
   };
@@ -325,7 +329,17 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
           const body = await readJson(req);
           const check = checkContainerNumber(body.number);
           if (!check.ok) return send(res, 400, { error: check.reason });
-          const shipped = (await vaults.timeline(id).catch(() => [])).find((st) => st.event === "OrderShipped");
+          let shipped = (await vaults.timeline(id).catch(() => [])).find((st) => st.event === "OrderShipped");
+          // Just shipped: the history index reads a couple of blocks behind, so check the
+          // shipping transaction's own receipt (only an OrderShipped log from this order's vault counts).
+          if (!shipped && /^0x[0-9a-fA-F]{64}$/.test(body.tx ?? "")) {
+            const vault = vaults.vaultFor(id);
+            const receipt = await client.getTransactionReceipt({ hash: body.tx }).catch(() => null);
+            const log = receipt?.status === "success" && vault
+              ? parseEventLogs({ abi: vaultAbi, eventName: "OrderShipped", logs: receipt.logs }).find((l) => l.address.toLowerCase() === vault.toLowerCase() && l.args.id === BigInt(id))
+              : null;
+            if (log) shipped = { trackingHash: log.args.trackingHash, at: Number(log.args.shippedAt), tx: body.tx };
+          }
           if (!shipped) return send(res, 409, { error: "The order isn't marked shipped yet" });
           if (keccak256(toBytes(check.number)).toLowerCase() !== String(shipped.trackingHash).toLowerCase()) {
             return send(res, 400, { error: "That number doesn't match the one the supplier recorded" });

@@ -64,7 +64,8 @@ export default function Problem({ order, link, preset, lang = "en", onDone, onCa
       // The reason and evidence, signed, so it can't be changed later (best effort: the money steps are done).
       try {
         const photoHash = photo ? (await api.uploadPhoto(link, photo)).photo : undefined;
-        const text = `Problem: ${WORDS.en.reasons[reason]}. ${details.trim()} Asking for $${money(refund)} of the $${money(held)} balance back.`.trim();
+        const said = details.trim();
+        const text = `Problem: ${WORDS.en.reasons[reason]}. ${said}${said && !/[.!?]$/.test(said) ? "." : ""} Asking for $${money(refund)} of the $${money(held)} balance back.`.replace(/\s+/g, " ").trim();
         await api.addNote(link, await signNote(order.id, { kind: "note", text, ...(photoHash ? { photo: photoHash } : {}) }));
       } catch {
         /* the note is extra; the hold and offer already went through */

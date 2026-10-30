@@ -5,6 +5,8 @@ export const STRINGS = {
     lang: "中文",
     receipt: "Receipt",
     calendar: "Add to calendar",
+    moreOptions: "More options",
+    partHint: "For example when the bill of lading arrives, then the rest on delivery.",
     locked: "Locked for you",
     lockedFor: (name) => `Locked for ${name}`,
     held: "held in the vault",
@@ -176,6 +178,8 @@ export const STRINGS = {
     lang: "English",
     receipt: "收据",
     calendar: "加入日历",
+    moreOptions: "更多选项",
+    partHint: "例如收到提单时先付一部分，到货后再付剩余部分。",
     locked: "已为您锁定",
     lockedFor: (name) => `已为 ${name} 锁定`,
     held: "存放在合约中",
@@ -364,3 +368,6 @@ export function saveLang(l) {
     /* ignore */
   }
 }
+
+/** "1 pieces" → "1 piece": shown quantities read naturally (the stored sheet is unchanged). */
+export const qtyText = (q, unit) => `${q} ${Number(q) === 1 && /[a-z]s$/i.test(unit ?? "") ? unit.slice(0, -1) : unit ?? ""}`.trim();

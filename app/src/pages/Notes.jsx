@@ -8,6 +8,7 @@ import { signNote, shrinkPhoto } from "../chain.js";
 const WORDS = {
   en: {
     title: "Notes and evidence",
+    add: "Add a note or photo",
     empty: "Nothing yet. Add photos of the goods, packing or receipts, or agree a change to the terms here, so there's one record both sides can point to.",
     buyer: "Buyer",
     supplier: "Supplier",
@@ -25,6 +26,7 @@ const WORDS = {
   },
   zh: {
     title: "备注与凭证",
+    add: "添加备注或照片",
     empty: "暂无内容。可在此上传货物、包装或单据照片，或协商修改条款，作为双方共同的记录。",
     buyer: "买家",
     supplier: "供应商",
@@ -92,10 +94,32 @@ export default function Notes({ order, link, role, lang = "en" }) {
   const when = (ts) => new Date(ts * 1000).toLocaleString(lang === "zh" ? "zh-CN" : "en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
   const shown = (list ?? []).filter((n) => n.kind !== "agree");
 
+  const composer = party ? (
+        <div className="block stack">
+          <div className="chips wrap" role="radiogroup">
+            {[["note", w.kindNote], ["change", w.kindChange]].map(([k, label]) => (
+              <button key={k} type="button" role="radio" aria-checked={kind === k} className={kind === k ? "chip on" : "chip"} onClick={() => setKind(k)}>{label}</button>
+            ))}
+          </div>
+          <textarea rows={3} value={text} maxLength={1000} onChange={(e) => setText(e.target.value)} placeholder={w.placeholder} />
+          {photo ? <img className="note-photo" src={photo.url} alt="" /> : null}
+          <div className="row-gap">
+            <label className="button secondary auto small-btn">
+              {w.photo}
+              <input type="file" accept="image/*" onChange={pick} style={{ display: "none" }} />
+            </label>
+            <button className="auto" disabled={!!busy || (!text.trim() && !photo)} onClick={() => post({ kind, text: text.trim(), photo: photo?.base64 })}>{w.post}</button>
+          </div>
+          <p className="small muted">{w.signed}</p>
+          {busy ? <p className="note">{busy}</p> : null}
+          {error ? <p className="note bad">{error}</p> : null}
+        </div>
+      ) : null;
+
   return (
     <section className="stack">
       <h2>{w.title}</h2>
-      {list && !shown.length ? <p className="small muted">{w.empty}</p> : null}
+      {list && !shown.length && !party ? <p className="small muted">{w.empty}</p> : null}
       {shown.length ? (
         <ol className="notes">
           {shown.map((n) => (
@@ -122,26 +146,12 @@ export default function Notes({ order, link, role, lang = "en" }) {
         </ol>
       ) : null}
 
-      {party ? (
-        <div className="block stack">
-          <div className="chips wrap" role="radiogroup">
-            {[["note", w.kindNote], ["change", w.kindChange]].map(([k, label]) => (
-              <button key={k} type="button" role="radio" aria-checked={kind === k} className={kind === k ? "chip on" : "chip"} onClick={() => setKind(k)}>{label}</button>
-            ))}
-          </div>
-          <textarea rows={3} value={text} maxLength={1000} onChange={(e) => setText(e.target.value)} placeholder={w.placeholder} />
-          {photo ? <img className="note-photo" src={photo.url} alt="" /> : null}
-          <div className="row-gap">
-            <label className="button secondary auto small-btn">
-              {w.photo}
-              <input type="file" accept="image/*" onChange={pick} style={{ display: "none" }} />
-            </label>
-            <button className="auto" disabled={!!busy || (!text.trim() && !photo)} onClick={() => post({ kind, text: text.trim(), photo: photo?.base64 })}>{w.post}</button>
-          </div>
-          <p className="small muted">{w.signed}</p>
-          {busy ? <p className="note">{busy}</p> : null}
-          {error ? <p className="note bad">{error}</p> : null}
-        </div>
+      {shown.length ? composer : party ? (
+        <details className="more">
+          <summary>{w.add}</summary>
+          <p className="small muted">{w.empty}</p>
+          {composer}
+        </details>
       ) : null}
     </section>
   );

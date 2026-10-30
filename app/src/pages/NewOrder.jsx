@@ -1,3 +1,4 @@
+import { qtyText } from "../i18n.js";
 import { useEffect, useMemo, useState } from "react";
 import { formatUnits, isAddress, parseEther } from "viem";
 import { api } from "../api.js";
@@ -28,7 +29,7 @@ const KINDS = {
       { product: "Spare parts: car brake pads", qty: "200", price: "4.80", d: { "Model or spec": "Front pads for Toyota Corolla 2010–2018", Colour: "Black backing plate", Size: "OEM part 04465-02220", Condition: "New, not refurbished", Brand: "Same factory as the sample", "Per carton": "20 sets per carton" } },
     ],
     checkLabel: "How you'll check the goods", checkPh: "Photos and a video of the goods before shipping",
-    dateLabel: "Ship by", notDone: "Not shipped by", depositHint: "Chinese suppliers usually ask for 30%.",
+    dateLabel: "Ship by", notDone: "Not shipped by", depositHint: "Suppliers usually ask for 20–30% up front.",
   },
   custom: {
     label: "Made to order", short: "Made to order", hint: "Furniture, signage, fabrication, custom outfits", icon: "sheet",
@@ -142,6 +143,7 @@ export default function NewOrder({ wallet }) {
   const [transitDays, setTransitDays] = useState(60);
   const [hasAI, setHasAI] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [pasteOpen, setPasteOpen] = useState(false);
   const [MAX_ORDER, setMaxOrder] = useState(50_000_000n); // the vault's safety cap while Arra is new
   useEffect(() => {
     currentVault().then(() => {
@@ -299,7 +301,7 @@ export default function NewOrder({ wallet }) {
   const needUsdt = shortBy > 0n && shortBy < TEXTILE_MIN ? TEXTILE_MIN : shortBy;
   const naira = payWith === "naira";
   // The firm price can come in slightly above the live preview, so ask for 1% headroom.
-  const fxCngn = fxRate ? (BigInt(fxRate.cngn) * 101n) / 100n : null;
+  const fxCngn = fxRate?.cngn ? (BigInt(fxRate.cngn) * 101n) / 100n : null;
   const short = naira ? fxCngn !== null && (cngn === null || fxCngn > cngn) : balance !== null && total > balance;
   const needsGas = supGas !== null && supGas < GAS_ENOUGH;
   const canCelo = (a) => myCelo !== null && myCelo >= parseEther(a) + parseEther("0.002");
@@ -408,7 +410,7 @@ export default function NewOrder({ wallet }) {
             <input value={f.supplier} onChange={set("supplier")} placeholder={K.namePh} autoComplete="organization" />
           </label>
           <div className="block stack invite-anchor">
-            <p className="small"><strong>Safest: let your {K.payee.toLowerCase()} send their wallet.</strong> Send them a link; when they open it and connect their wallet, the address fills in here by itself. Scammers can't slip in a look-alike address.</p>
+            <p className="small"><strong>Get your {K.payee.toLowerCase()}'s wallet with a link.</strong> They open it, read your order and connect the wallet they want to be paid in. The address fills in here by itself, so nobody can slip in a look-alike.</p>
             {!invite ? (
               <button type="button" className="secondary" disabled={!f.supplier.trim()} onClick={() => { setInviteErr(""); api.createInvite(account, f.supplier).then(({ code }) => setInvite({ code, address: null })).catch((e) => setInviteErr(e.message)); }}>
                 {f.supplier.trim() ? `Create an invite link for ${f.supplier.trim()}` : `Add the ${K.payee.toLowerCase()}'s name first`}
@@ -427,21 +429,28 @@ export default function NewOrder({ wallet }) {
             )}
             {inviteErr ? <p className="note bad">{inviteErr}</p> : null}
           </div>
-          <label className="field">
-            <span>{K.payee}'s wallet address on Celo</span>
-            <div className="with-btn">
-              <input value={supplierAddr} onChange={(e) => setSupplierAddr(e.target.value.trim())} placeholder="0x…" spellCheck="false" autoCapitalize="off" className="num" />
-              {navigator.clipboard?.readText ? (
-                <button type="button" className="secondary small-btn" onClick={() => navigator.clipboard.readText().then((t) => setSupplierAddr(t.trim())).catch(() => {})}>Paste</button>
+          {!invite?.address ? (
+            <details className="more" open={pasteOpen} onToggle={(e) => setPasteOpen(e.currentTarget.open)}>
+              <summary>I already have their wallet address</summary>
+              <div className="stack">
+              <label className="field">
+                <span>{K.payee}'s wallet address on Celo</span>
+                <div className="with-btn">
+                  <input value={supplierAddr} onChange={(e) => setSupplierAddr(e.target.value.trim())} placeholder="0x…" spellCheck="false" autoCapitalize="off" className="num" />
+                  {navigator.clipboard?.readText ? (
+                    <button type="button" className="secondary small-btn" onClick={() => navigator.clipboard.readText().then((t) => setSupplierAddr(t.trim())).catch(() => {})}>Paste</button>
+                  ) : null}
+                </div>
+                <small>Or paste it if they sent it to you. They'll accept the order from this same wallet, which proves it's really theirs.</small>
+              </label>
+              {supplierAddr && isAddress(supplierAddr) && !invite?.address ? (
+                <p className="note">Typed or pasted addresses can be swapped by scammers for one that looks almost the same. Before you lock money, read the last 6 characters, <strong className="num">{supplierAddr.slice(-6)}</strong>, to your {K.payee.toLowerCase()} on a call.</p>
               ) : null}
-            </div>
-            <small>Or paste it if they sent it to you. They'll accept the order from this same wallet, which proves it's really theirs.</small>
-          </label>
-          {supplierAddr && isAddress(supplierAddr) && !invite?.address ? (
-            <p className="note">Typed or pasted addresses can be swapped by scammers for one that looks almost the same. Before you lock money, read the last 6 characters, <strong className="num">{supplierAddr.slice(-6)}</strong>, to your {K.payee.toLowerCase()} on a call.</p>
+              {supplierAddr && !isAddress(supplierAddr) ? <p className="note bad">That isn't a complete wallet address. It starts with 0x and has 42 characters.</p> : null}
+              {isAddress(supplierAddr) && supplierAddr.toLowerCase() === account.toLowerCase() ? <p className="note bad">That's your own wallet. Use the {K.payee.toLowerCase()}'s.</p> : null}
+              </div>
+            </details>
           ) : null}
-          {supplierAddr && !isAddress(supplierAddr) ? <p className="note bad">That isn't a complete wallet address. It starts with 0x and has 42 characters.</p> : null}
-          {isAddress(supplierAddr) && supplierAddr.toLowerCase() === account.toLowerCase() ? <p className="note bad">That's your own wallet. Use the {K.payee.toLowerCase()}'s.</p> : null}
           {isAddress(supplierAddr) && supplierAddr.toLowerCase() !== account.toLowerCase() ? <TrackRecord address={supplierAddr.toLowerCase()} as="supplier" /> : null}
           {payee?.status === "new" ? <p className="note">{payee.message}</p> : null}
           {payee?.status === "known" ? <p className="note ok">{payee.message}</p> : null}
@@ -569,7 +578,7 @@ export default function NewOrder({ wallet }) {
             )
           ) : null}
           <div className="block stack summary">
-            <p className="muted small">{f.quantity} {f.unit} of {f.product}, from {f.supplier}</p>
+            <p className="muted small">{qtyText(f.quantity, f.unit)} of {f.product}, from {f.supplier}</p>
             <div className="row">
               <div><p className="muted small">Deposit when they accept</p><p className="num big-num">${usd(deposit)}</p></div>
               <div><p className="muted small">Kept locked until {f.kind === "goods" ? "shipping" : "delivery"}</p><p className="num big-num hl">${usd(total - deposit)}</p></div>
@@ -589,7 +598,7 @@ export default function NewOrder({ wallet }) {
             </label>
             <label className="choice">
               <input type="radio" name="payWith" checked={naira} onChange={() => setPayWith("naira")} />
-              <span><strong>Naira (cNGN), converted now</strong><small className="num">{cngn !== null ? `You have ${ngn(cngn)} cNGN` : "Checking balance…"}. One firm rate from Textile FX, locked for the whole order.</small></span>
+              <span><strong>Naira (cNGN), converted now</strong><small className="num">{cngn !== null ? `You have ${ngn(cngn)} cNGN.` : "Checking balance…"} One firm rate from Textile FX, locked for the whole order.</small></span>
             </label>
             {naira && needUsdt === 0n ? <p className="note ok">Your USDT already covers this order, so nothing needs converting.</p> : null}
             {naira && needUsdt > 0n && fxRate && !fxRate.error ? (
@@ -636,9 +645,17 @@ export default function NewOrder({ wallet }) {
               <li>Not accepted in {acceptText}: all ${usd(total)} comes back to you.</li>
               <li>{K.notDone} {new Date(`${f.shipBy}T12:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}: the ${usd(total - deposit)} balance comes back to you.</li>
               <li>No problem raised within {checkDays} days{v4 && f.kind === "goods" ? " of arrival" : ""}: the balance pays the {K.payee.toLowerCase()}.</li>
-              {v4 ? <li>Supplier running late? You can give them more time from the order page. A problem nobody resolves can't freeze the money: an offer ignored for 7 days goes through, and after 30 days the balance splits 50/50.</li> : null}
-              {keeperFee > 0n ? <li>Arra's agent makes these automatic refunds and payouts for you, for ${usd(keeperFee)} taken from that amount. Do it yourself first and there's no fee.</li> : null}
             </ul>
+            {v4 || keeperFee > 0n ? (
+              <details className="more">
+                <summary>What if they're late or there's a problem?</summary>
+                <ul className="small muted stack" style={{ paddingLeft: 18, margin: 0 }}>
+                  {v4 ? <li>Running late? You can give them more time from the order page. Dates can only move later.</li> : null}
+                  {v4 ? <li>Something wrong? You report it with a photo and say how much you want back. They accept or counter. An offer ignored for 7 days goes through, and after 30 days with no agreement the balance splits 50/50, so the money can't be stuck forever.</li> : null}
+                  {keeperFee > 0n ? <li>Arra's agent makes the automatic refunds and payouts for you, for ${usd(keeperFee)} taken from that amount. Do it yourself first and there's no fee.</li> : null}
+                </ul>
+              </details>
+            ) : null}
           </div>
 
           {!datesOk && shipBy > 0 && shipBy <= acceptBy ? (

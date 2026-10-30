@@ -373,7 +373,7 @@ footer.foot { display: flex; flex-wrap: wrap; gap: 8px 20px; justify-content: sp
 
 /* ===================== dashboard ===================== */
 .dash-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; }
-.balances { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.balances { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
 .bal { border: 1.5px solid var(--edge); border-radius: 16px; padding: 14px 16px; background: var(--surface); }
 .bal span { display: block; font-size: 13px; color: var(--text-soft); }
 .bal strong { display: block; margin-top: 4px; font-family: var(--display); font-size: 24px; letter-spacing: -0.02em; }
@@ -421,8 +421,8 @@ footer.foot { display: flex; flex-wrap: wrap; gap: 8px 20px; justify-content: sp
   .stats > div:last-child { border-right: 0; }
   .cases { grid-template-columns: repeat(3, 1fr); }
   .features { grid-template-columns: repeat(3, 1fr); }
-  .flow { grid-template-columns: repeat(5, 1fr); }
-  .balances { grid-template-columns: repeat(4, 1fr); }
+  .flow { grid-template-columns: repeat(3, 1fr); }
+  .balances { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
 }
 @media (max-width: 719px) {
   .stats > div:nth-child(2n) { border-right: 0; }
@@ -603,3 +603,13 @@ label.button { cursor: pointer; }
 @media (prefers-reduced-motion: reduce) { .ai-typing span { animation: none; opacity: .6; } }
 .ai-input { display: flex; gap: 8px; align-items: flex-end; }
 .ai-input textarea { flex: 1; resize: none; }
+
+/* Three steps for first-time users */
+.how3 { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; counter-reset: how; text-align: left; }
+.how3 li { counter-increment: how; position: relative; padding: 14px 16px 14px 56px; border: 1.5px solid var(--edge); border-radius: 16px; background: var(--surface); }
+.how3 li::before { content: counter(how); position: absolute; left: 16px; top: 14px; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--gold); color: var(--gold-ink); font-weight: 700; font-size: 14px; }
+.how3 strong { display: block; }
+.how3 span { display: block; color: var(--text-soft); font-size: 14px; margin-top: 2px; }
+@media (min-width: 760px) { .how3 { grid-template-columns: repeat(3, 1fr); } }
+.dash-head h1 { font-size: clamp(28px, 7vw, 40px); }
+@media (max-width: 520px) { .dash-head { align-items: center; } .dash-head .muted { font-size: 13px; } }

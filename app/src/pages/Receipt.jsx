@@ -6,7 +6,7 @@ import { formatUnits } from "viem";
 import { api } from "../api.js";
 import { EXPLORER, VAULT } from "../chain.js";
 import { navigate } from "../App.jsx";
-import { STRINGS } from "../i18n.js";
+import { STRINGS, qtyText } from "../i18n.js";
 import { moneyRows } from "./receiptRows.js";
 
 const t = STRINGS.en;
@@ -90,7 +90,7 @@ export default function Receipt({ id, wallet }) {
                 {s?.specs?.length ? <span className="rc-specs">{s.specs.join(" · ")}</span> : null}
                 {s?.incoterm ? <span className="rc-specs">{s.incoterm}</span> : null}
               </td>
-              <td className="r num">{s ? `${s.quantity} ${s.unit}` : "1"}</td>
+              <td className="r num">{s ? qtyText(s.quantity, s.unit) : "1"}</td>
               <td className="r num">{s ? `$${s.unitPriceUsd}` : "—"}</td>
               <td className="r num">{money(o.total)}</td>
             </tr>
