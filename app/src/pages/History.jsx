@@ -39,8 +39,11 @@ export default function History({ wallet }) {
 
   useEffect(() => {
     if (!account) return;
+    let current = true; // a wallet switch mustn't show the previous wallet's history
     setError("");
-    api.activity(account).then(setData).catch((e) => setError(e.status >= 500 || !e.status ? "Your history couldn't be loaded just now. Please try again in a moment." : e.message));
+    setData(null);
+    api.activity(account).then((d) => current && setData(d)).catch((e) => current && setError(e.status >= 500 || !e.status ? "Your history couldn't be loaded just now. Please try again in a moment." : e.message));
+    return () => { current = false; };
   }, [account, attempt]);
 
   if (!account) {

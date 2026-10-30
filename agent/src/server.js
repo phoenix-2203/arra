@@ -101,7 +101,7 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
     const role = v === o.buyer.toLowerCase() ? "buyer" : v === o.supplier.toLowerCase() ? "supplier" : "anyone";
     // F9: once the supplier has accepted from this address, remember it.
     const name = sheet?.sheet?.supplier;
-    if (name && o.status !== "Pending" && payees.check(o.buyer, name, o.supplier).status === "new") {
+    if (name && o.status !== "Pending" && o.status !== "Refunded" && payees.check(o.buyer, name, o.supplier).status !== "known") {
       payees.remember(o.buyer, name, o.supplier, `accepted order ${id}`);
     }
     return { order: o, link: links.code(id), tracking: loadTracking(id), sheet, role, actions: nextActions(o, t, role), explanation: explain(o, t), now: t };
@@ -151,9 +151,11 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
       if (!isAddress(body.buyer ?? "")) return [400, { error: "buyer must be an address" }];
       return [200, payees.check(body.buyer, body.supplierName ?? "", body.address ?? "")];
     },
+    // The buyer ticks "I confirmed by phone" for this order only. Nothing is stored: anyone
+    // could call this endpoint with someone else's wallet, so an address only becomes
+    // "known" once the supplier has accepted an order from it onchain (see orderView).
     "POST /api/payee/confirm": async (body) => {
       if (!isAddress(body.buyer ?? "") || !isAddress(body.address ?? "")) return [400, { error: "addresses required" }];
-      payees.remember(body.buyer, body.supplierName, body.address, "confirmed-by-phone");
       return [200, { ok: true }];
     },
 
@@ -249,9 +251,31 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
   const pngCache = new Map();
   let keeperFee = null;
 
+  // Per-visitor limits so nobody can flood the server with uploads or writes.
+  // (Caddy passes the visitor's address in x-forwarded-for.)
+  const hits = new Map();
+  const tooMany = (req, bucket, max, windowMs) => {
+    const ip = String(req.headers["x-forwarded-for"] ?? req.socket?.remoteAddress ?? "?").split(",")[0].trim();
+    const k = `${bucket}:${ip}`;
+    const t = Date.now();
+    let h = hits.get(k);
+    if (!h || t - h.start > windowMs) {
+      if (hits.size > 20_000) hits.clear();
+      h = { start: t, n: 0 };
+      hits.set(k, h);
+    }
+    return ++h.n > max;
+  };
+
   return async function handle(req, res) {
     const url = new URL(req.url, "http://x");
     try {
+      if (req.method === "POST" && url.pathname.startsWith("/api/")) {
+        const photo = /\/photos$/.test(url.pathname);
+        if (photo ? tooMany(req, "photo", 40, 3600_000) : tooMany(req, "post", 300, 600_000)) {
+          return send(res, 429, { error: "Too many requests from your connection. Please wait a few minutes and try again." });
+        }
+      }
       // Preview image for one order, drawn on request and kept in memory.
       const og = url.pathname.match(/^\/og\/([A-Za-z0-9]{10})\.png$/);
       if (og && req.method === "GET") {

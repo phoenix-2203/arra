@@ -31,13 +31,13 @@ export const VAGUE = [
 ];
 
 /** Lists what is missing or vague, in plain words. Empty list = ready to sign. */
-export function reviewSheet(sheet) {
+export function reviewSheet(sheet, now = Date.now()) {
   const issues = [];
   const kind = sheet?.kind ?? 'goods';
   if (!KINDS.includes(kind)) issues.push({ field: 'kind', problem: 'must be goods, custom or service' });
   for (const key of REQUIRED_BY_KIND[kind] ?? REQUIRED_BY_KIND.goods) {
     const v = sheet?.[key];
-    if (v === undefined || v === null || v === '' || (Array.isArray(v) && v.length === 0)) {
+    if (v === undefined || v === null || (typeof v === 'string' && !v.trim()) || (Array.isArray(v) && v.length === 0)) {
       issues.push({ field: key, problem: 'missing' });
     }
   }
@@ -49,6 +49,14 @@ export function reviewSheet(sheet) {
   }
   if (sheet?.shipBy && !/^\d{4}-\d{2}-\d{2}$/.test(sheet.shipBy)) {
     issues.push({ field: 'shipBy', problem: 'use a date like 2026-12-15' });
+  } else if (sheet?.shipBy) {
+    const d = new Date(`${sheet.shipBy}T23:59:59Z`);
+    if (Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== sheet.shipBy) issues.push({ field: 'shipBy', problem: "that date doesn't exist" });
+    else if (d.getTime() < now) issues.push({ field: 'shipBy', problem: 'pick a date in the future' });
+  }
+  // The vault refuses tiny orders (they must be worth more than ten $0.01 agent fees).
+  if (!issues.some((i) => i.field === 'quantity' || i.field === 'unitPriceUsd') && typeof sheet?.unitPriceUsd === 'string' && Number.isInteger(sheet?.quantity) && sheet.quantity > 0) {
+    if (sheetTotal(sheet) <= 100_000n) issues.push({ field: 'unitPriceUsd', problem: 'the order total must be more than $0.10' });
   }
   const texts = [
     ['product', sheet?.product],

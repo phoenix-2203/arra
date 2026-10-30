@@ -19,7 +19,7 @@ const sheet = {
   unitPriceUsd: "2.00",
   specs: ["180 gsm 100% combed cotton"],
   packaging: "10 per carton",
-  shipBy: "2026-12-15",
+  shipBy: "2030-12-15",
   incoterm: "FOB Guangzhou",
 };
 const T = 1_800_000_000;

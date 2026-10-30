@@ -10,7 +10,7 @@ const good = {
   specs: ['180 gsm 100% combed cotton', 'Sizes: 150 M, 200 L, 150 XL', 'Pantone 19-4052 navy'],
   packaging: '50 per carton, polybag each, carton max 15 kg',
   inspection: 'Buyer photos of 5 random cartons before balance release',
-  shipBy: '2026-12-15',
+  shipBy: '2030-12-15',
   incoterm: 'FOB Guangzhou',
 };
 
@@ -48,7 +48,7 @@ test('fingerprint ignores key order but catches any change to the terms', () => 
 });
 
 test('service and made-to-order deals do not need shipping terms', () => {
-  const service = { kind: 'service', product: 'Logo and brand kit', quantity: 1, unit: 'project', unitPriceUsd: '40', specs: ['3 logo concepts', '2 rounds of changes', 'SVG + PNG files'], shipBy: '2026-12-01' };
+  const service = { kind: 'service', product: 'Logo and brand kit', quantity: 1, unit: 'project', unitPriceUsd: '40', specs: ['3 logo concepts', '2 rounds of changes', 'SVG + PNG files'], shipBy: '2030-12-01' };
   assert.deepEqual(reviewSheet(service), []);
   assert.deepEqual(reviewSheet({ ...service, kind: 'custom' }), []);
   const asGoods = reviewSheet({ ...service, kind: 'goods' }).map((i) => i.field);
@@ -62,4 +62,14 @@ test("placeholders like N/A or TBD are flagged", () => {
     assert.equal(reviewSheet({ ...good, specs: [v] }).length, 1, v);
   }
   assert.deepEqual(reviewSheet({ ...good, specs: ["Model or spec: NA-200 charger"] }), [], "real words that start with NA are fine");
+});
+
+test('impossible dates, past dates, blank product and tiny totals are flagged', () => {
+  const now = Date.parse('2026-10-30T12:00:00Z');
+  const f = (patch) => reviewSheet({ ...good, ...patch }, now).map((i) => `${i.field}:${i.problem}`);
+  assert.deepEqual(f({ shipBy: '2030-02-30' }), ["shipBy:that date doesn't exist"]);
+  assert.deepEqual(f({ shipBy: '2026-10-01' }), ['shipBy:pick a date in the future']);
+  assert.deepEqual(f({ product: '   ' }), ['product:missing']);
+  assert.deepEqual(f({ quantity: 1, unitPriceUsd: '0.10' }), ['unitPriceUsd:the order total must be more than $0.10']);
+  assert.deepEqual(f({ quantity: 1, unitPriceUsd: '0.11' }), []);
 });

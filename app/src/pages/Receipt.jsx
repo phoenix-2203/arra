@@ -21,11 +21,14 @@ export default function Receipt({ id, wallet }) {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    let current = true; // ignore an older answer that arrives after the wallet reconnects
     api.order(id, account).then((v) => {
+      if (!current) return;
       setView(v);
       if (v.link && id !== v.link) history.replaceState(null, "", `/o/${v.link}/receipt`);
     }).catch((e) => setError(e.status === 404 ? t.notFound : e.message));
     api.timeline(id).then((r) => setSteps(r.steps ?? [])).catch(() => setSteps([]));
+    return () => { current = false; };
   }, [id, account]);
 
   if (error) return <p className="note bad">{error}</p>;

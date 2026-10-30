@@ -40,13 +40,17 @@ export default function Home({ wallet }) {
 
   useEffect(() => {
     if (!account) return;
+    let current = true; // a wallet switch mustn't show the previous wallet's orders
     setError("");
+    setOrders(null);
     api.myOrders(account).then((r) => {
+      if (!current) return;
       setOrders(r.orders);
       if (!r.orders.some((o) => o.role === "buyer") && r.orders.some((o) => o.role === "supplier")) setTab("supplier");
     }).catch((e) => setError(e.message));
     usdtBalance(account).then(setUsdt).catch(() => {});
     cngnBalance(account).then(setCngn).catch(() => {});
+    return () => { current = false; };
   }, [account]);
 
   if (!account) {

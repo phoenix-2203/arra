@@ -100,10 +100,15 @@ export default function Order({ id, wallet }) {
   // A brand-new order can take a few seconds to reach every network node, so a
   // "not found" is retried quickly before we believe it.
   const misses = useRef(0);
+  // The wallet often reconnects a moment after the page opens, so an answer for
+  // "no wallet" can arrive after the one for the buyer or supplier. Only the newest counts.
+  const latest = useRef(0);
   const load = useCallback(() => {
+    const ticket = ++latest.current;
     api
       .order(id, account)
       .then((v) => {
+        if (ticket !== latest.current) return;
         misses.current = 0;
         setError("");
         setView(v);
@@ -111,6 +116,7 @@ export default function Order({ id, wallet }) {
         if (v.link && id !== v.link) history.replaceState(null, "", `/o/${v.link}${location.search}`);
       })
       .catch((e) => {
+        if (ticket !== latest.current) return;
         if (e.status === 404 && isNew && misses.current < 12) {
           misses.current += 1;
           setError(t.confirming);
@@ -152,7 +158,7 @@ export default function Order({ id, wallet }) {
   const arrivedNow = o.status === "Shipped" && !!(o.arrivedAt || now > o.shippedAt + (o.transit ?? 0));
   const stepLabels = withArrival ? [t.steps[0], t.steps[1], t.steps[2], t.stepArrived, t.steps[3]] : [t.steps[0], t.steps[1], goods ? t.steps[2] : t.stepDelivered, t.steps[3]];
   const last = stepLabels.length;
-  const step = o.status === "Refunded" ? 0 : ["Released", "Settled"].includes(o.status) ? last : o.status === "Shipped" || o.status === "Disputed" ? (withArrival && (arrivedNow || o.status === "Disputed") ? 4 : 3) : STEP_OF[o.status];
+  const step = o.status === "Refunded" ? 0 : ["Released", "Settled"].includes(o.status) ? last : o.status === "Shipped" || o.status === "Disputed" ? (withArrival && (o.status === "Disputed" ? !!o.arrivedAt || now > o.shippedAt + (o.transit ?? 0) : arrivedNow) ? 4 : 3) : STEP_OF[o.status];
   const toSupplierSplit = (held * BigInt(splitPct)) / 100n;
 
   // One transaction, followed by a notification from "confirm" to "done", then
@@ -176,6 +182,7 @@ export default function Order({ id, wallet }) {
       for (let i = 0; i < 10; i++) {
         const v = await api.order(id, account).catch(() => null);
         if (v && key(v.order) !== before) {
+          latest.current += 1;
           setView(v);
           break;
         }
@@ -478,7 +485,7 @@ export default function Order({ id, wallet }) {
               {["product", "quantity", "unitPriceUsd", "specs", "packaging", "inspection", "shipBy", "incoterm"].filter((k) => s[k] !== undefined).map((k) => (
                 <div key={k}>
                   <dt>{t.fields[k]}</dt>
-                  <dd>{Array.isArray(s[k]) ? <ul>{s[k].map((x) => <li key={x}>{x}</li>)}</ul> : k === "quantity" ? qtyText(s.quantity, s.unit) : s[k]}</dd>
+                  <dd>{Array.isArray(s[k]) ? <ul>{s[k].map((x) => <li key={x}>{x}</li>)}</ul> : k === "quantity" ? qtyText(s.quantity, s.unit) : k === "shipBy" && s.shipBy !== new Date(o.shipBy * 1000).toISOString().slice(0, 10) ? `${s.shipBy} ${t.movedTo(day(o.shipBy, lang))}` : s[k]}</dd>
                 </div>
               ))}
             </dl>
