@@ -268,7 +268,8 @@ export default function NewOrder({ wallet }) {
   const TEXTILE_MIN = 1_000_000n;
   const needUsdt = shortBy > 0n && shortBy < TEXTILE_MIN ? TEXTILE_MIN : shortBy;
   const naira = payWith === "naira";
-  const fxCngn = fxRate ? BigInt(fxRate.cngn) : null;
+  // The firm price can come in slightly above the live preview, so ask for 1% headroom.
+  const fxCngn = fxRate ? (BigInt(fxRate.cngn) * 101n) / 100n : null;
   const short = naira ? fxCngn !== null && (cngn === null || fxCngn > cngn) : balance !== null && total > balance;
   const needsGas = supGas !== null && supGas < GAS_ENOUGH;
   const canCelo = (a) => myCelo !== null && myCelo >= parseEther(a) + parseEther("0.002");
