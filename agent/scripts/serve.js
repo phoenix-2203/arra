@@ -13,10 +13,16 @@ const client = publicClient();
 // Start reading vault history from the block it was deployed in.
 const DEPLOY_TX = "0xf8d8403f3574d1776a2d440e90fadbe49bb3d7706c5d49bc436a3dc3001bbe86";
 const fromBlock = process.env.VAULT_DEPLOY_BLOCK ?? (await client.getTransactionReceipt({ hash: DEPLOY_TX }).then((r) => r.blockNumber).catch(() => null));
+// Read the vault's history in the background at start-up, so the first visitor
+// to History or an order timeline doesn't wait; then keep it fresh every minute.
+const history = new LogIndex({ client, vault: ARRA_VAULT, fromBlock });
+const warm = () => history.sync().catch((e) => console.error("history sync:", e.shortMessage ?? e.message));
+warm();
+setInterval(warm, 60 * 1000);
 const app = createApp({
   client,
   vault: ARRA_VAULT,
-  history: new LogIndex({ client, vault: ARRA_VAULT, fromBlock }),
+  history,
   dataDir: process.env.DATA_DIR ?? fileURLToPath(new URL("../data", import.meta.url)),
   staticDir: process.env.STATIC_DIR ?? fileURLToPath(new URL("../../app/dist", import.meta.url)),
 });
