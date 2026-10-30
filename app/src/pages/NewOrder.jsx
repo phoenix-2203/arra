@@ -105,6 +105,7 @@ function toSheet(f) {
   return s;
 }
 
+const MORE_FIELDS = ["packaging", "inspection"]; // fields inside "More details (optional)"
 const FIELD_NAMES = { product: "What you're buying", quantity: "Quantity", unit: "Unit", unitPriceUsd: "Price each", specs: "Details", packaging: "Packaging", shipBy: "Date", incoterm: "Shipping terms", inspection: "How you'll check" };
 const fieldName = (f) => FIELD_NAMES[f] ?? (f.startsWith("specs[") ? `Detail ${Number(f.slice(6, -1)) + 1}` : f);
 const isoIn = (days) => new Date(Date.now() + days * DAY * 1000).toISOString().slice(0, 10);
@@ -140,6 +141,7 @@ export default function NewOrder({ wallet }) {
   const [v4, setV4] = useState(false);
   const [transitDays, setTransitDays] = useState(60);
   const [hasAI, setHasAI] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [MAX_ORDER, setMaxOrder] = useState(50_000_000n); // the vault's safety cap while Arra is new
   useEffect(() => {
     currentVault().then(() => {
@@ -245,6 +247,11 @@ export default function NewOrder({ wallet }) {
     const t = setTimeout(() => api.reviewSheet(sheet).then(setReview).catch((e) => setError(e.message)), 350);
     return () => clearTimeout(t);
   }, [sheet, step]);
+
+  // Open "More details" by itself when a problem is hiding in there.
+  useEffect(() => {
+    if (review?.issues?.some((i) => MORE_FIELDS.includes(i.field))) setMoreOpen(true);
+  }, [review]);
 
   // If the delivery date is close, shorten the accept window automatically so the
   // supplier's accept deadline always comes before the delivery date.
@@ -501,7 +508,7 @@ export default function NewOrder({ wallet }) {
             </div>
           ) : null}
 
-          <details className="more">
+          <details className="more" open={moreOpen} onToggle={(e) => setMoreOpen(e.currentTarget.open)}>
             <summary>More details (optional)</summary>
             <div className="stack">
               {f.kind === "goods" ? <label className="field"><span>Port or city</span><input value={f.port} onChange={set("port")} placeholder="Guangzhou" /></label> : null}
@@ -515,7 +522,12 @@ export default function NewOrder({ wallet }) {
             <div className="note bad">
               <p style={{ marginBottom: 6 }}><strong>Almost there:</strong></p>
               <ul className="issues">
-                {review.issues.map((i, k) => <li key={k}>{fieldName(i.field)}: {i.problem === "missing" ? "please fill this in" : i.problem}</li>)}
+                {review.issues.map((i, k) => (
+                  <li key={k}>
+                    {fieldName(i.field)}: {i.problem === "missing" ? "please fill this in" : i.problem}
+                    {MORE_FIELDS.includes(i.field) ? <> <button type="button" className="linkish" onClick={() => setF({ ...f, [i.field]: "" })}>Clear it</button></> : null}
+                  </li>
+                ))}
               </ul>
             </div>
           ) : null}
