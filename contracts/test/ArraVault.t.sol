@@ -52,7 +52,7 @@ contract ArraVaultTest is Test {
 
     function setUp() public {
         usdt = new MockUSDT();
-        vault = new ArraVault(IERC20(address(usdt)), 500e6, owner);
+        vault = new ArraVault(IERC20(address(usdt)), 500e6, owner, 1, 0);
         usdt.mint(buyer, START);
         vm.prank(buyer);
         usdt.approve(address(vault), type(uint256).max);
@@ -176,7 +176,7 @@ contract ArraVaultTest is Test {
 
     function test_create_rejectsFeeOnTransferToken() public {
         FeeToken fee = new FeeToken();
-        ArraVault v = new ArraVault(IERC20(address(fee)), 500e18, owner);
+        ArraVault v = new ArraVault(IERC20(address(fee)), 500e18, owner, 1, 0);
         fee.mint(buyer, 1_000e18);
         vm.startPrank(buyer);
         fee.approve(address(v), type(uint256).max);
@@ -484,7 +484,7 @@ contract Handler is Test {
     }
 
     function create(uint128 total, uint16 bps) external {
-        total = uint128(bound(total, 1, 50e6));
+        total = uint128(bound(total, 100_001, 50e6)); // over ten $0.01 keeper fees
         bps = uint16(bound(bps, 0, 9_000));
         vm.prank(buyer);
         ids.push(
@@ -522,9 +522,13 @@ contract Handler is Test {
             vm.prank(buyer);
             try vault.dispute(id) {} catch {}
         } else if (action == 7) {
-            try vault.claim(id) {} catch {}
+            try vault.claim(id) {
+                keeperCalls++;
+            } catch {}
         } else if (action == 8) {
-            try vault.reclaim(id) {} catch {}
+            try vault.reclaim(id) {
+                keeperCalls++;
+            } catch {}
         } else if (action == 9) {
             vm.prank(seed % 2 == 0 ? buyer : supplier);
             try vault.proposeSplit(id, amt) {} catch {}
@@ -536,6 +540,8 @@ contract Handler is Test {
             vm.warp(block.timestamp + 12 hours);
         }
     }
+
+    uint256 public keeperCalls;
 
     function heldSum() external view returns (uint256 s) {
         for (uint256 i; i < ids.length; i++) s += vault.getOrder(ids[i]).held;
@@ -552,7 +558,7 @@ contract ArraVaultInvariantTest is Test {
 
     function setUp() public {
         usdt = new MockUSDT();
-        vault = new ArraVault(IERC20(address(usdt)), 50e6, makeAddr("owner"));
+        vault = new ArraVault(IERC20(address(usdt)), 50e6, makeAddr("owner"), 1, 10_000); // with a $0.01 keeper fee
         handler = new Handler(vault, buyer, supplier);
         usdt.mint(buyer, START);
         vm.prank(buyer);
@@ -565,6 +571,154 @@ contract ArraVaultInvariantTest is Test {
     }
 
     function invariant_moneyOnlyReachesBuyerOrSupplier() public view {
-        assertEq(usdt.balanceOf(buyer) + usdt.balanceOf(supplier) + usdt.balanceOf(address(vault)), START);
+        // The handler triggers claim/reclaim as a third party, so it is the keeper here.
+        assertEq(
+            usdt.balanceOf(buyer) + usdt.balanceOf(supplier) + usdt.balanceOf(address(vault))
+                + usdt.balanceOf(address(handler)),
+            START
+        );
+    }
+
+    function invariant_keeperGetsOnlyTheFixedFee() public view {
+        assertLe(usdt.balanceOf(address(handler)), handler.keeperCalls() * 10_000);
+    }
+}
+
+/// v3: the keeper fee and continuing order numbers.
+contract ArraVaultKeeperFeeTest is Test {
+    MockUSDT usdt;
+    ArraVault vault;
+    address buyer = makeAddr("buyer");
+    address supplier = makeAddr("supplier");
+    address keeper = makeAddr("keeper");
+    uint128 constant FEE = 10_000; // $0.01
+    uint128 constant TOTAL = 10e6;
+    uint16 constant DEP = 3_000;
+
+    function setUp() public {
+        usdt = new MockUSDT();
+        vault = new ArraVault(IERC20(address(usdt)), 50e6, makeAddr("owner"), 5, FEE);
+        usdt.mint(buyer, 100e6);
+        vm.prank(buyer);
+        usdt.approve(address(vault), type(uint256).max);
+    }
+
+    function _create(uint128 total) internal returns (uint256 id) {
+        vm.prank(buyer);
+        id = vault.createOrder(
+            supplier, total, DEP, uint64(block.timestamp + 1 days), uint64(block.timestamp + 10 days), 1 days, bytes32(0)
+        );
+    }
+
+    function test_numbersContinueFromPreviousVault() public {
+        assertEq(_create(TOTAL), 5);
+        assertEq(_create(TOTAL), 6);
+        assertEq(vault.getOrder(4).buyer, address(0), "nothing below the first id");
+    }
+
+    function test_firstIdCannotBeZero() public {
+        vm.expectRevert(ArraVault.BadAmount.selector);
+        new ArraVault(IERC20(address(usdt)), 50e6, buyer, 0, FEE);
+    }
+
+    function test_keeperEarnsFeeOnRefund_buyerGetsTheRest() public {
+        uint256 id = _create(TOTAL);
+        vm.warp(block.timestamp + 1 days + 1);
+        vm.expectEmit(true, true, false, true);
+        emit ArraVault.KeeperPaid(id, keeper, FEE);
+        vm.prank(keeper);
+        vault.reclaim(id);
+        assertEq(usdt.balanceOf(keeper), FEE);
+        assertEq(usdt.balanceOf(buyer), 100e6 - FEE);
+        assertEq(usdt.balanceOf(address(vault)), 0);
+    }
+
+    function test_keeperEarnsFeeOnPayout_supplierGetsTheRest() public {
+        uint256 id = _create(TOTAL);
+        vm.prank(supplier);
+        vault.accept(id);
+        vm.prank(supplier);
+        vault.markShipped(id, bytes32(0));
+        vm.warp(block.timestamp + 1 days + 1);
+        vm.prank(keeper);
+        vault.claim(id);
+        assertEq(usdt.balanceOf(keeper), FEE);
+        assertEq(usdt.balanceOf(supplier), TOTAL - FEE, "deposit + balance minus one cent");
+    }
+
+    function test_noFeeWhenBuyerOrSupplierTriggerThemselves() public {
+        uint256 a = _create(TOTAL);
+        vm.warp(block.timestamp + 1 days + 1);
+        vm.prank(buyer);
+        vault.reclaim(a);
+        assertEq(usdt.balanceOf(buyer), 100e6, "full refund");
+
+        uint256 b = _create(TOTAL);
+        vm.prank(supplier);
+        vault.accept(b);
+        vm.prank(supplier);
+        vault.markShipped(b, bytes32(0));
+        vm.warp(block.timestamp + 1 days + 1);
+        vm.prank(supplier);
+        vault.claim(b);
+        assertEq(usdt.balanceOf(supplier), TOTAL, "full payout");
+    }
+
+    function test_noFeeOnOrdinaryPaths() public {
+        uint256 id = _create(TOTAL);
+        vm.prank(supplier);
+        vault.accept(id);
+        vm.prank(buyer);
+        vault.release(id);
+        assertEq(usdt.balanceOf(supplier), TOTAL);
+    }
+
+    function test_tinyOrdersRefused_soTheFeeStaysSmall() public {
+        vm.prank(buyer);
+        vm.expectRevert(ArraVault.BadAmount.selector);
+        vault.createOrder(supplier, 100_000, DEP, uint64(block.timestamp + 1 days), uint64(block.timestamp + 2 days), 1 days, bytes32(0));
+        _create(100_001); // just over ten fees is fine
+    }
+
+    function test_feeNeverExceedsWhatIsHeld() public {
+        // 90% deposit on a $0.11 order leaves 1.1 cents held; the fee still fits, and the
+        // supplier keeps the deposit.
+        vm.prank(buyer);
+        uint256 id = vault.createOrder(
+            supplier, 110_000, 9_000, uint64(block.timestamp + 1 days), uint64(block.timestamp + 2 days), 1 days, bytes32(0)
+        );
+        vm.prank(supplier);
+        vault.accept(id);
+        vm.warp(block.timestamp + 2 days + 1);
+        vm.prank(keeper);
+        vault.reclaim(id);
+        assertEq(usdt.balanceOf(keeper), FEE);
+        assertEq(usdt.balanceOf(buyer), 100e6 - 110_000 + 1_000);
+        assertEq(usdt.balanceOf(address(vault)), 0);
+    }
+
+    function testFuzz_feeConservesFunds(uint128 total, uint16 bps, bool claimPath) public {
+        total = uint128(bound(total, 100_001, 50e6));
+        bps = uint16(bound(bps, 0, 9_000));
+        vm.prank(buyer);
+        uint256 id = vault.createOrder(
+            supplier, total, bps, uint64(block.timestamp + 1 days), uint64(block.timestamp + 2 days), 1 days, bytes32(0)
+        );
+        if (claimPath) {
+            vm.prank(supplier);
+            vault.accept(id);
+            vm.prank(supplier);
+            vault.markShipped(id, bytes32(0));
+            vm.warp(block.timestamp + 1 days + 1);
+            vm.prank(keeper);
+            vault.claim(id);
+        } else {
+            vm.warp(block.timestamp + 1 days + 1);
+            vm.prank(keeper);
+            vault.reclaim(id);
+        }
+        assertEq(usdt.balanceOf(keeper), FEE);
+        assertEq(usdt.balanceOf(buyer) + usdt.balanceOf(supplier) + usdt.balanceOf(keeper), 100e6);
+        assertEq(usdt.balanceOf(address(vault)), 0);
     }
 }

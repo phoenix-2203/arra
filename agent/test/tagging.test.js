@@ -52,7 +52,7 @@ test("deploy, writeContract and plain transfers all carry the Arra tag", async (
   const h2 = await wallet.deployContract({
     abi: vault.abi,
     bytecode: vault.bytecode.object,
-    args: [r1.contractAddress, parseUnits("50", 6), account.address],
+    args: [r1.contractAddress, parseUnits("50", 6), account.address, 5n, 10_000n],
   });
   const r2 = await client.waitForTransactionReceipt({ hash: h2 });
   assert.equal(r2.status, "success", "vault deploys with the suffix appended");
@@ -60,6 +60,8 @@ test("deploy, writeContract and plain transfers all carry the Arra tag", async (
   const read = (functionName) =>
     client.readContract({ address: r2.contractAddress, abi: vault.abi, functionName });
   assert.equal((await read("token")).toLowerCase(), r1.contractAddress.toLowerCase());
+  assert.equal(await read("nextId"), 5n, "all constructor arguments survive the tag");
+  assert.equal(await read("keeperFee"), 10_000n);
   assert.equal(await read("maxOrder"), parseUnits("50", 6));
   assert.equal(await read("owner"), account.address);
   assert.deepEqual(tagOf((await client.getTransaction({ hash: h2 })).input), [ATTRIBUTION_TAG]);

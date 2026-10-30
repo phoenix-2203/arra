@@ -23,8 +23,11 @@ import {Ownable, Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step
 ///           Shipped  -- window passes with no dispute, claim() --> Released to supplier
 ///           Active   -- ship-by passes with no shipment, reclaim() --> Refunded to buyer
 ///         claim and reclaim can be triggered by anyone (the Arra agent automates them); the
-///         funds still go only to the fixed party. The owner can pause new orders and set the
-///         size cap, but can never move, freeze or redirect funds.
+///         funds still go only to the fixed party, except a fixed keeper fee (set once at
+///         deployment, e.g. $0.01) paid to a caller who is neither the buyer nor the supplier,
+///         so the agent that keeps deadlines pays for itself. The owner can pause new orders
+///         and set the size cap, but can never move, freeze or redirect funds.
+///         v3: keeper fee, and order numbers can start after a previous vault's.
 contract ArraVault is ReentrancyGuard, Ownable2Step {
     using SafeERC20 for IERC20;
 
@@ -64,9 +67,12 @@ contract ArraVault is ReentrancyGuard, Ownable2Step {
     uint64 public constant MAX_SHIP_PERIOD = 180 days;
 
     IERC20 public immutable token;
+    /// @notice Paid from the order to whoever triggers a due claim/reclaim, unless that is the
+    ///         buyer or the supplier themselves. Never more than what the order still holds.
+    uint128 public immutable keeperFee;
     uint256 public maxOrder;
     bool public paused;
-    uint256 public nextId = 1;
+    uint256 public nextId;
     mapping(uint256 => Order) private _orders;
     mapping(uint256 => SplitOffer) private _splits;
 
@@ -89,6 +95,7 @@ contract ArraVault is ReentrancyGuard, Ownable2Step {
     event SplitSettled(uint256 indexed id, uint256 toSupplier, uint256 toBuyer);
     event BalanceReleased(uint256 indexed id, address indexed supplier, uint256 amount);
     event BalanceRefunded(uint256 indexed id, address indexed buyer, uint256 amount);
+    event KeeperPaid(uint256 indexed id, address indexed keeper, uint256 fee);
     event MaxOrderUpdated(uint256 maxOrder);
     event PausedSet(bool paused);
 
@@ -108,9 +115,16 @@ contract ArraVault is ReentrancyGuard, Ownable2Step {
     error OfferMismatch();
     error TransferMismatch();
 
-    constructor(IERC20 token_, uint256 maxOrder_, address owner_) Ownable(owner_) {
+    /// @param firstId  number of this vault's first order (continues a previous vault's numbering)
+    /// @param keeperFee_ fee for a third party that triggers a due refund or payout
+    constructor(IERC20 token_, uint256 maxOrder_, address owner_, uint256 firstId, uint128 keeperFee_)
+        Ownable(owner_)
+    {
+        if (firstId == 0) revert BadAmount();
         token = token_;
         maxOrder = maxOrder_;
+        nextId = firstId;
+        keeperFee = keeperFee_;
         emit MaxOrderUpdated(maxOrder_);
     }
 
@@ -139,7 +153,8 @@ contract ArraVault is ReentrancyGuard, Ownable2Step {
     ) external nonReentrant returns (uint256 id) {
         if (paused) revert IsPaused();
         if (supplier == address(0) || supplier == msg.sender || supplier == address(this)) revert BadSupplier();
-        if (total == 0 || total > maxOrder) revert BadAmount();
+        // The order must be worth more than ten keeper fees, so the fee stays small.
+        if (total == 0 || total > maxOrder || total <= uint256(keeperFee) * 10) revert BadAmount();
         if (depositBps > MAX_DEPOSIT_BPS) revert BadDeposit();
         if (acceptBy <= block.timestamp || acceptBy > shipBy || shipBy > block.timestamp + MAX_SHIP_PERIOD) {
             revert BadDates();
@@ -284,7 +299,9 @@ contract ArraVault is ReentrancyGuard, Ownable2Step {
         Order storage o = _orders[id];
         if (o.status != Status.Shipped) revert WrongStatus();
         if (block.timestamp <= uint256(o.shippedAt) + o.disputeWindow) revert TooEarly();
+        uint128 fee = _takeKeeperFee(o);
         _payOut(id, o, o.supplier, Status.Released);
+        _sendKeeperFee(id, fee);
     }
 
     /// @notice Returns funds to the buyer if the supplier never accepted by the accept-by date,
@@ -298,7 +315,9 @@ contract ArraVault is ReentrancyGuard, Ownable2Step {
         } else {
             revert WrongStatus();
         }
+        uint128 fee = _takeKeeperFee(o);
         _payOut(id, o, o.buyer, Status.Refunded);
+        _sendKeeperFee(id, fee);
     }
 
     // ------------------------------------------------------------------ owner
@@ -320,6 +339,21 @@ contract ArraVault is ReentrancyGuard, Ownable2Step {
         if (o.status != Status.Active && o.status != Status.Shipped && o.status != Status.Disputed) {
             revert WrongStatus();
         }
+    }
+
+    /// @dev The keeper fee comes out of what the order holds; the buyer or supplier triggering
+    ///      it themselves pays nothing.
+    ///      Bookkeeping first (here), money second (_sendKeeperFee, after the payout).
+    function _takeKeeperFee(Order storage o) private returns (uint128 fee) {
+        if (keeperFee == 0 || msg.sender == o.buyer || msg.sender == o.supplier) return 0;
+        fee = keeperFee < o.held ? keeperFee : o.held;
+        o.held -= fee;
+    }
+
+    function _sendKeeperFee(uint256 id, uint128 fee) private {
+        if (fee == 0) return;
+        token.safeTransfer(msg.sender, fee);
+        emit KeeperPaid(id, msg.sender, fee);
     }
 
     function _payOut(uint256 id, Order storage o, address to, Status finalStatus) private {

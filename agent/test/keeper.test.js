@@ -42,7 +42,7 @@ before(async () => {
   const t = await client.waitForTransactionReceipt({ hash: await w.deployContract({ abi: mock.abi, bytecode: mock.bytecode.object }) });
   token = t.contractAddress;
   const v = await client.waitForTransactionReceipt({
-    hash: await w.deployContract({ abi: vaultAbi, bytecode: vaultArtifact.bytecode, args: [token, parseUnits("50", 6), agent.address] }),
+    hash: await w.deployContract({ abi: vaultAbi, bytecode: vaultArtifact.bytecode, args: [token, parseUnits("50", 6), agent.address, 1n, 0n] }),
   });
   vault = v.contractAddress;
   await send(agent, token, mock.abi, "mint", [buyer.address, parseUnits("100", 6)]);
