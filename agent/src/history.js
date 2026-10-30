@@ -157,6 +157,50 @@ LogIndex.prototype.activity = async function activity(address) {
   return rows.reverse();
 };
 
+/**
+ * How a wallet has behaved on Arra, as a supplier and as a buyer. Read only from
+ * vault events, so nobody can fake it. Counts are plain numbers per vault.
+ */
+LogIndex.prototype.record = async function record(address) {
+  await this.sync();
+  const me = address.toLowerCase();
+  const asSupplier = new Set();
+  const asBuyer = new Set();
+  for (const l of this.logs) {
+    if (l.eventName !== "OrderCreated") continue;
+    if (l.args.supplier.toLowerCase() === me) asSupplier.add(l.args.id);
+    if (l.args.buyer.toLowerCase() === me) asBuyer.add(l.args.id);
+  }
+  const s = { accepted: 0, shipped: 0, paid: 0, refundedUnshipped: 0, disputed: 0, firstAt: null };
+  const b = { orders: asBuyer.size, paid: 0, disputesRaised: 0, firstAt: null };
+  const accepted = new Set();
+  const shipped = new Set();
+  for (const l of this.logs) {
+    const id = l.args.id;
+    if (asSupplier.has(id)) {
+      if (l.eventName === "OrderAccepted") {
+        s.accepted++;
+        accepted.add(id);
+        const at = await this.time(l.blockNumber);
+        if (s.firstAt === null || at < s.firstAt) s.firstAt = at;
+      }
+      if (l.eventName === "OrderShipped") (s.shipped++, shipped.add(id));
+      if (l.eventName === "BalanceReleased" || l.eventName === "SplitSettled") s.paid++;
+      if (l.eventName === "BalanceRefunded" && accepted.has(id) && !shipped.has(id)) s.refundedUnshipped++;
+      if (l.eventName === "OrderDisputed") s.disputed++;
+    }
+    if (asBuyer.has(id)) {
+      if (l.eventName === "OrderCreated") {
+        const at = await this.time(l.blockNumber);
+        if (b.firstAt === null || at < b.firstAt) b.firstAt = at;
+      }
+      if (l.eventName === "BalanceReleased" || l.eventName === "SplitSettled") b.paid++;
+      if (l.eventName === "OrderDisputed") b.disputesRaised++;
+    }
+  }
+  return { asSupplier: s, asBuyer: b };
+};
+
 /** Totals across all orders, for the homepage. */
 export async function vaultStats(client, vault) {
   const n = await orderCount(client, vault);

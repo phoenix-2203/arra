@@ -67,6 +67,19 @@ export class VaultSet {
     return all.sort((a, b) => b.at - a.at);
   }
 
+  /** A wallet's track record across all vaults. */
+  async record(address) {
+    const parts = await Promise.all(this.list.map((v) => v.history.record(address)));
+    const min = (a, b) => (a === null ? b : b === null ? a : Math.min(a, b));
+    const out = { asSupplier: { accepted: 0, shipped: 0, paid: 0, refundedUnshipped: 0, disputed: 0, firstAt: null }, asBuyer: { orders: 0, paid: 0, disputesRaised: 0, firstAt: null } };
+    for (const p of parts) {
+      for (const side of ["asSupplier", "asBuyer"]) {
+        for (const [k, v] of Object.entries(p[side])) out[side][k] = k === "firstAt" ? min(out[side][k], v) : out[side][k] + v;
+      }
+    }
+    return out;
+  }
+
   /** Homepage totals across all vaults. */
   async stats() {
     const n = await this.count();

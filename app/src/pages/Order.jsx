@@ -4,6 +4,7 @@ import { api } from "../api.js";
 import { vaultCall, toUnits, EXPLORER, celoBalance, usdtBalance, sendCelo, sendUsdt, isMiniPay, GAS_ENOUGH } from "../chain.js";
 import { Cloth } from "../Adire.jsx";
 import { withToast } from "../toast.jsx";
+import TrackRecord from "../TrackRecord.jsx";
 import { STRINGS, initialLang, saveLang } from "../i18n.js";
 import { short, navigate } from "../App.jsx";
 
@@ -278,6 +279,7 @@ export default function Order({ id, wallet }) {
         <div className="actions">
           {has("accept") ? (
             <>
+              <TrackRecord address={o.buyer} as="buyer" lang={lang} />
               <p className="small muted">{t.acceptNote}</p>
               <button className="money" disabled={!!busy} onClick={() => run("accept", [bid])}>{A.accept} (${usd(o.deposit)})</button>
             </>

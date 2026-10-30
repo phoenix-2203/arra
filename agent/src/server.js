@@ -261,6 +261,15 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
             return send(res, 200, invites.claim(inv[1], body.address));
           }
         }
+        const rec = url.pathname.match(/^\/api\/record\/(0x[0-9a-fA-F]{40})$/);
+        if (rec && req.method === "GET") {
+          try {
+            return send(res, 200, await vaults.record(rec[1]));
+          } catch (e) {
+            console.error("record:", e.shortMessage ?? e.message);
+            return send(res, 503, { error: "Track record unavailable right now" });
+          }
+        }
         const tr = url.pathname.match(/^\/api\/orders\/([A-Za-z0-9]{1,10})\/tracking$/);
         if (tr && req.method === "POST") {
           const id = await toId(tr[1]);

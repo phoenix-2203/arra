@@ -189,3 +189,19 @@ test("two vault versions served as one Arra: numbers continue, keeper fee, combi
   const st = await set.stats();
   assert.ok(st.orders >= before, "totals include both vaults");
 });
+
+test("track record: what each wallet has done as supplier and buyer", async () => {
+  const { LogIndex } = await import("../src/history.js");
+  const idx = new LogIndex({ client, vault, fromBlock: 0n, lag: 0n });
+  const r = await idx.record(supplier.address);
+  assert.ok(r.asSupplier.accepted >= 3, "accepted orders 2, 3 and later ones");
+  assert.ok(r.asSupplier.paid >= 1, "order 2 was paid out");
+  assert.equal(r.asSupplier.refundedUnshipped, 0, "never kept a deposit without shipping");
+  assert.ok(r.asSupplier.firstAt > 0);
+  const b = await idx.record(buyer.address);
+  assert.ok(b.asBuyer.orders >= 3);
+  assert.equal(b.asSupplier.accepted, 0);
+  const none = await idx.record("0x000000000000000000000000000000000000dEaD");
+  assert.equal(none.asSupplier.accepted, 0);
+  assert.equal(none.asSupplier.firstAt, null);
+});

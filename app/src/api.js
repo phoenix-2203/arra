@@ -27,5 +27,6 @@ api.tracking = (id, number) => call("POST", `/api/orders/${id}/tracking`, { numb
 api.createInvite = (buyer, name) => call("POST", "/api/invites", { buyer, name });
 api.invite = (code) => call("GET", `/api/invites/${code}`);
 api.claimInvite = (code, address) => call("POST", `/api/invites/${code}/claim`, { address });
+api.record = (address) => call("GET", `/api/record/${address}`);
 api.activity = (address) => call("GET", `/api/activity?address=${address}`);
 api.timeline = (id) => call("GET", `/api/orders/${id}/timeline`);

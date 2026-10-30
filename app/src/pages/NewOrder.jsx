@@ -4,6 +4,7 @@ import { api } from "../api.js";
 import { lockOrder, usdtBalance, cngnBalance, convertNairaToUsdt, celoBalance, sendCelo, sendUsdt, GAS_ENOUGH, currentVault } from "../chain.js";
 import * as chain from "../chain.js";
 import { withToast } from "../toast.jsx";
+import TrackRecord from "../TrackRecord.jsx";
 import { navigate } from "../App.jsx";
 import { toast } from "../toast.jsx";
 import Icon from "../Icon.jsx";
@@ -386,6 +387,7 @@ export default function NewOrder({ wallet }) {
           ) : null}
           {supplierAddr && !isAddress(supplierAddr) ? <p className="note bad">That isn't a complete wallet address. It starts with 0x and has 42 characters.</p> : null}
           {isAddress(supplierAddr) && supplierAddr.toLowerCase() === account.toLowerCase() ? <p className="note bad">That's your own wallet. Use the {K.payee.toLowerCase()}'s.</p> : null}
+          {isAddress(supplierAddr) && supplierAddr.toLowerCase() !== account.toLowerCase() ? <TrackRecord address={supplierAddr.toLowerCase()} as="supplier" /> : null}
           {payee?.status === "new" ? <p className="note">{payee.message}</p> : null}
           {payee?.status === "known" ? <p className="note ok">{payee.message}</p> : null}
           {payee?.status === "changed" ? (
