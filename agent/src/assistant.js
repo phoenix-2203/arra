@@ -121,16 +121,22 @@ export function assistant({ key = process.env.ANTHROPIC_API_KEY, geminiKey = pro
         if (!res.ok) throw fail(`${res.status} ${(await res.text().catch(() => "")).slice(0, 300)}`);
         input = (await res.json()).content?.find((c) => c.type === "tool_use" && c.name === "respond")?.input;
       } else {
-        const res = await fetchFn(GEMINI_API, {
+        // Flash-Lite with thinking off: a form-filling chat doesn't need long reasoning,
+        // and it answers in about a second instead of several.
+        const ask = (fast) => fetchFn(GEMINI_API, {
           method: "POST",
           headers: { "content-type": "application/json", authorization: `Bearer ${geminiKey}` },
           body: JSON.stringify({
-            model: process.env.ASSISTANT_MODEL ?? "gemini-flash-latest",
+            model: process.env.ASSISTANT_MODEL ?? "gemini-flash-lite-latest",
             messages: [{ role: "system", content: system }, ...msgs],
             tools: [{ type: "function", function: { name: TOOL.name, description: TOOL.description, parameters: geminiSchema(TOOL.input_schema) } }],
             tool_choice: "required",
+            max_tokens: 1200,
+            ...(fast ? { reasoning_effort: "none" } : {}),
           }),
         });
+        let res = await ask(true);
+        if (res.status === 400) res = await ask(false); // a model that can't turn thinking off
         if (!res.ok) throw fail(res.status === 429 ? 429 : `${res.status} ${(await res.text().catch(() => "")).slice(0, 300)}`);
         const args = (await res.json()).choices?.[0]?.message?.tool_calls?.find((c) => c.function?.name === "respond")?.function?.arguments;
         try {
