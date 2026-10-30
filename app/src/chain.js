@@ -234,3 +234,49 @@ export async function convertNairaToUsdt(taker, usd, api, onStep = () => {}) {
   if (receipt.status !== "success") throw new Error("The conversion failed onchain. Nothing was locked.");
   return { hash, ngnPerUsd: q.ngnPerUsd, takerPays: q.takerPays };
 }
+
+// ---- Notes and evidence: signed by the wallet (free, moves no money) ----
+const ZERO32 = `0x${"0".repeat(64)}`;
+export function noteTypedData({ orderId, kind, text, photo = ZERO32, replyTo = ZERO32, at }) {
+  return {
+    domain: { name: "Arra Notes", version: "1", chainId: 42220 },
+    types: {
+      Note: [
+        { name: "orderId", type: "uint256" },
+        { name: "kind", type: "string" },
+        { name: "text", type: "string" },
+        { name: "photo", type: "bytes32" },
+        { name: "replyTo", type: "bytes32" },
+        { name: "at", type: "uint256" },
+      ],
+    },
+    primaryType: "Note",
+    message: { orderId: BigInt(orderId), kind, text, photo, replyTo, at: BigInt(at) },
+  };
+}
+
+/** Signs a note for an order and returns the body the server expects. */
+export async function signNote(orderId, { kind, text = "", photo = ZERO32, replyTo = ZERO32 }) {
+  const w = await ensureWallet();
+  const at = Math.floor(Date.now() / 1000);
+  const signature = await w.signTypedData({ account: w.account, ...noteTypedData({ orderId, kind, text, photo, replyTo, at }) });
+  return { kind, text, photo, replyTo, at, signature };
+}
+
+/** Shrinks a photo on the phone to a JPEG of at most 1280 px before upload. */
+export function shrinkPhoto(file, max = 1280) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.width * k);
+      c.height = Math.round(img.height * k);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(img.src);
+      resolve(c.toDataURL("image/jpeg", 0.82).split(",")[1]);
+    };
+    img.onerror = () => reject(new Error("That file isn't a photo we can read"));
+    img.src = URL.createObjectURL(file);
+  });
+}

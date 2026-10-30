@@ -5,6 +5,7 @@ import { vaultCall, toUnits, EXPLORER, celoBalance, usdtBalance, sendCelo, sendU
 import { Cloth } from "../Adire.jsx";
 import { withToast } from "../toast.jsx";
 import TrackRecord from "../TrackRecord.jsx";
+import Notes from "./Notes.jsx";
 import { downloadIcs, deadlines } from "../calendar.js";
 import { STRINGS, initialLang, saveLang } from "../i18n.js";
 import { short, navigate } from "../App.jsx";
@@ -379,6 +380,7 @@ export default function Order({ id, wallet }) {
           <p className="small muted">{t.timelineEmpty}</p>
         )}
       </section>
+      <Notes order={o} link={view.link} role={role} lang={lang} />
       <section className="stack">
         <h2>{t.terms}</h2>
         {s ? (

@@ -28,5 +28,8 @@ api.createInvite = (buyer, name) => call("POST", "/api/invites", { buyer, name }
 api.invite = (code) => call("GET", `/api/invites/${code}`);
 api.claimInvite = (code, address) => call("POST", `/api/invites/${code}/claim`, { address });
 api.record = (address) => call("GET", `/api/record/${address}`);
+api.notes = (id) => call("GET", `/api/orders/${id}/notes`);
+api.addNote = (id, body) => call("POST", `/api/orders/${id}/notes`, body);
+api.uploadPhoto = (id, jpegBase64) => call("POST", `/api/orders/${id}/photos`, { jpegBase64 });
 api.activity = (address) => call("GET", `/api/activity?address=${address}`);
 api.timeline = (id) => call("GET", `/api/orders/${id}/timeline`);

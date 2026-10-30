@@ -217,3 +217,42 @@ test("supplier invites: the supplier's own wallet fills the address; first claim
   assert.equal((await post("/api/invites", { buyer: BUYER, name: "" }))[0], 400);
   assert.equal((await get("/api/invites/abcdefghjkmn"))[0], 404);
 });
+
+test("notes: only the buyer or supplier can post, signed by their wallet; changes need the other side to agree", async () => {
+  const { privateKeyToAccount } = await import("viem/accounts");
+  const { noteTypedData } = await import("../src/notes.js");
+  const buyerAcc = privateKeyToAccount(`0x${"a1".repeat(32)}`);
+  const supAcc = privateKeyToAccount(`0x${"b2".repeat(32)}`);
+  const stranger = privateKeyToAccount(`0x${"c3".repeat(32)}`);
+  const client = { async readContract({ functionName, args }) {
+    if (functionName === "nextId") return 2n;
+    if (functionName === "getSplitOffer") return { proposer: "0x0000000000000000000000000000000000000000", toSupplier: 0n };
+    if (functionName === "getOrder") return args[0] === 1n ? { ...onchain, buyer: buyerAcc.address, supplier: supAcc.address } : { ...onchain, status: 0 };
+  } };
+  const d = mkdtempSync(join(tmpdir(), "arra-notes-"));
+  const srv = await listen(createApp({ client, vault: "0xvault", dataDir: d, staticDir: null, now: () => T, textile: fakeTextile }), 0);
+  const b = `http://127.0.0.1:${srv.address().port}`;
+  const postJ = (path, body) => fetch(b + path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }).then(async (r) => [r.status, await r.json()]);
+  const sign = async (acc, n) => ({ ...n, signature: await acc.signTypedData(noteTypedData({ orderId: 1, ...n })) });
+  const ZERO = `0x${"0".repeat(64)}`;
+
+  const [s1, r1] = await postJ("/api/orders/1/notes", await sign(buyerAcc, { kind: "note", text: "Paid deposit, waiting for samples", photo: ZERO, replyTo: ZERO, at: T }));
+  assert.equal(s1, 200);
+  assert.equal(r1.note.role, "buyer");
+  assert.equal((await postJ("/api/orders/1/notes", await sign(stranger, { kind: "note", text: "fake", photo: ZERO, replyTo: ZERO, at: T })))[0], 403, "strangers can't post");
+  const forged = await sign(buyerAcc, { kind: "note", text: "original", photo: ZERO, replyTo: ZERO, at: T });
+  assert.equal((await postJ("/api/orders/1/notes", { ...forged, text: "edited after signing" }))[0], 403, "changing the words breaks the signature");
+
+  const jpeg = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.alloc(100, 1)]).toString("base64");
+  const [, { photo }] = await postJ("/api/orders/1/photos", { jpegBase64: jpeg });
+  assert.match(photo, /^0x[0-9a-f]{64}$/);
+  assert.equal((await fetch(`${b}/api/photos/${photo}.jpg`)).headers.get("content-type"), "image/jpeg");
+
+  const [, ch] = await postJ("/api/orders/1/notes", await sign(supAcc, { kind: "change", text: "Colour changes from navy to black", photo, replyTo: ZERO, at: T }));
+  assert.equal((await postJ("/api/orders/1/notes", await sign(supAcc, { kind: "agree", text: "", photo: ZERO, replyTo: ch.note.id, at: T })))[0], 400, "you can't agree to your own change");
+  assert.equal((await postJ("/api/orders/1/notes", await sign(buyerAcc, { kind: "agree", text: "", photo: ZERO, replyTo: ch.note.id, at: T })))[0], 200);
+  const list = (await fetch(`${b}/api/orders/1/notes`).then((r) => r.json())).notes;
+  assert.equal(list.length, 3);
+  assert.equal(list.find((n) => n.kind === "change").agreedBy, buyerAcc.address);
+  srv.close();
+});

@@ -14,6 +14,7 @@ import { LogIndex } from "./history.js";
 import { VaultSet } from "./vaults.js";
 import { OrderLinks, LINK_RE } from "./links.js";
 import { Invites } from "./invites.js";
+import { Notes } from "./notes.js";
 import { orderPreviewPng } from "./ogImage.js";
 
 const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml", ".png": "image/png", ".json": "application/json", ".ico": "image/x-icon", ".webmanifest": "application/manifest+json" };
@@ -24,12 +25,12 @@ function send(res, status, body) {
   res.end(JSON.stringify(body));
 }
 
-async function readJson(req) {
+async function readJson(req, limit = MAX_BODY) {
   let size = 0;
   const chunks = [];
   for await (const c of req) {
     size += c.length;
-    if (size > MAX_BODY) throw Object.assign(new Error("Request too large"), { status: 413 });
+    if (size > limit) throw Object.assign(new Error("Request too large"), { status: 413 });
     chunks.push(c);
   }
   try {
@@ -68,6 +69,7 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
   // server the number, and it's kept only if it matches that fingerprint, so the
   // buyer can see and track it.
   const invites = new Invites(join(dataDir, "invites"));
+  const notes = new Notes(join(dataDir, "notes"));
   const trackingDir = join(dataDir, "tracking");
   mkdirSync(trackingDir, { recursive: true });
   const trackingPath = (id) => join(trackingDir, `${Number(id)}.json`);
@@ -260,6 +262,28 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
             const body = await readJson(req);
             return send(res, 200, invites.claim(inv[1], body.address));
           }
+        }
+        // Notes and evidence: list, upload a photo, add a signed note.
+        const nt = url.pathname.match(/^\/api\/orders\/([A-Za-z0-9]{1,10})\/(notes|photos)$/);
+        if (nt) {
+          const id = await toId(nt[1]);
+          const o = id && (await vaults.read(id));
+          if (!o) return send(res, 404, { error: "No such order" });
+          if (nt[2] === "notes" && req.method === "GET") return send(res, 200, { notes: notes.list(id) });
+          if (nt[2] === "photos" && req.method === "POST") {
+            const body = await readJson(req, 2_200_000);
+            return send(res, 200, { photo: notes.savePhoto(body.jpegBase64) });
+          }
+          if (nt[2] === "notes" && req.method === "POST") {
+            const body = await readJson(req);
+            return send(res, 200, { note: await notes.add(o, body, now()) });
+          }
+        }
+        const ph = url.pathname.match(/^\/api\/photos\/(0x[0-9a-f]{64})\.jpg$/);
+        if (ph && req.method === "GET") {
+          if (!notes.hasPhoto(ph[1])) return send(res, 404, { error: "No such photo" });
+          res.writeHead(200, { "content-type": "image/jpeg", "cache-control": "public, max-age=31536000, immutable" });
+          return res.end(readFileSync(notes.photoPath(ph[1])));
         }
         const rec = url.pathname.match(/^\/api\/record\/(0x[0-9a-fA-F]{40})$/);
         if (rec && req.method === "GET") {

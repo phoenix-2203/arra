@@ -563,3 +563,14 @@ button:not(:disabled):active, .button:active, .chip:not(:disabled):active, .tab:
 .block.urgent { border-color: var(--alert); }
 .ol-meta .due { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--text-soft); white-space: nowrap; }
 .ol-meta .due.act { color: var(--mark); }
+
+/* ---- Notes and evidence ---- */
+.notes { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.note-item { border: 1.5px solid var(--edge); border-radius: 14px; padding: 12px 14px; background: var(--surface); }
+.note-item > * + * { margin-top: 6px; }
+.note-item.change { border-color: var(--mark); }
+.note-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.note-photo { display: block; max-width: 100%; max-height: 260px; border-radius: 10px; border: 1px solid var(--line); }
+.note-ok { color: var(--mark); font-weight: 600; }
+textarea { width: 100%; box-sizing: border-box; font: inherit; color: var(--text); background: var(--bg); border: 1.5px solid var(--edge); border-radius: 12px; padding: 12px 14px; resize: vertical; }
+label.button { cursor: pointer; }
