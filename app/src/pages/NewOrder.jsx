@@ -234,7 +234,8 @@ export default function NewOrder({ wallet }) {
   }, [f.shipBy]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Live naira price for whatever USDT the wallet is missing.
-  const missing = review?.ready && balance !== null ? BigInt(review.totalUsdt) - balance : 0n;
+  const gap = review?.ready && balance !== null ? BigInt(review.totalUsdt) - balance : 0n;
+  const missing = gap > 0n && gap < 1_000_000n ? 1_000_000n : gap; // Textile's $1 minimum
   useEffect(() => {
     setFxRate(null);
     if (step !== 3 || payWith !== "naira" || missing <= 0n) return;
@@ -262,7 +263,10 @@ export default function NewOrder({ wallet }) {
   const supplierOk = f.supplier.trim() && isAddress(supplierAddr) && supplierAddr.toLowerCase() !== account.toLowerCase() && payee && payee.status !== "invalid" && (payee.status !== "changed" || phoneConfirmed);
   const tooBig = total > MAX_ORDER;
   // F11: with naira, Arra converts only what the wallet is missing, at one firm Textile rate.
-  const needUsdt = balance !== null && total > balance ? total - balance : 0n;
+  const shortBy = balance !== null && total > balance ? total - balance : 0n;
+  // Textile converts at least $1.00 at a time; for a smaller gap convert $1 and keep the change as USDT.
+  const TEXTILE_MIN = 1_000_000n;
+  const needUsdt = shortBy > 0n && shortBy < TEXTILE_MIN ? TEXTILE_MIN : shortBy;
   const naira = payWith === "naira";
   const fxCngn = fxRate ? BigInt(fxRate.cngn) : null;
   const short = naira ? fxCngn !== null && cngn !== null && fxCngn > cngn : balance !== null && total > balance;
@@ -541,7 +545,7 @@ export default function NewOrder({ wallet }) {
             {naira && needUsdt === 0n ? <p className="note ok">Your USDT already covers this order, so nothing needs converting.</p> : null}
             {naira && needUsdt > 0n && fxRate && !fxRate.error ? (
               <p className="note num">
-                {ngn(BigInt(fxRate.cngn))} becomes ${usd(needUsdt)} USDT at about ₦{Math.round(fxRate.ngnPerUsd).toLocaleString("en-NG")} per $1, fee included. You'll confirm the final rate before anything moves.
+                {ngn(BigInt(fxRate.cngn))} becomes ${usd(needUsdt)} USDT{needUsdt > shortBy ? ` (Textile's minimum is $1; the extra $${usd(needUsdt - shortBy)} stays in your wallet)` : ""} at about ₦{Math.round(fxRate.ngnPerUsd).toLocaleString("en-NG")} per $1, fee included. You'll confirm the final rate before anything moves.
               </p>
             ) : null}
             {naira && fxRate?.error ? <p className="note bad">Couldn't get a naira rate: {fxRate.error}</p> : null}
