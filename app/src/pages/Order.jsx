@@ -84,6 +84,7 @@ export default function Order({ id, wallet }) {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState("");
   const [shareLang, setShareLang] = useState("auto");
+  const [extendDate, setExtendDate] = useState("");
   const [lastTx, setLastTx] = useState("");
   const [partAmount, setPartAmount] = useState("");
   const [container, setContainer] = useState("");
@@ -188,8 +189,13 @@ export default function Order({ id, wallet }) {
       await new Promise((r) => setTimeout(r, 2000));
     }
   }
-  const checkEnds = o.shippedAt + o.disputeWindow;
+  // v4: the check period starts at confirmed arrival, else at shipping + transit.
+  const checkStart = o.arrivedAt ? o.arrivedAt : o.shippedAt + (o.transit ?? 0);
+  const checkEnds = checkStart + o.disputeWindow;
+  const inTransit = o.v4 && !o.arrivedAt && o.transit > 0 && now <= o.shippedAt + o.transit;
   const daysLeft = Math.max(0, Math.ceil((checkEnds - now) / 86400));
+  const [extendTo, setExtendTo] = [extendDate, setExtendDate];
+  const extendDefault = new Date((Math.max(o.shipBy, now) + 14 * 86400) * 1000).toISOString().slice(0, 10);
   const bid = BigInt(o.id);
   const has = (a) => actions.includes(a);
   const shareUrl = `${location.origin}/o/${view.link}${shareLang === "auto" ? "" : `?lang=${shareLang}`}`;
@@ -217,7 +223,7 @@ export default function Order({ id, wallet }) {
           <div><dt>{t.deposit}</dt><dd>${usd(o.deposit)}</dd></div>
           {o.status === "Pending" ? <div><dt>{t.acceptBy}</dt><dd>{day(o.acceptBy, lang)}</dd></div> : null}
           {o.status === "Pending" || o.status === "Active" ? <div><dt>{goods ? t.shipBy : t.deliverBy}</dt><dd>{day(o.shipBy, lang)}</dd></div> : null}
-          {o.status === "Shipped" ? <div><dt>{t.checkWindow}</dt><dd>{day(o.shippedAt + o.disputeWindow, lang)}</dd></div> : null}
+          {o.status === "Shipped" ? <div><dt>{t.checkWindow}</dt><dd>{inTransit ? t.v4.afterArrival : day(checkEnds, lang)}</dd></div> : null}
         </dl>
       </section>
 
@@ -249,8 +255,9 @@ export default function Order({ id, wallet }) {
 
       {o.status === "Shipped" && goods ? (
         <div className={`block stack ${role === "buyer" && daysLeft <= 7 ? "urgent" : ""}`}>
-          <h3>{role === "buyer" ? t.ship.buyerTitle(daysLeft) : t.ship.otherTitle(daysLeft)}</h3>
-          <p className="small muted">{role === "buyer" ? t.ship.buyerBody : t.ship.otherBody}</p>
+          <h3>{inTransit ? t.v4.transitTitle : role === "buyer" ? t.ship.buyerTitle(daysLeft) : t.ship.otherTitle(daysLeft)}</h3>
+          <p className="small muted">{inTransit ? (role === "buyer" ? t.v4.transitBuyer(day(o.shippedAt + o.transit, lang), Math.round(o.disputeWindow / 86400)) : t.v4.transitOther(day(o.shippedAt + o.transit, lang))) : role === "buyer" ? t.ship.buyerBody : t.ship.otherBody}</p>
+          {role === "buyer" && has("confirmArrival") ? <button className="money" disabled={!!busy} onClick={() => run("confirmArrival", [bid])}>{A.confirmArrival}</button> : null}
           {view.tracking ? (
             <div className="row-gap">
               <span className="num">{t.ship.container} <strong>{view.tracking.number}</strong></span>
@@ -342,6 +349,21 @@ export default function Order({ id, wallet }) {
           ) : null}
 
           {has("dispute") && !(goods && o.status === "Shipped") ? <button className="danger" disabled={!!busy} onClick={() => run("dispute", [bid])}>{A.dispute}</button> : null}
+          {has("extendDeadlines") ? (
+            <div className="block stack">
+              <label className="field">
+                <span>{A.extendDeadlines}</span>
+                <input type="date" value={extendTo || extendDefault} min={new Date(Math.max(o.shipBy, now) * 1000).toISOString().slice(0, 10)} onChange={(e) => setExtendTo(e.target.value)} />
+                <small>{t.v4.extendHint}</small>
+              </label>
+              <button className="secondary" disabled={!!busy} onClick={() => {
+                const ship = Math.floor(Date.parse(`${extendTo || extendDefault}T23:59:59Z`) / 1000);
+                const accept = o.status === "Pending" ? Math.min(ship, Math.max(o.acceptBy, now + 86400)) : o.acceptBy;
+                run("extendDeadlines", [bid, BigInt(accept), BigInt(ship)]);
+              }}>{A.extendDeadlines}</button>
+            </div>
+          ) : null}
+          {has("resolveDispute") ? <button disabled={!!busy} onClick={() => run("resolveDispute", [bid])}>{A.resolveDispute}</button> : null}
           {has("claim") ? <button disabled={!!busy} onClick={() => run("claim", [bid])}>{A.claim}</button> : null}
           {has("reclaim") ? <button disabled={!!busy} onClick={() => run("reclaim", [bid])}>{A.reclaim}</button> : null}
           {has("decline") ? <button className="danger" disabled={!!busy} onClick={() => run("cancel", [bid])}>{A.decline}</button> : null}

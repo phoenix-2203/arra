@@ -135,8 +135,15 @@ export default function NewOrder({ wallet }) {
   const [acceptDays, setAcceptDays] = useState(3);
   // The agent's fee if it has to step in at a deadline (from the current vault).
   const [keeperFee, setKeeperFee] = useState(0n);
+  // v4 vaults start the check period when the goods arrive, so it can be short again.
+  const [v4, setV4] = useState(false);
+  const [transitDays, setTransitDays] = useState(60);
   useEffect(() => {
-    currentVault().then(() => setKeeperFee(chain.KEEPER_FEE));
+    currentVault().then(() => {
+      setKeeperFee(chain.KEEPER_FEE);
+      setV4(chain.VAULT_V4);
+      if (chain.VAULT_V4) setCheckDays(7);
+    });
   }, []);
   // Demo mode (/new?demo=1): a 5-minute accept window, so the agent's automatic
   // refund can be shown live. The contract allows any future deadline.
@@ -178,7 +185,7 @@ export default function NewOrder({ wallet }) {
     return () => clearInterval(t);
   }, [step, f.product]);
   const ex = K.examples[exIdx % K.examples.length];
-  const setKind = (k) => (setCheckDays(k === "goods" ? 30 : 7), setF({ ...f, kind: k, unit: KINDS[k].units[0], details: KINDS[k].details.slice(0, 2).map((label) => ({ label, value: "" })) }));
+  const setKind = (k) => (setCheckDays(k === "goods" && !v4 ? 30 : 7), setF({ ...f, kind: k, unit: KINDS[k].units[0], details: KINDS[k].details.slice(0, 2).map((label) => ({ label, value: "" })) }));
   const setDetail = (i, value) => setF({ ...f, details: f.details.map((d, j) => (j === i ? { ...d, value } : d)) });
   const addDetail = (label) => setF({ ...f, details: [...f.details, { label, value: "" }] });
   const removeDetail = (i) => setF({ ...f, details: f.details.filter((_, j) => j !== i) });
@@ -292,7 +299,7 @@ export default function NewOrder({ wallet }) {
       // One notification per wallet confirmation, so the buyer always knows what's happening.
       let current = null;
       const { id } = await lockOrder(
-        { buyer: account, supplier: supplierAddr, total, depositBps: depositPct * 100, acceptBy: Math.floor(Date.now() / 1000) + Math.round(acceptDays * DAY), shipBy, disputeWindow: checkDays * DAY, ref },
+        { buyer: account, supplier: supplierAddr, total, depositBps: depositPct * 100, acceptBy: Math.floor(Date.now() / 1000) + Math.round(acceptDays * DAY), shipBy, disputeWindow: checkDays * DAY, transit: f.kind === "goods" ? transitDays * DAY : 0, ref },
         (s) => {
           if (current) current.update({ kind: "ok", title: "USDT allowed", spinner: false });
           setBusy(s === "approve" ? "Step 1 of 2: allow Arra's vault to take the USDT. Confirm in your wallet." : "Step 2 of 2: lock the money. Confirm in your wallet.");
@@ -533,15 +540,23 @@ export default function NewOrder({ wallet }) {
               <span className="field-label">{K.payee} must accept within</span>
               <Chips label="Accept within" value={acceptDays} onChange={setAcceptDays} options={[...(demo ? [[FIVE_MIN, "5 min (demo)"]] : []), [1, "1 day"], [3, "3 days"], [7, "7 days"]]} />
             </div>
+            {v4 && f.kind === "goods" ? (
+              <div className="field">
+                <span className="field-label">How is it shipped?</span>
+                <Chips label="Shipping" value={transitDays} onChange={setTransitDays} options={[[60, "Sea"], [14, "Air"], [10, "Courier"], [3, "Local delivery"]]} />
+                <small>Up to {transitDays} days in transit. Your check period starts when you tap "Goods arrived", or after {transitDays} days at the latest, so the supplier can't be paid before the goods could reach you.</small>
+              </div>
+            ) : null}
             <div className="field">
-              <span className="field-label">Your time to check it after {f.kind === "goods" ? "shipping" : "delivery"}</span>
-              <Chips label="Check period" value={checkDays} onChange={setCheckDays} options={f.kind === "goods" ? [[7, "7 days"], [14, "14 days"], [30, "30 days"]] : [[3, "3 days"], [7, "7 days"], [14, "14 days"]]} />
-              {f.kind === "goods" ? <small>It starts when the supplier marks the goods shipped, not when they reach you. Sea freight from China takes about 4 to 8 weeks plus clearing, so 30 days is safest. If the goods haven't arrived as the time runs out, tap "Not arrived yet" on the order to hold the balance.</small> : null}
+              <span className="field-label">Your time to check it after {f.kind === "goods" ? (v4 ? "it arrives" : "shipping") : "delivery"}</span>
+              <Chips label="Check period" value={checkDays} onChange={setCheckDays} options={f.kind === "goods" && !v4 ? [[7, "7 days"], [14, "14 days"], [30, "30 days"]] : [[3, "3 days"], [7, "7 days"], [14, "14 days"]]} />
+              {f.kind === "goods" && !v4 ? <small>It starts when the supplier marks the goods shipped, not when they reach you. Sea freight from China takes about 4 to 8 weeks plus clearing, so 30 days is safest. If the goods haven't arrived as the time runs out, tap "Not arrived yet" on the order to hold the balance.</small> : null}
             </div>
             <ul className="small muted stack" style={{ paddingLeft: 18, margin: 0 }}>
               <li>Not accepted in {acceptText}: all ${usd(total)} comes back to you.</li>
               <li>{K.notDone} {new Date(`${f.shipBy}T12:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}: the ${usd(total - deposit)} balance comes back to you.</li>
-              <li>No problem raised within {checkDays} days: the balance pays the {K.payee.toLowerCase()}.</li>
+              <li>No problem raised within {checkDays} days{v4 && f.kind === "goods" ? " of arrival" : ""}: the balance pays the {K.payee.toLowerCase()}.</li>
+              {v4 ? <li>Supplier running late? You can give them more time from the order page. A problem nobody resolves can't freeze the money: an offer ignored for 7 days goes through, and after 30 days the balance splits 50/50.</li> : null}
               {keeperFee > 0n ? <li>Arra's agent makes these automatic refunds and payouts for you, for ${usd(keeperFee)} taken from that amount. Do it yourself first and there's no fee.</li> : null}
             </ul>
           </div>

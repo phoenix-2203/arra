@@ -45,9 +45,13 @@ export function cardFor(order, sheet) {
     case "Active":
       return { ...base, label: "Still locked in the vault", amount: money(order.held), tone: "lime", status: goods ? "Accepted · being made" : "Accepted · in progress",
         rows: [["Order total", money(order.total)], ["Deposit paid", money(order.deposit)], [goods ? "Ship by" : "Deliver by", day(order.shipBy)]], cta: "Open order" };
-    case "Shipped":
-      return { ...base, label: "Still locked in the vault", amount: money(order.held), tone: "lime", status: goods ? "Shipped · buyer checking" : "Delivered · buyer checking",
-        rows: [["Order total", money(order.total)], ["Deposit paid", money(order.deposit)], ["Paid out on", day(order.shippedAt + order.disputeWindow)]], cta: "Open order" };
+    case "Shipped": {
+      // v4: the check period starts at arrival (or shipping + transit at the latest).
+      const transit = !order.arrivedAt && order.transit > 0;
+      const start = order.arrivedAt || order.shippedAt + (order.transit ?? 0);
+      return { ...base, label: "Still locked in the vault", amount: money(order.held), tone: "lime", status: transit ? "Shipped · on its way" : goods ? "Arrived · buyer checking" : "Delivered · buyer checking",
+        rows: [["Order total", money(order.total)], ["Deposit paid", money(order.deposit)], transit ? ["Check starts", "on arrival"] : ["Paid out on", day(start + order.disputeWindow)]], cta: "Open order" };
+    }
     case "Disputed":
       return { ...base, label: "Held while it's sorted out", amount: money(order.held), tone: "alert", status: "Problem raised",
         rows: [["Order total", money(order.total)], ["Deposit paid", money(order.deposit)], ["Next", "Offer or accept a split"]], cta: "Open order" };

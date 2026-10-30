@@ -8,7 +8,7 @@ import { isAddress, keccak256, toBytes } from "viem";
 import { reviewSheet, sheetRef, sheetTotal, canonicalSheet } from "./orderSheet.js";
 import { PayeeBook } from "./payeeBook.js";
 import { checkContainerNumber } from "./container.js";
-import { nextActions, explain, vaultAbi } from "./vault.js";
+import { nextActions, explain, vaultAbi, abiFor } from "./vault.js";
 import { textileClient, ngnPerUsd, rampSupportsCelo, TextileError } from "./textile.js";
 import { LogIndex } from "./history.js";
 import { VaultSet } from "./vaults.js";
@@ -97,7 +97,8 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
     "GET /api/health": async () => {
       // keeperFee: what the agent takes if it has to trigger a refund or payout (v3 vaults; 0 before).
       keeperFee ??= await client.readContract({ address: vaults.current, abi: vaultAbi, functionName: "keeperFee" }).then((v) => (/^\d+$/.test(String(v)) ? String(v) : "0")).catch(() => "0");
-      return [200, { ok: true, vault: vaults.current, vaults: vaults.addresses, keeperFee }];
+      const v4 = (await abiFor(client, vaults.current).catch(() => null)) === vaultAbi;
+      return [200, { ok: true, vault: vaults.current, vaults: vaults.addresses, keeperFee, v4 }];
     },
 
     // Live totals for the homepage (cached for a minute).

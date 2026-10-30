@@ -5,11 +5,14 @@ import { createPublicClient, createWalletClient, custom, http, parseUnits, parse
 import { celo } from "viem/chains";
 import { withAttribution } from "@celo/attribution-tags";
 import vaultAbi from "./vaultAbi.json";
+import legacyVaultAbi from "./vaultAbi.v3.json";
 
 // Where new orders go. The server says which vault is current (after an upgrade,
 // older orders stay in older vaults and their pages use that order's vault).
 export let VAULT = "0x5a1f66d1e8e905efb176a5f647d0b51d8a979422";
 export let KEEPER_FEE = 0n;
+// v4 vaults: check period from arrival, deadlines can move later, disputes end by themselves.
+export let VAULT_V4 = false;
 let health;
 export function currentVault() {
   health ??= fetch("/api/health")
@@ -17,6 +20,7 @@ export function currentVault() {
     .then((h) => {
       if (h.vault) VAULT = h.vault;
       KEEPER_FEE = BigInt(h.keeperFee ?? 0);
+      VAULT_V4 = !!h.v4;
       return VAULT;
     })
     .catch(() => VAULT);
@@ -144,7 +148,7 @@ export const sendUsdt = (to, usd, opts) => write(USDT, erc20, "transfer", [to, t
 
 export const usdtBalance = (who) => reader.readContract({ address: USDT, abi: erc20, functionName: "balanceOf", args: [who] });
 
-export async function lockOrder({ buyer, supplier, total, depositBps, acceptBy, shipBy, disputeWindow, ref }, onStep = () => {}, onSent = () => {}) {
+export async function lockOrder({ buyer, supplier, total, depositBps, acceptBy, shipBy, disputeWindow, transit = 0, ref }, onStep = () => {}, onSent = () => {}) {
   const VAULT = await currentVault();
   const allowance = await reader.readContract({ address: USDT, abi: erc20, functionName: "allowance", args: [buyer, VAULT] });
   if (allowance < total) {
@@ -153,9 +157,13 @@ export async function lockOrder({ buyer, supplier, total, depositBps, acceptBy, 
   }
   onStep("lock");
   await ensureWallet();
-  const args = [supplier, total, depositBps, BigInt(acceptBy), BigInt(shipBy), disputeWindow, ref];
-  await simulateSoon({ account: wallet.account, address: VAULT, abi: vaultAbi, functionName: "createOrder", args });
-  const hash = await wallet.writeContract({ address: VAULT, abi: vaultAbi, functionName: "createOrder", args, ...feeOpts() });
+  // v4 takes the transit time too; older vaults don't.
+  const abi = VAULT_V4 ? vaultAbi : legacyVaultAbi;
+  const args = VAULT_V4
+    ? [supplier, total, depositBps, BigInt(acceptBy), BigInt(shipBy), disputeWindow, transit, ref]
+    : [supplier, total, depositBps, BigInt(acceptBy), BigInt(shipBy), disputeWindow, ref];
+  await simulateSoon({ account: wallet.account, address: VAULT, abi, functionName: "createOrder", args });
+  const hash = await wallet.writeContract({ address: VAULT, abi, functionName: "createOrder", args, ...feeOpts() });
   onSent("lock", hash);
   const receipt = await reader.waitForTransactionReceipt({ hash, retryCount: 20 });
   // Read the id from the event, not the simulation, in case someone else ordered at the same moment.
