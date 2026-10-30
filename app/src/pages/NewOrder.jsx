@@ -138,7 +138,8 @@ export default function NewOrder({ wallet }) {
   const demo = typeof location !== "undefined" && new URLSearchParams(location.search).has("demo");
   const FIVE_MIN = 5 / (24 * 60);
   const acceptText = acceptDays < 1 ? `${Math.round(acceptDays * 24 * 60)} minutes` : `${acceptDays} day${acceptDays > 1 ? "s" : ""}`;
-  const [checkDays, setCheckDays] = useState(7);
+  // Shipped goods: 30 days, because the check period starts at shipping and sea freight takes weeks.
+  const [checkDays, setCheckDays] = useState(30);
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   const [balance, setBalance] = useState(null);
@@ -159,7 +160,7 @@ export default function NewOrder({ wallet }) {
     return () => clearInterval(t);
   }, [step, f.product]);
   const ex = K.examples[exIdx % K.examples.length];
-  const setKind = (k) => setF({ ...f, kind: k, unit: KINDS[k].units[0], details: KINDS[k].details.slice(0, 2).map((label) => ({ label, value: "" })) });
+  const setKind = (k) => (setCheckDays(k === "goods" ? 30 : 7), setF({ ...f, kind: k, unit: KINDS[k].units[0], details: KINDS[k].details.slice(0, 2).map((label) => ({ label, value: "" })) }));
   const setDetail = (i, value) => setF({ ...f, details: f.details.map((d, j) => (j === i ? { ...d, value } : d)) });
   const addDetail = (label) => setF({ ...f, details: [...f.details, { label, value: "" }] });
   const removeDetail = (i) => setF({ ...f, details: f.details.filter((_, j) => j !== i) });
@@ -492,7 +493,8 @@ export default function NewOrder({ wallet }) {
             </div>
             <div className="field">
               <span className="field-label">Your time to check it after {f.kind === "goods" ? "shipping" : "delivery"}</span>
-              <Chips label="Check period" value={checkDays} onChange={setCheckDays} options={[[3, "3 days"], [7, "7 days"], [14, "14 days"]]} />
+              <Chips label="Check period" value={checkDays} onChange={setCheckDays} options={f.kind === "goods" ? [[7, "7 days"], [14, "14 days"], [30, "30 days"]] : [[3, "3 days"], [7, "7 days"], [14, "14 days"]]} />
+              {f.kind === "goods" ? <small>It starts when the supplier marks the goods shipped, not when they reach you. Sea freight from China takes about 4 to 8 weeks plus clearing, so 30 days is safest. If the goods haven't arrived as the time runs out, tap "Not arrived yet" on the order to hold the balance.</small> : null}
             </div>
             <ul className="small muted stack" style={{ paddingLeft: 18, margin: 0 }}>
               <li>Not accepted in {acceptText}: all ${usd(total)} comes back to you.</li>

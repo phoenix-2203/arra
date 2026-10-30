@@ -7,6 +7,7 @@ import { join } from "node:path";
 import { createApp, listen } from "../src/server.js";
 import { sheetRef } from "../src/orderSheet.js";
 import { TextileError } from "../src/textile.js";
+import { keccak256, toBytes } from "viem";
 
 const BUYER = "0x1111111111111111111111111111111111111111";
 const SUPPLIER = "0x2222222222222222222222222222222222222222";
@@ -180,4 +181,21 @@ test("naira payment: preview, proof-gated firm quote, claim token kept on the se
   assert.equal((await post("/api/fx/rfq_unknown/submit", { txHash: hash }))[0], 404);
   const [, prov] = await get("/api/ramp/providers");
   assert.deepEqual(prov.celo, []);
+});
+
+test("container number: kept only if it matches the fingerprint the supplier recorded", async () => {
+  const shippedHash = keccak256(toBytes("CSQU3054383"));
+  const history = { async timeline() { return [{ event: "OrderShipped", at: T, tx: `0x${"ab".repeat(32)}`, trackingHash: shippedHash }]; }, async sync() {}, async activity() { return []; } };
+  const d = mkdtempSync(join(tmpdir(), "arra-trk-"));
+  const srv = await listen(createApp({ client: fakeClient, vault: "0xvault", dataDir: d, staticDir: null, now: () => T, textile: fakeTextile, history }), 0);
+  const b = `http://127.0.0.1:${srv.address().port}`;
+  const postTo = (body) => fetch(`${b}/api/orders/1/tracking`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }).then(async (r) => [r.status, await r.json()]);
+  assert.equal((await postTo({ number: "MSCU1234565" }))[0], 400, "a valid number that isn't this order's is refused");
+  assert.equal((await postTo({ number: "CSQU3054384" }))[0], 400, "a bad check digit is refused");
+  const [st, ok] = await postTo({ number: "csqu 305438 3" });
+  assert.equal(st, 200);
+  assert.equal(ok.number, "CSQU3054383");
+  const view = await fetch(`${b}/api/orders/1`).then((r) => r.json());
+  assert.equal(view.tracking.number, "CSQU3054383", "the buyer can now see and track it");
+  srv.close();
 });

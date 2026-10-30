@@ -560,3 +560,4 @@ button:not(:disabled):active, .button:active, .chip:not(:disabled):active, .tab:
 .hero-copy { min-width: 0; }
 .hero-copy h1.display { overflow-wrap: anywhere; }
 @media (max-width: 340px) { h1.display { font-size: 38px; } }
+.block.urgent { border-color: var(--alert); }

@@ -87,6 +87,7 @@ export class LogIndex {
         amount: amount != null ? amount.toString() : null,
         ...(a.toBuyer != null ? { toBuyer: a.toBuyer.toString() } : {}),
         ...(a.remaining != null ? { remaining: a.remaining.toString() } : {}),
+        ...(a.trackingHash != null ? { trackingHash: a.trackingHash } : {}),
       });
     }
     return out;

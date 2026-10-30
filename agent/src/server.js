@@ -4,7 +4,7 @@ import { createServer as httpServer } from "node:http";
 import { gzipSync } from "node:zlib";
 import { readFileSync, writeFileSync, existsSync, mkdirSync, statSync } from "node:fs";
 import { join, extname, normalize } from "node:path";
-import { isAddress } from "viem";
+import { isAddress, keccak256, toBytes } from "viem";
 import { reviewSheet, sheetRef, sheetTotal, canonicalSheet } from "./orderSheet.js";
 import { PayeeBook } from "./payeeBook.js";
 import { checkContainerNumber } from "./container.js";
@@ -63,6 +63,13 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
   links ??= new OrderLinks(join(dataDir, "link-secret"));
   // An order can be addressed by its private link code or (old links) its number.
   const toId = async (x) => (/^\d{1,9}$/.test(x) ? Number(x) : links.resolve(x, await vaults.count()));
+  // Container numbers: the vault stores only their fingerprint. Anyone may tell the
+  // server the number, and it's kept only if it matches that fingerprint, so the
+  // buyer can see and track it.
+  const trackingDir = join(dataDir, "tracking");
+  mkdirSync(trackingDir, { recursive: true });
+  const trackingPath = (id) => join(trackingDir, `${Number(id)}.json`);
+  const loadTracking = (id) => (existsSync(trackingPath(id)) ? JSON.parse(readFileSync(trackingPath(id), "utf8")) : null);
   const sheetPath = (ref) => join(sheetsDir, `${ref.toLowerCase()}.json`);
   const loadSheet = (ref) => (existsSync(sheetPath(ref)) ? JSON.parse(readFileSync(sheetPath(ref), "utf8")) : null);
 
@@ -79,7 +86,7 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
     if (name && o.status !== "Pending" && payees.check(o.buyer, name, o.supplier).status === "new") {
       payees.remember(o.buyer, name, o.supplier, `accepted order ${id}`);
     }
-    return { order: o, link: links.code(id), sheet, role, actions: nextActions(o, t, role), explanation: explain(o, t), now: t };
+    return { order: o, link: links.code(id), tracking: loadTracking(id), sheet, role, actions: nextActions(o, t, role), explanation: explain(o, t), now: t };
   }
 
   const routes = {
@@ -237,6 +244,21 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
           const id = await toId(m[1]);
           const view = id ? await orderView(id, url.searchParams.get("as")) : null;
           return view ? send(res, 200, view) : send(res, 404, { error: "No such order" });
+        }
+        const tr = url.pathname.match(/^\/api\/orders\/([A-Za-z0-9]{1,10})\/tracking$/);
+        if (tr && req.method === "POST") {
+          const id = await toId(tr[1]);
+          if (!id) return send(res, 404, { error: "No such order" });
+          const body = await readJson(req);
+          const check = checkContainerNumber(body.number);
+          if (!check.ok) return send(res, 400, { error: check.reason });
+          const shipped = (await vaults.timeline(id).catch(() => [])).find((st) => st.event === "OrderShipped");
+          if (!shipped) return send(res, 409, { error: "The order isn't marked shipped yet" });
+          if (keccak256(toBytes(check.number)).toLowerCase() !== String(shipped.trackingHash).toLowerCase()) {
+            return send(res, 400, { error: "That number doesn't match the one the supplier recorded" });
+          }
+          writeFileSync(trackingPath(id), JSON.stringify({ number: check.number, at: shipped.at, tx: shipped.tx }));
+          return send(res, 200, { ok: true, number: check.number });
         }
         const tl = url.pathname.match(/^\/api\/orders\/([A-Za-z0-9]{1,10})\/timeline$/);
         if (tl && req.method === "GET") {

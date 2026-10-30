@@ -95,6 +95,16 @@ export const STRINGS = {
       supplierNone: "Your wallet needs a tiny network fee (gas) to accept, less than one cent. Ask the buyer to send some from this page, or open this link in MiniPay, which pays fees from USDT.",
       supplierHasUsdt: "Your wallet has USDT but no CELO. Open this link in MiniPay or Valora to pay the fee in USDT, or ask the buyer to send a little CELO.",
     },
+    ship: {
+      buyerTitle: (d) => (d === 0 ? "Your check period ends today" : `${d} day${d === 1 ? "" : "s"} left to check the goods`),
+      otherTitle: (d) => (d === 0 ? "The buyer's check period ends today" : `The buyer has ${d} day${d === 1 ? "" : "s"} to check the goods`),
+      buyerBody: "When the time runs out the balance pays the supplier automatically. Track the container below. If the goods haven't arrived or something is wrong, hold the balance; then pay or agree a split once you've checked them.",
+      otherBody: "If no problem is raised before then, the balance pays out to the supplier automatically.",
+      container: "Container",
+      track: "Track it",
+      noNumber: "The container number will show here once the supplier's app records it.",
+      hold: "Not arrived yet or wrong: hold the balance",
+    },
     timelineTitle: "What happened",
     timeline: {
       OrderCreated: "Money locked in the vault",
@@ -205,6 +215,16 @@ export const STRINGS = {
       thanks: "已发送，供应商现在可以接单。",
       supplierNone: "接单需要极少的网络手续费（gas），不到一美分。请让买家在此页面发送一些，或在 MiniPay 中打开此链接（手续费从 USDT 扣除）。",
       supplierHasUsdt: "您的钱包有 USDT 但没有 CELO。请在 MiniPay 或 Valora 中打开此链接用 USDT 支付手续费，或请买家发送少量 CELO。",
+    },
+    ship: {
+      buyerTitle: (d) => (d === 0 ? "验货期今天结束" : `还有 ${d} 天验货`),
+      otherTitle: (d) => (d === 0 ? "买家验货期今天结束" : `买家还有 ${d} 天验货`),
+      buyerBody: "验货期结束后尾款会自动付给供应商。请在下方追踪集装箱。如货物未到或有问题，请先冻结尾款，检查后再付款或协商分配。",
+      otherBody: "如果在此之前买家没有提出问题，尾款将自动付给供应商。",
+      container: "集装箱",
+      track: "追踪",
+      noNumber: "供应商记录后，集装箱号会显示在这里。",
+      hold: "未到货或有问题：冻结尾款",
     },
     timelineTitle: "订单记录",
     timeline: {

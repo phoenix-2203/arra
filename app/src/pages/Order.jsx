@@ -176,6 +176,17 @@ export default function Order({ id, wallet }) {
   }
 
   const A = t.actions;
+  // Mark shipped, then tell the server the container number (it checks it against the
+  // fingerprint now onchain) so the buyer can see and track it.
+  async function shipWithTracking(number) {
+    await run("markShipped", [BigInt(o.id), keccak256(toBytes(number))]);
+    for (let i = 0; i < 6; i++) {
+      if (await api.tracking(view.link, number).then(() => true).catch(() => false)) return load();
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+  }
+  const checkEnds = o.shippedAt + o.disputeWindow;
+  const daysLeft = Math.max(0, Math.ceil((checkEnds - now) / 86400));
   const bid = BigInt(o.id);
   const has = (a) => actions.includes(a);
   const shareUrl = `${location.origin}/o/${view.link}${shareLang === "auto" ? "" : `?lang=${shareLang}`}`;
@@ -232,6 +243,21 @@ export default function Order({ id, wallet }) {
 
       {["Pending", "Active", "Disputed"].includes(o.status) ? <GasHelp o={o} role={role} account={account} t={t} /> : null}
 
+      {o.status === "Shipped" && goods ? (
+        <div className={`block stack ${role === "buyer" && daysLeft <= 7 ? "urgent" : ""}`}>
+          <h3>{role === "buyer" ? t.ship.buyerTitle(daysLeft) : t.ship.otherTitle(daysLeft)}</h3>
+          <p className="small muted">{role === "buyer" ? t.ship.buyerBody : t.ship.otherBody}</p>
+          {view.tracking ? (
+            <div className="row-gap">
+              <span className="num">{t.ship.container} <strong>{view.tracking.number}</strong></span>
+              <a className="linkish" href={`https://www.google.com/search?q=${view.tracking.number}+container+tracking`} target="_blank" rel="noreferrer">{t.ship.track}</a>
+              <a className="linkish" href="https://www.track-trace.com/container" target="_blank" rel="noreferrer">track-trace.com</a>
+            </div>
+          ) : <p className="small muted">{t.ship.noNumber}</p>}
+          {role === "buyer" && has("dispute") ? <button className="secondary" disabled={!!busy} onClick={() => run("dispute", [bid])}>{t.ship.hold}</button> : null}
+        </div>
+      ) : null}
+
       <section className="stack">
         {account ? <p className="small muted">{t.youAre[role]}</p> : null}
         {!account && !final ? (
@@ -276,7 +302,7 @@ export default function Order({ id, wallet }) {
                 <small>{t.containerHint}</small>
               </label>
               {containerCheck && !containerCheck.ok ? <p className="note bad">{containerCheck.reason}</p> : null}
-              <button disabled={!!busy || !containerCheck?.ok} onClick={() => run("markShipped", [bid, keccak256(toBytes(containerCheck.number))])}>{A.markShipped}</button>
+              <button disabled={!!busy || !containerCheck?.ok} onClick={() => shipWithTracking(containerCheck.number)}>{A.markShipped}</button>
             </div>
           ) : null}
 
@@ -310,7 +336,7 @@ export default function Order({ id, wallet }) {
             </div>
           ) : null}
 
-          {has("dispute") ? <button className="danger" disabled={!!busy} onClick={() => run("dispute", [bid])}>{A.dispute}</button> : null}
+          {has("dispute") && !(goods && o.status === "Shipped") ? <button className="danger" disabled={!!busy} onClick={() => run("dispute", [bid])}>{A.dispute}</button> : null}
           {has("claim") ? <button disabled={!!busy} onClick={() => run("claim", [bid])}>{A.claim}</button> : null}
           {has("reclaim") ? <button disabled={!!busy} onClick={() => run("reclaim", [bid])}>{A.reclaim}</button> : null}
           {has("decline") ? <button className="danger" disabled={!!busy} onClick={() => run("cancel", [bid])}>{A.decline}</button> : null}
