@@ -239,6 +239,8 @@ Server setup on a VPS: `bash deploy/setup.sh` (installs, builds and runs Arra as
 - Optional named arbitrator (for example a market association leader) who can only split funds between the two parties.
 - Paid tracking lookups and inspector approval as a release step.
 - Raising the per-order cap as the contract builds a track record.
+- **Self-funding keeper:** the vault pays a fixed one-cent fee from the order to whoever triggers a due refund or payout, so the agent never needs topping up.
+- **Dispute timeout:** after 30 days in dispute with one side silent, a default split the keeper can trigger.
 
 ---
 
