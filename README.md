@@ -203,6 +203,12 @@ agent.json   ERC-8004 agent card
 - **Small by design while new.** Orders are capped at $50 each during the pilot.
 - **Keys stay with their owners.** Scripts preview by default and only send with `--send`; private keys live only in local `.env` files.
 
+**Known limits (honest list, from our own review of the contract on 30 Oct 2026):**
+
+- **A dispute has no timeout.** Once the buyer raises a problem, the balance moves only when the buyer pays, the supplier refunds, or both agree a split. If one side disappears, the money waits. There's no third-party judge by design: nobody but the two parties can move funds. The deposit has already been paid, so only the balance is ever at stake. *Next version:* after 30 days in dispute with no answer from one side, a default (for example a 50/50 split) that the keeper can trigger.
+- **USDT can freeze addresses.** Tether can blacklist a wallet; a payout to a frozen wallet would fail and the balance would wait until the other side refunds or splits.
+- **Not audited.** It is small (one contract, about 330 lines, OpenZeppelin building blocks) and well tested, which is why orders are capped at $50 until an outside audit.
+
 ## Run it
 
 ```bash
