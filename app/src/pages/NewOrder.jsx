@@ -196,7 +196,7 @@ export default function NewOrder({ wallet }) {
     usdtBalance(account).then(setBalance).catch(() => {});
     cngnBalance(account).then(setCngn).catch(() => {});
     celoBalance(account.toLowerCase()).then(setMyCelo).catch(() => {});
-  }, [account]);
+  }, [account, step]); // re-read on each step so the payment step never shows a stale balance
 
   // Does the supplier's wallet have anything to pay network fees with?
   useEffect(() => {
@@ -269,12 +269,15 @@ export default function NewOrder({ wallet }) {
   const needUsdt = shortBy > 0n && shortBy < TEXTILE_MIN ? TEXTILE_MIN : shortBy;
   const naira = payWith === "naira";
   const fxCngn = fxRate ? BigInt(fxRate.cngn) : null;
-  const short = naira ? fxCngn !== null && cngn !== null && fxCngn > cngn : balance !== null && total > balance;
+  const short = naira ? fxCngn !== null && (cngn === null || fxCngn > cngn) : balance !== null && total > balance;
   const needsGas = supGas !== null && supGas < GAS_ENOUGH;
   const canCelo = (a) => myCelo !== null && myCelo >= parseEther(a) + parseEther("0.002");
   const gasDefault = canCelo("0.02") ? "0.02" : !naira && balance !== null && balance >= total + 100_000n ? "usdt" : "none";
   const gas = needsGas ? gasPick ?? gasDefault : "none";
   const gasUsdt = gas === "usdt" ? 100_000n : 0n;
+  // Plain words for "not enough cNGN", with what's needed and what to do.
+  const notEnoughNaira = (have) =>
+    `Not enough naira in this wallet. This needs about ${fxCngn ? ngn(fxCngn) : "more"} in cNGN${have !== null && have !== undefined ? ` and you have ${ngn(have)}` : ""}. Add cNGN to this wallet (for example from MiniPay or an exchange), or choose "Pay with USDT".`;
   const ngn = (v) => `₦${Number(formatUnits(v, 6)).toLocaleString("en-NG", { maximumFractionDigits: 0 })}`;
 
   async function lock() {
@@ -284,6 +287,10 @@ export default function NewOrder({ wallet }) {
       if (payee?.status === "changed") await api.confirmPayee(account, f.supplier, supplierAddr);
       const { ref } = await api.saveSheet(sheet);
       if (naira && needUsdt > 0n) {
+        // Check the naira balance again right before converting (it may have changed).
+        const have = await cngnBalance(account);
+        setCngn(have);
+        if (fxCngn !== null && have < fxCngn) throw new Error(notEnoughNaira(have));
         const words = {
           quote: "Getting a firm naira rate from Textile…",
           sign: "Sign the free message that proves this wallet is yours. It moves no money.",
@@ -329,7 +336,12 @@ export default function NewOrder({ wallet }) {
       }
       navigate(`/o/${id}?new=1`);
     } catch (e) {
-      setError(e.shortMessage ?? e.message);
+      const msg = e.shortMessage ?? e.message ?? "";
+      if (/not hold enough|insufficient/i.test(msg) && naira) {
+        const have = await cngnBalance(account).catch(() => cngn);
+        if (have !== null) setCngn(have);
+        setError(notEnoughNaira(have));
+      } else setError(msg);
     } finally {
       setBusy("");
     }
@@ -602,7 +614,7 @@ export default function NewOrder({ wallet }) {
           {tooBig ? <p className="note bad">While Arra is new, orders are capped at $50. Lower the quantity or split it into several orders.</p> : null}
           {short && !tooBig && !naira ? <p className="note bad">Your wallet has ${usd(balance)} USDT; this order needs ${usd(total)}. Choose naira above to convert the rest.</p> : null}
           {!short && !tooBig && !naira && gasUsdt > 0n && balance !== null && total + gasUsdt > balance ? <p className="note bad">The order plus $0.10 gas is more than your ${usd(balance)} USDT. Pick a CELO option or "Don't send".</p> : null}
-          {short && !tooBig && naira ? <p className="note bad">You need {ngn(fxCngn)} cNGN for this order and have {ngn(cngn)}.</p> : null}
+          {short && !tooBig && naira && cngn !== null ? <p className="note bad">{notEnoughNaira(cngn)}</p> : null}
           {error ? <p className="note bad">{error}</p> : null}
           {busy ? <p className="note">{busy}</p> : null}
           <div className="row">
