@@ -9,7 +9,7 @@ import legacyVaultAbi from "./vaultAbi.v3.json";
 
 // Where new orders go. The server says which vault is current (after an upgrade,
 // older orders stay in older vaults and their pages use that order's vault).
-export let VAULT = "0x5a1f66d1e8e905efb176a5f647d0b51d8a979422";
+export let VAULT = "0xa3b339624d21a055c6da036f8e6d219ff2c3c444";
 export let KEEPER_FEE = 0n;
 // v4 vaults: check period from arrival, deadlines can move later, disputes end by themselves.
 export let VAULT_V4 = false;

@@ -4,7 +4,7 @@
 
 Arra is escrow for importers buying anything from China and abroad (phones, solar panels, machine parts, clothes) and for any deal paid with a deposit and a balance. The buyer funds the order from naira or USDT at one locked rate. The supplier gets the deposit the moment they accept. The balance waits in an open contract on Celo that they can see but can't touch until the goods ship, and it comes back automatically if they don't.
 
-**Live app:** https://usearra.duckdns.org &nbsp;·&nbsp; **Vault (v3):** [`0x5a1f…9422` on Celoscan](https://celoscan.io/address/0x5a1f66d1e8e905efb176a5f647d0b51d8a979422) &nbsp;·&nbsp; **Source:** [verified on Sourcify](https://repo.sourcify.dev/42220/0x5a1f66d1e8e905efb176a5f647d0b51d8a979422) &nbsp;·&nbsp; **Agent:** ERC-8004 #9996
+**Live app:** https://usearra.duckdns.org &nbsp;·&nbsp; **Vault (v4):** [`0xa3b3…c444` on Celoscan](https://celoscan.io/address/0xa3b339624d21a055c6da036f8e6d219ff2c3c444) &nbsp;·&nbsp; **Source:** [verified on Sourcify](https://repo.sourcify.dev/42220/0xa3b339624d21a055c6da036f8e6d219ff2c3c444) &nbsp;·&nbsp; **Agent:** ERC-8004 #9996
 
 Built for the [Agents on Open Rails](https://www.loops.house/agents-on-open-rails) hackathon (Celo × Loops House), **Open Corridors: Textile FX** track.
 
@@ -148,12 +148,15 @@ The same contract protects any deal with a deposit and a balance. When creating 
 
 | What | Link |
 |---|---|
-| ArraVault v3 (new orders, keeper fee) | [`0x5a1f66d1e8e905efb176a5f647d0b51d8a979422`](https://celoscan.io/address/0x5a1f66d1e8e905efb176a5f647d0b51d8a979422) |
+| ArraVault v4 (new orders) | [`0xa3b339624d21a055c6da036f8e6d219ff2c3c444`](https://celoscan.io/address/0xa3b339624d21a055c6da036f8e6d219ff2c3c444) |
+| v4 deployment (tagged) | [`0x0ffc45…7799`](https://celoscan.io/tx/0x0ffc4534d0e85619e0179d09b6f58f30a13a5bf18bce3464c58618b23da77799) |
+| v3 paused for new orders (tagged) | [`0xe59114…73ff`](https://celoscan.io/tx/0xe591147b3ff7a99390c799778dc4ad6242cb265abdd98c05a3a89b6c2b3873ff) |
+| ArraVault v3 (order #5) | [`0x5a1f66d1e8e905efb176a5f647d0b51d8a979422`](https://celoscan.io/address/0x5a1f66d1e8e905efb176a5f647d0b51d8a979422) |
 | v3 deployment (tagged) | [`0x94410e…b52c`](https://celoscan.io/tx/0x94410e011e191691c0acd415872fe1fa1350d1042c403b9b2668fc1aa2c9b52c) |
 | ArraVault v2 (orders #1–#4) | [`0x3da5f9d36d1ae8769a9460a7788a21c8041c7bb3`](https://celoscan.io/address/0x3da5f9d36d1ae8769a9460a7788a21c8041c7bb3) |
 | v2 paused for new orders (tagged) | [`0x938747…a126`](https://celoscan.io/tx/0x93874732b99e995a6df8664c93515670079fde854117ff3df63075df7f8ba126) |
 | v2 deployment (tagged) | [`0xf8d840…be86`](https://celoscan.io/tx/0xf8d8403f3574d1776a2d440e90fadbe49bb3d7706c5d49bc436a3dc3001bbe86) |
-| Verified source (exact match) | v3: [Sourcify](https://repo.sourcify.dev/42220/0x5a1f66d1e8e905efb176a5f647d0b51d8a979422) · v2: [Sourcify](https://repo.sourcify.dev/42220/0x3da5f9d36d1ae8769a9460a7788a21c8041c7bb3) |
+| Verified source (exact match) | v4: [Sourcify](https://repo.sourcify.dev/42220/0xa3b339624d21a055c6da036f8e6d219ff2c3c444) · v3: [Sourcify](https://repo.sourcify.dev/42220/0x5a1f66d1e8e905efb176a5f647d0b51d8a979422) · v2: [Sourcify](https://repo.sourcify.dev/42220/0x3da5f9d36d1ae8769a9460a7788a21c8041c7bb3) |
 | Agent identity #9996 (tagged) | [`0xc99e65…5a90`](https://celoscan.io/tx/0xc99e653aac82055dcefe99c1c5e7b4be6cefab39d4203a1bf73f4574a8935a90) |
 | First Textile FX swap, 1 USDT → 1,381.23 cNGN (tagged) | [`0xd1c5fd…e906`](https://celoscan.io/tx/0xd1c5fd631c02af304388e1040e1ad9726220547ba2658740ba425c3d7063e906) |
 | Agent wallet | [`0xF4Fa…7053`](https://celoscan.io/address/0xF4Fa62d294E5BcB514D27612998D7459c5D97053) |
@@ -165,7 +168,8 @@ A deployed contract can never be changed, and Arra's vault deliberately has no u
 | Version | What changed | Orders |
 |---|---|---|
 | v2 `0x3da5…7bb3` | The original | #1 onwards; now finishing its open orders, no new ones |
-| v3 [`0x5a1f…9422`](https://celoscan.io/address/0x5a1f66d1e8e905efb176a5f647d0b51d8a979422) | **Self-funding keeper:** whoever triggers a due refund or payout (normally Arra's agent) gets a fixed **$0.01** from that order, so the agent pays its own network fees. A buyer or supplier who does it themselves pays nothing. | #5 onwards (continues where v2 stopped) |
+| v3 [`0x5a1f…9422`](https://celoscan.io/address/0x5a1f66d1e8e905efb176a5f647d0b51d8a979422) | **Self-funding keeper:** whoever triggers a due refund or payout (normally Arra's agent) gets a fixed **$0.01** from that order, so the agent pays its own network fees. A buyer or supplier who does it themselves pays nothing. | #5 (continues where v2 stopped); now finishing its order, no new ones |
+| v4 [`0xa3b3…c444`](https://celoscan.io/address/0xa3b339624d21a055c6da036f8e6d219ff2c3c444) | **Nothing can freeze or rush the money.** The buyer can give the supplier more time (deadlines only move later); the check period starts when the buyer confirms the goods arrived, or after the transit time at the latest; a split offer the other side ignores for 7 days goes through, and a dispute nobody resolves splits 50/50 after 30 days. Keeps the $0.01 keeper fee. | #6 onwards |
 
 The app and API treat every version as one Arra: order numbers never overlap, every old link still works, History, receipts and totals combine all vaults, and the keeper watches all of them. Money in an open v2 order stays in v2 and finishes there, exactly as its rules say.
 
@@ -212,14 +216,14 @@ agent.json   ERC-8004 agent card
 ## Safety
 
 - **No admin access to money.** The owner can only pause new orders and change the per-order cap. Existing orders always run to completion.
-- **Every exit is to the buyer or the supplier** (plus, from v3, a fixed one-cent keeper fee; see below). 44 contract tests, including fuzzing and invariant runs (thousands of random calls) checking that the vault always holds exactly the sum of open balances and that money never goes anywhere else.
+- **Every exit is to the buyer or the supplier** (plus, from v3, a fixed one-cent keeper fee; see below). 55 contract tests, including fuzzing and invariant runs (thousands of random calls) checking that the vault always holds exactly the sum of open balances and that money never goes anywhere else.
 - **Defensive checks.** Fee-on-transfer tokens are rejected, deposits are capped at 90% so at least 10% always stays locked, deadlines are bounded (ship within 180 days, check period 1–30 days), and re-entry is blocked.
 - **Small by design while new.** Orders are capped at $50 each during the pilot.
 - **Keys stay with their owners.** Scripts preview by default and only send with `--send`; private keys live only in local `.env` files.
 
 **Known limits (honest list, from our own review of the contract on 30 Oct 2026):**
 
-- **A dispute has no timeout.** Once the buyer raises a problem, the balance moves only when the buyer pays, the supplier refunds, or both agree a split. If one side disappears, the money waits. There's no third-party judge by design: nobody but the two parties can move funds. The deposit has already been paid, so only the balance is ever at stake. *Next version:* after 30 days in dispute with no answer from one side, a default (for example a 50/50 split) that the keeper can trigger.
+- **Disputes end by themselves (v4).** There's still no third-party judge, by design, but silence loses: an ignored split offer settles after 7 days and an unresolved dispute splits 50/50 after 30 days. Orders #1 to #5 on older vaults keep the older rule (the balance waits until both sides agree).
 - **USDT can freeze addresses.** Tether can blacklist a wallet; a payout to a frozen wallet would fail and the balance would wait until the other side refunds or splits.
 - **Not audited.** It is small (one contract, about 330 lines, OpenZeppelin building blocks) and well tested, which is why orders are capped at $50 until an outside audit.
 
@@ -253,7 +257,6 @@ Server setup on a VPS: `bash deploy/setup.sh` (installs, builds and runs Arra as
 - Optional named arbitrator (for example a market association leader) who can only split funds between the two parties.
 - Paid tracking lookups and inspector approval as a release step.
 - Raising the per-order cap as the contract builds a track record.
-- **Dispute timeout:** after 30 days in dispute with one side silent, a default split the keeper can trigger.
 
 ---
 

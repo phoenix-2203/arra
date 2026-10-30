@@ -25,6 +25,9 @@ export const VAULTS = [
   // v3, 30 Oct 2026: $0.01 keeper fee. Orders #5 onwards. v2 paused for new orders in
   // tx 0x93874732b99e995a6df8664c93515670079fde854117ff3df63075df7f8ba126.
   { address: "0x5a1f66d1e8e905efb176a5f647d0b51d8a979422", firstId: 5, deployTx: "0x94410e011e191691c0acd415872fe1fa1350d1042c403b9b2668fc1aa2c9b52c" },
+  // v4, 30 Oct 2026: deadlines move later, check period from arrival, disputes end by themselves.
+  // Orders #6 onwards. v3 paused for new orders in tx 0xe591147b3ff7a99390c799778dc4ad6242cb265abdd98c05a3a89b6c2b3873ff.
+  { address: "0xa3b339624d21a055c6da036f8e6d219ff2c3c444", firstId: 6, deployTx: "0x0ffc4534d0e85619e0179d09b6f58f30a13a5bf18bce3464c58618b23da77799" },
 ];
 // Where new orders go. ARRA_VAULT in .env only matters if it names a vault not listed above.
 const envVault = process.env.ARRA_VAULT?.toLowerCase();
