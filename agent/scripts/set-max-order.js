@@ -7,7 +7,7 @@ import { formatUnits, parseUnits } from "viem";
 import { agentAccount, taggedWallet, publicClient } from "../src/wallet.js";
 import { USDT_FEE_ADAPTER, ARRA_VAULT } from "../src/config.js";
 import { vaultAbi } from "../src/vault.js";
-import { SEND, balances, previewOnly, celoscanTx, readSoon, tagOf } from "./_common.js";
+import { SEND, balances, previewOnly, celoscanTx, tagOf } from "./_common.js";
 import { verifyTx } from "@celo/attribution-tags";
 
 const usd = process.argv.slice(2).find((a) => /^\d+(\.\d{1,2})?$/.test(a));
@@ -49,7 +49,12 @@ if (!SEND) {
 const h = await taggedWallet(account).writeContract({ address: ARRA_VAULT, abi: vaultAbi, functionName: "setMaxOrder", args: [next], ...feeOpts });
 const r = await client.waitForTransactionReceipt({ hash: h });
 console.log(`\n${r.status === "success" ? "Done" : "Failed"}: ${celoscanTx(h)}`);
-const now = await readSoon(() => read("maxOrder"));
+// Public nodes can lag a block behind: wait a few seconds for the new value to show.
+let now = await read("maxOrder");
+for (let i = 0; i < 10 && now !== next; i++) {
+  await new Promise((r) => setTimeout(r, 1500));
+  now = await read("maxOrder");
+}
 console.log(`Cap is now $${formatUnits(now, 6)}`);
 const tag = await tagOf(verifyTx, client, h);
 if (tag) console.log(`Attribution tag: ${JSON.stringify(tag)}`);
