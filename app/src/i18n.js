@@ -49,6 +49,11 @@ export const STRINGS = {
       extendDeadlines: "Give the supplier more time",
       resolveDispute: "Settle now (the reply time is over)",
     },
+    decide: {
+      supplier: "the supplier",
+      ok: (who, amt) => `Everything's right: pay ${who} $${amt}`,
+      wrong: "Something's wrong",
+    },
     v4: {
       afterArrival: "Starts when the goods arrive",
       transitTitle: "On its way",
@@ -212,6 +217,11 @@ export const STRINGS = {
       confirmArrival: "货已到：开始验货期",
       extendDeadlines: "给供应商更多时间",
       resolveDispute: "立即结算（答复期已过）",
+    },
+    decide: {
+      supplier: "供应商",
+      ok: (who, amt) => `一切正常：向 ${who} 支付 $${amt}`,
+      wrong: "有问题",
     },
     v4: {
       afterArrival: "货到后开始",

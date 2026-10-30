@@ -6,6 +6,7 @@ import { Cloth } from "../Adire.jsx";
 import { withToast } from "../toast.jsx";
 import TrackRecord from "../TrackRecord.jsx";
 import Notes from "./Notes.jsx";
+import Problem from "./Problem.jsx";
 import { downloadIcs, deadlines } from "../calendar.js";
 import { STRINGS, initialLang, saveLang } from "../i18n.js";
 import { short, navigate } from "../App.jsx";
@@ -85,6 +86,7 @@ export default function Order({ id, wallet }) {
   const [busy, setBusy] = useState("");
   const [shareLang, setShareLang] = useState("auto");
   const [extendDate, setExtendDate] = useState("");
+  const [problem, setProblem] = useState(null); // null | preset reason
   const [lastTx, setLastTx] = useState("");
   const [partAmount, setPartAmount] = useState("");
   const [container, setContainer] = useState("");
@@ -253,19 +255,27 @@ export default function Order({ id, wallet }) {
 
       {["Pending", "Active", "Disputed"].includes(o.status) ? <GasHelp o={o} role={role} account={account} t={t} /> : null}
 
-      {o.status === "Shipped" && goods ? (
-        <div className={`block stack ${role === "buyer" && daysLeft <= 7 ? "urgent" : ""}`}>
+      {o.status === "Shipped" ? (
+        <div className={`block stack ${role === "buyer" && daysLeft <= 7 && !inTransit ? "urgent" : ""}`}>
           <h3>{inTransit ? t.v4.transitTitle : role === "buyer" ? t.ship.buyerTitle(daysLeft) : t.ship.otherTitle(daysLeft)}</h3>
           <p className="small muted">{inTransit ? (role === "buyer" ? t.v4.transitBuyer(day(o.shippedAt + o.transit, lang), Math.round(o.disputeWindow / 86400)) : t.v4.transitOther(day(o.shippedAt + o.transit, lang))) : role === "buyer" ? t.ship.buyerBody : t.ship.otherBody}</p>
           {role === "buyer" && has("confirmArrival") ? <button className="money" disabled={!!busy} onClick={() => run("confirmArrival", [bid])}>{A.confirmArrival}</button> : null}
-          {view.tracking ? (
+          {/* The decision (like Escrow.com's accept/reject and Upwork's approve/request changes). */}
+          {role === "buyer" && !inTransit && has("release") && problem === null ? (
+            <div className="decide">
+              <button className="money" disabled={!!busy} onClick={() => run("release", [bid])}>{t.decide.ok(s?.supplier ?? t.decide.supplier, usd(o.held))}</button>
+              <button className="danger" disabled={!!busy} onClick={() => setProblem("")}>{t.decide.wrong}</button>
+            </div>
+          ) : null}
+          {goods && view.tracking ? (
             <div className="row-gap">
               <span className="num">{t.ship.container} <strong>{view.tracking.number}</strong></span>
               <a className="linkish" href={`https://www.google.com/search?q=${view.tracking.number}+container+tracking`} target="_blank" rel="noreferrer">{t.ship.track}</a>
               <a className="linkish" href="https://www.track-trace.com/container" target="_blank" rel="noreferrer">track-trace.com</a>
             </div>
-          ) : <p className="small muted">{t.ship.noNumber}</p>}
-          {role === "buyer" && has("dispute") ? <button className="secondary" disabled={!!busy} onClick={() => run("dispute", [bid])}>{t.ship.hold}</button> : null}
+          ) : goods ? <p className="small muted">{t.ship.noNumber}</p> : null}
+          {role === "buyer" && inTransit && has("dispute") && problem === null ? <button className="secondary" disabled={!!busy} onClick={() => setProblem("notArrived")}>{t.ship.hold}</button> : null}
+          {role === "buyer" && problem !== null ? <Problem order={o} link={view.link} preset={problem || undefined} lang={lang} onCancel={() => setProblem(null)} onDone={() => { setProblem(null); load(); }} /> : null}
         </div>
       ) : null}
 
@@ -322,7 +332,7 @@ export default function Order({ id, wallet }) {
             <button className="money" disabled={!!busy} onClick={() => run("acceptSplit", [bid, BigInt(o.splitOffer.toSupplier)])}>{A.acceptSplit}</button>
           ) : null}
 
-          {has("release") ? <button className={o.splitOffer && has("acceptSplit") ? "secondary" : "money"} disabled={!!busy} onClick={() => run("release", [bid])}>{A.release} (${usd(o.held)})</button> : null}
+          {has("release") && !(o.status === "Shipped" && !inTransit) ? <button className={o.splitOffer && has("acceptSplit") ? "secondary" : "money"} disabled={!!busy} onClick={() => run("release", [bid])}>{A.release} (${usd(o.held)})</button> : null}
 
           {has("releasePart") ? (
             <div className="block stack">
@@ -348,7 +358,7 @@ export default function Order({ id, wallet }) {
             </div>
           ) : null}
 
-          {has("dispute") && !(goods && o.status === "Shipped") ? <button className="danger" disabled={!!busy} onClick={() => run("dispute", [bid])}>{A.dispute}</button> : null}
+          {has("dispute") && o.status !== "Shipped" ? <button className="danger" disabled={!!busy} onClick={() => run("dispute", [bid])}>{A.dispute}</button> : null}
           {has("extendDeadlines") ? (
             <div className="block stack">
               <label className="field">
