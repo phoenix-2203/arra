@@ -13,6 +13,8 @@ export let VAULT = "0xa3b339624d21a055c6da036f8e6d219ff2c3c444";
 export let KEEPER_FEE = 0n;
 // v4 vaults: check period from arrival, deadlines can move later, disputes end by themselves.
 export let VAULT_V4 = false;
+// Whether the order assistant (Claude) is switched on for this server.
+export let ASSISTANT = false;
 let health;
 export function currentVault() {
   health ??= fetch("/api/health")
@@ -21,6 +23,7 @@ export function currentVault() {
       if (h.vault) VAULT = h.vault;
       KEEPER_FEE = BigInt(h.keeperFee ?? 0);
       VAULT_V4 = !!h.v4;
+      ASSISTANT = !!h.assistant;
       return VAULT;
     })
     .catch(() => VAULT);

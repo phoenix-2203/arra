@@ -8,6 +8,7 @@ import TrackRecord from "../TrackRecord.jsx";
 import { navigate } from "../App.jsx";
 import { toast } from "../toast.jsx";
 import Icon from "../Icon.jsx";
+import Assistant from "./Assistant.jsx";
 
 const MAX_ORDER = 50_000_000n; // $50 cap while Arra is new (set in the vault)
 const DAY = 86400;
@@ -139,8 +140,10 @@ export default function NewOrder({ wallet }) {
   // v4 vaults start the check period when the goods arrive, so it can be short again.
   const [v4, setV4] = useState(false);
   const [transitDays, setTransitDays] = useState(60);
+  const [hasAI, setHasAI] = useState(false);
   useEffect(() => {
     currentVault().then(() => {
+      setHasAI(chain.ASSISTANT);
       setKeeperFee(chain.KEEPER_FEE);
       setV4(chain.VAULT_V4);
       if (chain.VAULT_V4) setCheckDays(7);
@@ -186,6 +189,25 @@ export default function NewOrder({ wallet }) {
   }, [step, f.product]);
   const ex = K.examples[exIdx % K.examples.length];
   const setKind = (k) => (setCheckDays(k === "goods" && !v4 ? 30 : 7), setF({ ...f, kind: k, unit: KINDS[k].units[0], details: KINDS[k].details.slice(0, 2).map((label) => ({ label, value: "" })) }));
+  // The order assistant's draft goes straight into the form, field by field.
+  const DRAFT_KEYS = ["supplier", "product", "quantity", "unit", "unitPriceUsd", "packaging", "inspection", "shipBy", "term", "port", "handover"];
+  function applyDraft(d) {
+    setF((prev) => {
+      const kind = d.kind ?? prev.kind;
+      const n = { ...prev, kind };
+      if (kind !== prev.kind) Object.assign(n, { unit: KINDS[kind].units[0], details: KINDS[kind].details.slice(0, 2).map((label) => ({ label, value: "" })) });
+      for (const k of DRAFT_KEYS) if (d[k] !== undefined) n[k] = d[k];
+      if (d.details?.length) n.details = d.details;
+      return n;
+    });
+    if (d.kind && d.kind !== f.kind) setCheckDays(d.kind === "goods" && !v4 ? 30 : 7);
+    if (d.depositPct !== undefined) setDepositPct(d.depositPct);
+    if (d.transitDays) setTransitDays(d.transitDays);
+  }
+  function aiReady() {
+    if (supplierOk) setStep(2);
+    else document.querySelector(".invite-anchor")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
   const setDetail = (i, value) => setF({ ...f, details: f.details.map((d, j) => (j === i ? { ...d, value } : d)) });
   const addDetail = (label) => setF({ ...f, details: [...f.details, { label, value: "" }] });
   const removeDetail = (i) => setF({ ...f, details: f.details.filter((_, j) => j !== i) });
@@ -363,6 +385,7 @@ export default function NewOrder({ wallet }) {
 
       {step === 1 && (
         <section className="stack">
+          {hasAI ? <Assistant onDraft={applyDraft} onReady={aiReady} /> : null}
           <div className="kind-cards" role="radiogroup" aria-label="What kind of deal?">
             {Object.entries(KINDS).map(([k, v]) => (
               <button key={k} type="button" role="radio" aria-checked={f.kind === k} className={f.kind === k ? "kind-card on" : "kind-card"} onClick={() => setKind(k)}>
@@ -376,7 +399,7 @@ export default function NewOrder({ wallet }) {
             <span>{K.payeeName}</span>
             <input value={f.supplier} onChange={set("supplier")} placeholder={K.namePh} autoComplete="organization" />
           </label>
-          <div className="block stack">
+          <div className="block stack invite-anchor">
             <p className="small"><strong>Safest: let your {K.payee.toLowerCase()} send their wallet.</strong> Send them a link; when they open it and connect their wallet, the address fills in here by itself. Scammers can't slip in a look-alike address.</p>
             {!invite ? (
               <button type="button" className="secondary" disabled={!f.supplier.trim()} onClick={() => { setInviteErr(""); api.createInvite(account, f.supplier).then(({ code }) => setInvite({ code, address: null })).catch((e) => setInviteErr(e.message)); }}>
@@ -433,7 +456,7 @@ export default function NewOrder({ wallet }) {
           <div className="qty-row">
             <label className="field"><span>How many</span><input inputMode="numeric" value={f.quantity} onChange={(e) => setF({ ...f, quantity: e.target.value.replace(/[^\d]/g, "") })} placeholder={ex.qty} /></label>
             <label className="field"><span>Unit</span>
-              <select value={f.unit} onChange={set("unit")}>{K.units.map((u) => <option key={u} value={u}>{u}</option>)}</select>
+              <select value={f.unit} onChange={set("unit")}>{(K.units.includes(f.unit) ? K.units : [f.unit, ...K.units]).map((u) => <option key={u} value={u}>{u}</option>)}</select>
             </label>
             <label className="field"><span>Price each ($)</span><input inputMode="decimal" value={f.unitPriceUsd} onChange={(e) => setF({ ...f, unitPriceUsd: e.target.value.replace(/[^\d.]/g, "") })} placeholder={ex.price} /></label>
           </div>

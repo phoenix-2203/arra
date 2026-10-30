@@ -9,6 +9,7 @@ import { reviewSheet, sheetRef, sheetTotal, canonicalSheet } from "./orderSheet.
 import { PayeeBook } from "./payeeBook.js";
 import { checkContainerNumber } from "./container.js";
 import { nextActions, explain, vaultAbi, abiFor } from "./vault.js";
+import { assistant } from "./assistant.js";
 import { textileClient, ngnPerUsd, rampSupportsCelo, TextileError } from "./textile.js";
 import { LogIndex } from "./history.js";
 import { VaultSet } from "./vaults.js";
@@ -40,7 +41,7 @@ async function readJson(req, limit = MAX_BODY) {
   }
 }
 
-export function createApp({ client, vault, dataDir, staticDir, now = () => Math.floor(Date.now() / 1000), textile = textileClient(), history = null, vaults = null, links = null }) {
+export function createApp({ client, vault, dataDir, staticDir, now = () => Math.floor(Date.now() / 1000), textile = textileClient(), history = null, vaults = null, links = null, ai = assistant() }) {
   // One vault (tests, simple setups) or several versions shown as one Arra.
   vaults ??= new VaultSet({ client, vaults: [{ address: vault, firstId: 1, history: history ?? new LogIndex({ client, vault }) }] });
   let statsCache = null;
@@ -98,13 +99,19 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
       // keeperFee: what the agent takes if it has to trigger a refund or payout (v3 vaults; 0 before).
       keeperFee ??= await client.readContract({ address: vaults.current, abi: vaultAbi, functionName: "keeperFee" }).then((v) => (/^\d+$/.test(String(v)) ? String(v) : "0")).catch(() => "0");
       const v4 = (await abiFor(client, vaults.current).catch(() => null)) === vaultAbi;
-      return [200, { ok: true, vault: vaults.current, vaults: vaults.addresses, keeperFee, v4 }];
+      return [200, { ok: true, vault: vaults.current, vaults: vaults.addresses, keeperFee, v4, assistant: ai.enabled }];
     },
 
     // Live totals for the homepage (cached for a minute).
     "GET /api/stats": async () => {
       if (!statsCache || Date.now() - statsCache.at > 60_000) statsCache = { at: Date.now(), data: await vaults.stats() };
       return [200, statsCache.data];
+    },
+
+    // Order assistant: describe the deal in your own words; Claude fills the form.
+    "POST /api/assistant": async (body) => {
+      const today = /^\d{4}-\d{2}-\d{2}$/.test(body.today ?? "") ? body.today : undefined;
+      return [200, await ai.chat(body.messages, today)];
     },
 
     // F7: check an order sheet and get its fingerprint before funding.

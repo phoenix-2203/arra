@@ -582,3 +582,24 @@ label.button { cursor: pointer; }
 .mini-steps { margin-top: 8px !important; }
 .decide { display: grid; gap: 10px; }
 .steps { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
+
+/* Order assistant */
+.ai-open { display: flex; gap: 14px; align-items: center; text-align: left; width: 100%; padding: 16px 18px; background: var(--gold-soft); color: var(--text); border: 1.5px dashed var(--gold); border-radius: var(--radius-panel); }
+.ai-open small { display: block; color: var(--text-soft); font-weight: 400; margin-top: 2px; font-size: 13px; }
+.ai-spark { color: var(--gold); font-size: 20px; line-height: 1; }
+:root[data-theme="light"] .ai-spark { color: var(--gold-ink); }
+.ai-box { background: var(--surface); border: 1.5px solid var(--gold); border-radius: var(--radius-panel); padding: 16px; box-shadow: 0 0 0 4px var(--gold-soft); }
+.ai-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.ai-starter { text-align: left; font-weight: 400; font-size: 14px; background: var(--bg); color: var(--text); border: 1.5px solid var(--line); border-radius: 12px; padding: 10px 12px; width: 100%; }
+.ai-chat { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; max-height: 340px; overflow-y: auto; }
+.ai-chat li { max-width: 86%; padding: 10px 13px; border-radius: 16px; font-size: 15px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+.ai-me { align-self: flex-end; background: var(--gold); color: var(--gold-ink); border-bottom-right-radius: 4px; }
+.ai-it { align-self: flex-start; background: var(--bg); border: 1.5px solid var(--line); border-bottom-left-radius: 4px; }
+.ai-chat .ai-end { padding: 0; }
+.ai-typing { display: flex; gap: 5px; }
+.ai-typing span { width: 7px; height: 7px; border-radius: 50%; background: var(--text-soft); animation: ai-dot 1s infinite ease-in-out; }
+.ai-typing span:nth-child(2) { animation-delay: .15s; } .ai-typing span:nth-child(3) { animation-delay: .3s; }
+@keyframes ai-dot { 0%, 80%, 100% { opacity: .25; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
+@media (prefers-reduced-motion: reduce) { .ai-typing span { animation: none; opacity: .6; } }
+.ai-input { display: flex; gap: 8px; align-items: flex-end; }
+.ai-input textarea { flex: 1; resize: none; }

@@ -36,3 +36,4 @@ api.addNote = (id, body) => call("POST", `/api/orders/${id}/notes`, body);
 api.uploadPhoto = (id, jpegBase64) => call("POST", `/api/orders/${id}/photos`, { jpegBase64 });
 api.activity = (address) => call("GET", `/api/activity?address=${address}`);
 api.timeline = (id) => call("GET", `/api/orders/${id}/timeline`);
+api.assistant = (messages, today) => call("POST", "/api/assistant", { messages, today });
