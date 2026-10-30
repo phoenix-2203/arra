@@ -1,4 +1,5 @@
-// Deploys a new ArraVault (v3: $0.01 keeper fee) on Celo mainnet from the agent wallet
+// Deploys a new ArraVault version (v4: deadlines move later, check period from arrival,
+// disputes end by themselves; keeps the $0.01 keeper fee) on Celo mainnet from the agent wallet
 // (tagged, gas paid in USDT), continuing the order numbers of the vault before it.
 //   1. Pauses NEW orders on the previous vault. Its existing orders are untouched and
 //      finish normally (pausing can't block refunds, payouts or anything else).
@@ -24,7 +25,7 @@ const read = (functionName, opts = {}) => client.readContract({ address: previou
 const [owner, paused, nextId] = await Promise.all([read("owner"), read("paused"), read("nextId")]);
 const b = await balances(account.address);
 
-console.log("Deploy ArraVault v3 (keeper fee)");
+console.log("Deploy ArraVault v4 (arrival-based checks, deadlines move later, disputes end by themselves)");
 console.log(`  From / owner   : ${account.address}`);
 console.log(`  Previous vault : ${previous} (${paused ? "already paused" : "taking orders"}, next order #${nextId})`);
 console.log(`  Token          : USDT ${USDT}`);
