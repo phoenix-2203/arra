@@ -7,7 +7,9 @@ const EVENTS = vaultAbi.filter((e) => e.type === "event");
 const ORDER_EVENTS = new Set(["OrderCreated", "OrderAccepted", "OrderShipped", "OrderDisputed", "PartReleased", "SplitProposed", "SplitSettled", "BalanceReleased", "BalanceRefunded"]);
 
 export class LogIndex {
-  constructor({ client, vault, fromBlock, chunk = 20_000n, lag = 2n }) {
+  constructor({ client, vault, fromBlock, chunk = 4_000n, lag = 2n }) {
+    // forno.celo.org answers eth_getLogs for at most 5,000 blocks per request.
+    if (chunk > 5_000n) chunk = 5_000n;
     this.lag = lag;
     this.client = client;
     this.vault = vault;
