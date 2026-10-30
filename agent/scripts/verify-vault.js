@@ -2,13 +2,22 @@
 // 1. Sourcify (no account needed). Blockscout explorers pick it up from there.
 // 2. Celoscan, only if CELOSCAN_API_KEY is set in .env (a free Etherscan.io
 //    account key works for Celoscan; it is not a wallet secret, but keep it private).
-// Usage: npm run verify-vault   (verifies the newest vault in src/config.js VAULTS)
+// Usage: npm run verify-vault              (the newest vault in src/config.js VAULTS)
+//        npm run verify-vault -- 0x5a1f…   (any listed vault, by address)
 import { readFileSync } from "node:fs";
 import { encodeAbiParameters } from "viem";
 import { VAULTS, USDT, MAX_ORDER_USDT, KEEPER_FEE_USDT } from "../src/config.js";
 
 const OWNER = "0xF4Fa62d294E5BcB514D27612998D7459c5D97053";
-const entry = VAULTS.at(-1);
+const wanted = process.argv.find((a) => /^0x[0-9a-fA-F]{40}$/.test(a))?.toLowerCase();
+const index = wanted ? VAULTS.findIndex((v) => v.address.toLowerCase() === wanted) : VAULTS.length - 1;
+if (index < 0) {
+  console.log(`${wanted} isn't one of Arra's vaults in src/config.js.`);
+  process.exit(1);
+}
+const entry = VAULTS[index];
+// The source each version was built from: 0 = v2, 1 = v3, 2+ = current.
+const INPUTS = ["../abi/ArraVault.v2.input.json", "../abi/ArraVault.v3.input.json"];
 const DEPLOY_TX = entry.deployTx;
 // v2 (the first vault) took 3 constructor arguments; v3 adds the first order number and the keeper fee.
 const isV2 = entry.address.toLowerCase() === "0x3da5f9d36d1ae8769a9460a7788a21c8041c7bb3";
@@ -17,7 +26,7 @@ const CONTRACT = "src/ArraVault.sol:ArraVault";
 const CHAIN_ID = 42220;
 
 const address = entry.address;
-const stdJsonInput = JSON.parse(readFileSync(new URL(isV2 ? "../abi/ArraVault.v2.input.json" : "../abi/ArraVault.input.json", import.meta.url)));
+const stdJsonInput = JSON.parse(readFileSync(new URL(INPUTS[index] ?? "../abi/ArraVault.input.json", import.meta.url)));
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 console.log(`Verify ArraVault at ${address}\n`);
