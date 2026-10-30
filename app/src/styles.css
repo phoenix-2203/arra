@@ -581,3 +581,4 @@ label.button { cursor: pointer; }
 .mini-steps li.on { border-color: var(--mark); color: var(--text); font-weight: 600; }
 .mini-steps { margin-top: 8px !important; }
 .decide { display: grid; gap: 10px; }
+.steps { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }

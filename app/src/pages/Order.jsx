@@ -87,6 +87,7 @@ export default function Order({ id, wallet }) {
   const [shareLang, setShareLang] = useState("auto");
   const [extendDate, setExtendDate] = useState("");
   const [problem, setProblem] = useState(null); // null | preset reason
+  const [tell, setTell] = useState(""); // message for the other side after an action
   const [lastTx, setLastTx] = useState("");
   const [partAmount, setPartAmount] = useState("");
   const [container, setContainer] = useState("");
@@ -146,7 +147,12 @@ export default function Order({ id, wallet }) {
   const statusLabel = o.status === "Shipped" && !goods ? t.statusDelivered : t.status[o.status];
   const held = BigInt(o.held);
   const final = ["Released", "Refunded", "Settled"].includes(o.status);
-  const step = STEP_OF[o.status];
+  // Progress: Locked, Accepted, Shipped, (Arrived, for v4 shipped goods), Paid.
+  const withArrival = o.v4 && goods && o.transit > 0;
+  const arrivedNow = o.status === "Shipped" && !!(o.arrivedAt || now > o.shippedAt + (o.transit ?? 0));
+  const stepLabels = withArrival ? [t.steps[0], t.steps[1], t.steps[2], t.stepArrived, t.steps[3]] : [t.steps[0], t.steps[1], goods ? t.steps[2] : t.stepDelivered, t.steps[3]];
+  const last = stepLabels.length;
+  const step = o.status === "Refunded" ? 0 : ["Released", "Settled"].includes(o.status) ? last : o.status === "Shipped" || o.status === "Disputed" ? (withArrival && (arrivedNow || o.status === "Disputed") ? 4 : 3) : STEP_OF[o.status];
   const toSupplierSplit = (held * BigInt(splitPct)) / 100n;
 
   // One transaction, followed by a notification from "confirm" to "done", then
@@ -154,7 +160,8 @@ export default function Order({ id, wallet }) {
   async function run(name, args) {
     setError("");
     setBusy(t.working);
-    const before = `${o.status}:${o.held}:${o.splitOffer?.toSupplier ?? ""}`;
+    const key = (x) => `${x.status}:${x.held}:${x.splitOffer?.toSupplier ?? ""}:${x.arrivedAt ?? 0}:${x.shipBy}:${x.acceptBy}`;
+    const before = key(o);
     const amount = name === "releasePart" ? usd(args[1]) : null;
     try {
       const hash = await withToast((cb) => vaultCall(name, args, cb, o.vault), {
@@ -163,11 +170,12 @@ export default function Order({ id, wallet }) {
         done: t.toast.done[name] ? t.toast.done[name](amount) : t.done,
       });
       setLastTx(hash);
+      setTell(tellText(name, args));
       setPartAmount("");
       setContainer("");
       for (let i = 0; i < 10; i++) {
         const v = await api.order(id, account).catch(() => null);
-        if (v && `${v.order.status}:${v.order.held}:${v.order.splitOffer?.toSupplier ?? ""}` !== before) {
+        if (v && key(v.order) !== before) {
           setView(v);
           break;
         }
@@ -182,6 +190,24 @@ export default function Order({ id, wallet }) {
   }
 
   const A = t.actions;
+  // After each step, a ready-made message for the other side (like Escrow.com's notifications,
+  // but on the WhatsApp/WeChat chat they already use).
+  function tellText(name, args) {
+    const url = `${location.origin}/o/${view.link}`;
+    const n = `order #${o.id}${s?.product ? ` (${s.product})` : ""}`;
+    const m = {
+      accept: `I've accepted ${n} on Arra and received the deposit. I'll ship by ${day(o.shipBy, "en")}.`,
+      markShipped: `${n} has shipped${container ? `, container ${container.toUpperCase()}` : ""}. You can track it from the order page.`,
+      confirmArrival: `The goods for ${n} have arrived. I'm checking them now.`,
+      release: `I've paid the balance for ${n}. Thank you!`,
+      releasePart: `I've paid $${args?.[1] ? usd(args[1]) : ""} of the balance for ${n}.`,
+      extendDeadlines: `I've given you more time on ${n}: the new ship-by date is ${args?.[2] ? day(Number(args[2]), "en") : ""}.`,
+      proposeSplit: `I've offered a split on ${n}. Please look and accept or reply.`,
+      acceptSplit: `I've accepted the split on ${n}. It's settled.`,
+      cancel: `${n} has been cancelled and the money returned.`,
+    }[name];
+    return m ? `${m}\n${url}` : "";
+  }
   // Mark shipped, then tell the server the container number (it checks it against the
   // fingerprint now onchain) so the buyer can see and track it.
   async function shipWithTracking(number) {
@@ -231,8 +257,8 @@ export default function Order({ id, wallet }) {
 
       {o.status !== "Refunded" ? (
         <ol className="steps" aria-label="Progress">
-          {t.steps.map((label0, i) => ({ label: i === 2 && !goods ? t.stepDelivered : label0, i })).map(({ label, i }) => (
-            <li key={label} className={i + 1 <= step ? (step === 4 ? "paid" : "done") : ""}>{label}</li>
+          {stepLabels.map((label, i) => (
+            <li key={label} className={i + 1 <= step ? (step === last ? "paid" : "done") : ""}>{label}</li>
           ))}
         </ol>
       ) : null}
@@ -384,6 +410,17 @@ export default function Order({ id, wallet }) {
         {busy ? <p className="note">{busy}</p> : null}
         {error ? <p className="note bad">{error}</p> : null}
         {lastTx ? <p className="note ok">{t.done}. <a href={`${EXPLORER}/tx/${lastTx}`} target="_blank" rel="noreferrer">{t.viewTx}</a></p> : null}
+        {tell ? (
+          <div className="block stack">
+            <p className="small"><strong>{t.tell.title(role === "buyer" ? t.tell.supplier : t.tell.buyer)}</strong></p>
+            <p className="small muted" style={{ whiteSpace: "pre-wrap" }}>{tell}</p>
+            <div className="row-gap">
+              <a className="button money auto small-btn" href={`https://wa.me/?text=${encodeURIComponent(tell)}`} target="_blank" rel="noreferrer">WhatsApp</a>
+              <button className="secondary auto small-btn" onClick={() => navigator.clipboard?.writeText(tell)}>{t.tell.copy}</button>
+              <button className="linkish" onClick={() => setTell("")}>{t.tell.skip}</button>
+            </div>
+          </div>
+        ) : null}
       </section>
 
       </div>
