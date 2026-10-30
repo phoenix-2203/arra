@@ -56,3 +56,10 @@ test('service and made-to-order deals do not need shipping terms', () => {
   assert.equal(reviewSheet({ ...service, kind: 'loan' })[0].field, 'kind');
   assert.notEqual(sheetRef(service), sheetRef({ ...service, kind: 'custom' }), 'the kind is part of the fingerprint');
 });
+
+test("placeholders like N/A or TBD are flagged", () => {
+  for (const v of ["Model or spec: N/A", "TBD", "Colour: -", "n/a", "Size: ?"]) {
+    assert.equal(reviewSheet({ ...good, specs: [v] }).length, 1, v);
+  }
+  assert.deepEqual(reviewSheet({ ...good, specs: ["Model or spec: NA-200 charger"] }), [], "real words that start with NA are fine");
+});

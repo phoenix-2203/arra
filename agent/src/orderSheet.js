@@ -26,6 +26,8 @@ const VAGUE = [
   /\bbest\b/i,
   /\bok(ay)?\b/i,
   /\betc\.?/i,
+  // Placeholders that say nothing at all.
+  /^\s*(?:[^:]{1,40}:\s*)?(?:n\/?a|tbd|tba|none|nil|-+|\.+|\?+|x+)\s*$/i,
 ];
 
 /** Lists what is missing or vague, in plain words. Empty list = ready to sign. */
