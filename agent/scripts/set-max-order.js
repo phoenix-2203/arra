@@ -27,7 +27,13 @@ console.log(`  Vault   : ${ARRA_VAULT}`);
 console.log(`  Owner   : ${owner}`);
 console.log(`  Now     : $${formatUnits(current, 6)}`);
 console.log(`  New     : $${formatUnits(next, 6)}`);
-console.log(`  Gas     : paid in USDT (agent has $${b.usdt})`);
+// Pay the fee in USDT if the agent has a little, otherwise in CELO.
+const feeOpts = b.usdtRaw >= 20_000n ? { feeCurrency: USDT_FEE_ADAPTER } : Number(b.celo) >= 0.01 ? {} : null;
+console.log(`  Gas     : ${feeOpts?.feeCurrency ? "USDT" : feeOpts ? "CELO" : "nothing to pay with"} (agent has $${b.usdt} USDT, ${Number(b.celo).toFixed(4)} CELO)`);
+if (!feeOpts) {
+  console.log(`\nThe agent wallet needs a tiny amount for the network fee: send it about $0.10 USDT or 0.05 CELO on Celo:\n  ${account.address}\nThen run this again.`);
+  process.exit(1);
+}
 if (owner.toLowerCase() !== account.address.toLowerCase()) {
   console.log(`\nThis wallet (${account.address}) isn't the vault's owner. Stopping.`);
   process.exit(1);
@@ -40,7 +46,7 @@ if (!SEND) {
   previewOnly(`npm run set-max -- ${usd}`);
   process.exit(0);
 }
-const h = await taggedWallet(account).writeContract({ address: ARRA_VAULT, abi: vaultAbi, functionName: "setMaxOrder", args: [next], feeCurrency: USDT_FEE_ADAPTER });
+const h = await taggedWallet(account).writeContract({ address: ARRA_VAULT, abi: vaultAbi, functionName: "setMaxOrder", args: [next], ...feeOpts });
 const r = await client.waitForTransactionReceipt({ hash: h });
 console.log(`\n${r.status === "success" ? "Done" : "Failed"}: ${celoscanTx(h)}`);
 const now = await readSoon(() => read("maxOrder"));

@@ -3,8 +3,10 @@
 // into Arra's order form, asking one short question at a time for anything missing.
 // It only fills in the form. The buyer reviews every field, and the supplier's wallet
 // never comes from the AI: it comes from the invite link, so a chat can't change who gets paid.
-const API = process.env.ANTHROPIC_API ?? "https://api.anthropic.com/v1/messages";
-const MODEL = process.env.ASSISTANT_MODEL ?? "claude-haiku-5-5";
+// Two ways to run it: Claude (ANTHROPIC_API_KEY) or, free, Google Gemini (GEMINI_API_KEY,
+// through Google's OpenAI-compatible endpoint). Claude is used when both are set.
+const ANTHROPIC_API = process.env.ANTHROPIC_API ?? "https://api.anthropic.com/v1/messages";
+const GEMINI_API = process.env.GEMINI_API ?? "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
 const MAX_TURNS = 30;
 const MAX_CHARS = 1500;
 
@@ -83,29 +85,62 @@ export function cleanDraft(d = {}) {
   return out;
 }
 
-export function assistant({ key = process.env.ANTHROPIC_API_KEY, fetchFn = fetch, perHour = Number(process.env.ASSISTANT_PER_HOUR ?? 300), maxUsd = 50 } = {}) {
+/** Gemini's function schemas accept only string enums: drop number enums (cleanDraft checks them anyway). */
+function geminiSchema(x) {
+  if (Array.isArray(x)) return x.map(geminiSchema);
+  if (!x || typeof x !== "object") return x;
+  const out = {};
+  for (const [k, v] of Object.entries(x)) if (!(k === "enum" && x.type === "integer")) out[k] = geminiSchema(v);
+  return out;
+}
+
+export function assistant({ key = process.env.ANTHROPIC_API_KEY, geminiKey = process.env.GEMINI_API_KEY, fetchFn = fetch, perHour = Number(process.env.ASSISTANT_PER_HOUR ?? 300), maxUsd = 50 } = {}) {
   let window = { start: Date.now(), n: 0 };
   return {
-    enabled: !!key,
+    enabled: !!(key || geminiKey),
+    provider: key ? "claude" : geminiKey ? "gemini" : null,
     async chat(messages, today = new Date().toISOString().slice(0, 10), cap = maxUsd) {
-      if (!key) throw Object.assign(new Error("The order assistant isn't switched on"), { status: 503 });
+      if (!key && !geminiKey) throw Object.assign(new Error("The order assistant isn't switched on"), { status: 503 });
       if (!Array.isArray(messages) || !messages.length || messages.length > MAX_TURNS) throw Object.assign(new Error("Start a new chat"), { status: 400 });
       const msgs = messages.map((m) => ({ role: m.role === "assistant" ? "assistant" : "user", content: clean(m.content, MAX_CHARS) || "…" }));
       if (msgs[0].role !== "user" || msgs.at(-1).role !== "user") throw Object.assign(new Error("Bad chat"), { status: 400 });
       if (Date.now() - window.start > 3600_000) window = { start: Date.now(), n: 0 };
       if (++window.n > perHour) throw Object.assign(new Error("The assistant is busy. Fill the form by hand or try again later."), { status: 429 });
-      const res = await fetchFn(API, {
-        method: "POST",
-        headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
-        body: JSON.stringify({ model: MODEL, max_tokens: 1200, system: systemPrompt(today, cap), tools: [TOOL], tool_choice: { type: "tool", name: "respond" }, messages: msgs }),
-      });
-      if (!res.ok) {
-        console.error("assistant:", res.status, (await res.text().catch(() => "")).slice(0, 300));
-        throw Object.assign(new Error("The assistant couldn't answer just now. Try again, or fill the form by hand."), { status: 502 });
+      const system = systemPrompt(today, cap);
+      const fail = (status) => {
+        console.error("assistant:", status);
+        return Object.assign(new Error("The assistant couldn't answer just now. Try again, or fill the form by hand."), { status: status === 429 ? 429 : 502 });
+      };
+      let input;
+      if (key) {
+        const res = await fetchFn(ANTHROPIC_API, {
+          method: "POST",
+          headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
+          body: JSON.stringify({ model: process.env.ASSISTANT_MODEL ?? "claude-haiku-5-5", max_tokens: 1200, system, tools: [TOOL], tool_choice: { type: "tool", name: "respond" }, messages: msgs }),
+        });
+        if (!res.ok) throw fail(`${res.status} ${(await res.text().catch(() => "")).slice(0, 300)}`);
+        input = (await res.json()).content?.find((c) => c.type === "tool_use" && c.name === "respond")?.input;
+      } else {
+        const res = await fetchFn(GEMINI_API, {
+          method: "POST",
+          headers: { "content-type": "application/json", authorization: `Bearer ${geminiKey}` },
+          body: JSON.stringify({
+            model: process.env.ASSISTANT_MODEL ?? "gemini-flash-latest",
+            messages: [{ role: "system", content: system }, ...msgs],
+            tools: [{ type: "function", function: { name: TOOL.name, description: TOOL.description, parameters: geminiSchema(TOOL.input_schema) } }],
+            tool_choice: "required",
+          }),
+        });
+        if (!res.ok) throw fail(res.status === 429 ? 429 : `${res.status} ${(await res.text().catch(() => "")).slice(0, 300)}`);
+        const args = (await res.json()).choices?.[0]?.message?.tool_calls?.find((c) => c.function?.name === "respond")?.function?.arguments;
+        try {
+          input = typeof args === "string" ? JSON.parse(args) : args;
+        } catch {
+          input = null;
+        }
       }
-      const body = await res.json();
-      const call = body.content?.find((c) => c.type === "tool_use" && c.name === "respond");
-      if (!call) throw Object.assign(new Error("The assistant couldn't answer just now. Try again."), { status: 502 });
+      if (!input || typeof input.message !== "string") throw Object.assign(new Error("The assistant couldn't answer just now. Try again."), { status: 502 });
+      const call = { input };
       return { message: clean(call.input.message, 1200), draft: cleanDraft(call.input.draft), ready: !!call.input.ready };
     },
   };

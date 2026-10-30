@@ -21,7 +21,7 @@ test("assistant turns a description into a clean draft", async () => {
 });
 
 test("assistant is off without a key and rejects bad chats", async () => {
-  await assert.rejects(assistant({ key: "" }).chat([{ role: "user", content: "hi" }]), { status: 503 });
+  await assert.rejects(assistant({ key: "", geminiKey: "" }).chat([{ role: "user", content: "hi" }]), { status: 503 });
   const ai = assistant({ key: "k", fetchFn: reply({ message: "", draft: {}, ready: false }) });
   await assert.rejects(ai.chat([{ role: "assistant", content: "hi" }]), { status: 400 });
   await assert.rejects(ai.chat([]), { status: 400 });
@@ -29,4 +29,21 @@ test("assistant is off without a key and rejects bad chats", async () => {
 
 test("cleanDraft drops unsafe values", () => {
   assert.deepEqual(cleanDraft({ depositPct: 90, transitDays: 5, term: "XYZ", unitPriceUsd: "1e9", quantity: -1 }), {});
+});
+
+test("assistant can run on Gemini (free tier) through the OpenAI-style endpoint", async () => {
+  let sent;
+  const fetchFn = async (url, opts) => {
+    sent = { url, body: JSON.parse(opts.body), auth: opts.headers.authorization };
+    return { ok: true, json: async () => ({ choices: [{ message: { tool_calls: [{ function: { name: "respond", arguments: JSON.stringify({ message: "What's the price?", draft: { product: "Phones", depositPct: 30 }, ready: false }) } }] } }] }) };
+  };
+  const ai = assistant({ key: "", geminiKey: "g", fetchFn });
+  assert.equal(ai.provider, "gemini");
+  const r = await ai.chat([{ role: "user", content: "phones" }], "2026-10-30", 500);
+  assert.match(sent.url, /generativelanguage/);
+  assert.equal(sent.auth, "Bearer g");
+  assert.equal(sent.body.messages[0].role, "system");
+  assert.match(sent.body.messages[0].content, /\$500/);
+  assert.equal(JSON.stringify(sent.body.tools).includes('"enum":[0,20,30,50]'), false);
+  assert.deepEqual(r.draft, { product: "Phones", depositPct: 30 });
 });
