@@ -184,12 +184,18 @@ export async function convertNairaToUsdt(taker, usd, api, onStep = () => {}) {
   try {
     q = await api.fxQuote(taker, usd);
   } catch (e) {
+    // Only without a Textile partner key on the server: prove once (free, no gas)
+    // that this wallet is yours. Textile confirmed MiniPay can sign this too.
     if (e.status !== 401) throw e;
-    if (isMiniPay()) {
-      throw new Error("Paying from naira needs a one-time wallet signature that MiniPay doesn't support yet. Pay with USDT here, or open Arra in another Celo wallet to pay from naira.");
-    }
     onStep("sign");
-    q = await api.fxQuote(taker, usd, await signTakerProof(taker));
+    let proof;
+    try {
+      proof = await signTakerProof(taker);
+    } catch (err) {
+      if (/reject|denied|cancel/i.test(err?.shortMessage ?? err?.message ?? "")) throw err;
+      throw new Error("Your wallet couldn't sign the free ownership message Textile needs. Pay with USDT instead, or try again from another Celo wallet.");
+    }
+    q = await api.fxQuote(taker, usd, proof);
   }
   if (q.status !== "quoted") throw new Error(q.reason === "no_makers_online" ? "No naira liquidity right now. Try again in a minute." : "Textile couldn't price this amount right now. Try a different amount or try again shortly.");
   const allowance = await reader.readContract({ address: CNGN, abi: erc20, functionName: "allowance", args: [taker, q.reactor] });
