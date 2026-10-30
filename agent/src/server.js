@@ -11,7 +11,8 @@ import { checkContainerNumber } from "./container.js";
 import { readOrder, orderCount, nextActions, explain } from "./vault.js";
 import { textileClient, ngnPerUsd, rampSupportsCelo, TextileError } from "./textile.js";
 import { LogIndex, vaultStats } from "./history.js";
-import { OrderLinks } from "./links.js";
+import { OrderLinks, LINK_RE } from "./links.js";
+import { orderPreviewPng } from "./ogImage.js";
 
 const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml", ".png": "image/png", ".json": "application/json", ".ico": "image/x-icon", ".webmanifest": "application/manifest+json" };
 const MAX_BODY = 64 * 1024;
@@ -182,6 +183,8 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
       const v = id && (await orderView(id, null));
       if (!v) return meta;
       const { order: o, sheet } = v;
+      // A picture of this order; the version changes with its state so chat apps refresh it.
+      meta.image = `${origin}/og/${v.link}.png?v=${o.status}-${o.held}`;
       const s = sheet?.sheet;
       const money = (x) => `$${(Number(x) / 1e6).toFixed(2)}`;
       const what = s ? `${s.product}${s.quantity ? `, ${s.quantity} ${s.unit}` : ""}` : `Order #${o.id}`;
@@ -201,9 +204,25 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
     return meta;
   }
 
+  const pngCache = new Map();
+
   return async function handle(req, res) {
     const url = new URL(req.url, "http://x");
     try {
+      // Preview image for one order, drawn on request and kept in memory.
+      const og = url.pathname.match(/^\/og\/([A-Za-z0-9]{10})\.png$/);
+      if (og && req.method === "GET") {
+        const id = LINK_RE.test(og[1]) ? await toId(og[1]) : null;
+        const v = id && (await orderView(id, null));
+        if (!v) return send(res, 404, { error: "No such order" });
+        const key = `${id}:${v.order.status}:${v.order.held}`;
+        if (!pngCache.has(key)) {
+          if (pngCache.size > 500) pngCache.clear();
+          pngCache.set(key, orderPreviewPng(v.order, v.sheet?.sheet));
+        }
+        res.writeHead(200, { "content-type": "image/png", "cache-control": "public, max-age=300" });
+        return res.end(pngCache.get(key));
+      }
       if (url.pathname.startsWith("/api/")) {
         const m = url.pathname.match(/^\/api\/orders\/([A-Za-z0-9]{1,10})$/);
         if (m && req.method === "GET") {

@@ -130,10 +130,17 @@ test("shared order links get a preview with the amount and what it's for", async
   await post("/api/sheets", { sheet });
   const [, page] = await get("/o/1");
   assert.match(page, /<title>Order #1: Cotton T-shirts, crew neck, 10 pieces · Arra<\/title>/);
-  assert.match(page, /og:image" content="http:\/\/127\.0\.0\.1:\d+\/og\.png"/);
+  assert.match(page, /og:image" content="http:\/\/127\.0\.0\.1:\d+\/og\/[A-Za-z0-9]{10}\.png\?v=Active-14000000"/, "each order gets its own picture");
   assert.match(page, /og:description" content="\$20\.00 USDT order\./);
   const [, home] = await get("/");
   assert.match(home, /<title>Arra<\/title>/);
+  const code = page.match(/\/og\/([A-Za-z0-9]{10})\.png/)[1];
+  const img = await fetch(`${base}/og/${code}.png`);
+  assert.equal(img.headers.get("content-type"), "image/png");
+  const bytes = Buffer.from(await img.arrayBuffer());
+  assert.equal(bytes.subarray(1, 4).toString(), "PNG");
+  assert.equal(bytes.readUInt32BE(16), 1200, "1200 px wide");
+  assert.equal((await fetch(`${base}/og/abcdefghjk.png`)).status, 404);
   const [, receipt] = await get("/o/1/receipt");
   assert.match(receipt, /Receipt for order #1/);
 });
