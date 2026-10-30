@@ -15,7 +15,7 @@
 import { keccak256, toBytes, parseUnits } from "viem";
 import { verifyTx } from "@celo/attribution-tags";
 import { agentAccount, taggedWallet, publicClient } from "../src/wallet.js";
-import { ARRA_VAULT, USDT_FEE_ADAPTER } from "../src/config.js";
+import { VAULTS, USDT_FEE_ADAPTER } from "../src/config.js";
 import { vaultAbi, readOrder, nextActions, explain } from "../src/vault.js";
 import { checkContainerNumber } from "../src/container.js";
 import { SEND, celoscanTx, readSoon, tagOf } from "./_common.js";
@@ -32,6 +32,8 @@ const usage = () => {
 if (!cmd || !/^\d+$/.test(idArg ?? "")) usage();
 
 const id = BigInt(idArg);
+// Each order number lives in exactly one vault version.
+const ARRA_VAULT = VAULTS.filter((v) => BigInt(v.firstId) <= id).at(-1).address;
 const account = agentAccount();
 const client = publicClient();
 const o = await readOrder(client, ARRA_VAULT, id);

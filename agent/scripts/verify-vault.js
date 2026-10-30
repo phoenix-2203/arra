@@ -2,19 +2,22 @@
 // 1. Sourcify (no account needed). Blockscout explorers pick it up from there.
 // 2. Celoscan, only if CELOSCAN_API_KEY is set in .env (a free Etherscan.io
 //    account key works for Celoscan; it is not a wallet secret, but keep it private).
-// Usage: npm run verify-vault
+// Usage: npm run verify-vault   (verifies the newest vault in src/config.js VAULTS)
 import { readFileSync } from "node:fs";
 import { encodeAbiParameters } from "viem";
-import { ARRA_VAULT, USDT, MAX_ORDER_USDT } from "../src/config.js";
+import { VAULTS, USDT, MAX_ORDER_USDT, KEEPER_FEE_USDT } from "../src/config.js";
 
-const DEPLOY_TX = "0xf8d8403f3574d1776a2d440e90fadbe49bb3d7706c5d49bc436a3dc3001bbe86";
 const OWNER = "0xF4Fa62d294E5BcB514D27612998D7459c5D97053";
+const entry = VAULTS.at(-1);
+const DEPLOY_TX = entry.deployTx;
+// v2 (the first vault) took 3 constructor arguments; v3 adds the first order number and the keeper fee.
+const isV2 = entry.address.toLowerCase() === "0x3da5f9d36d1ae8769a9460a7788a21c8041c7bb3";
 const COMPILER = "0.8.28+commit.7893614a";
 const CONTRACT = "src/ArraVault.sol:ArraVault";
 const CHAIN_ID = 42220;
 
-const address = ARRA_VAULT || "0x3da5f9d36d1ae8769a9460a7788a21c8041c7bb3";
-const stdJsonInput = JSON.parse(readFileSync(new URL("../abi/ArraVault.input.json", import.meta.url)));
+const address = entry.address;
+const stdJsonInput = JSON.parse(readFileSync(new URL(isV2 ? "../abi/ArraVault.v2.input.json" : "../abi/ArraVault.input.json", import.meta.url)));
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 console.log(`Verify ArraVault at ${address}\n`);
@@ -56,9 +59,13 @@ if (!key) {
   console.log("\nCeloscan  : skipped (add CELOSCAN_API_KEY to .env to also verify there)");
   process.exit(0);
 }
-const constructorArgs = encodeAbiParameters(
-  [{ type: "address" }, { type: "uint256" }, { type: "address" }],
-  [USDT, MAX_ORDER_USDT, OWNER],
+const constructorArgs = (
+  isV2
+    ? encodeAbiParameters([{ type: "address" }, { type: "uint256" }, { type: "address" }], [USDT, MAX_ORDER_USDT, OWNER])
+    : encodeAbiParameters(
+        [{ type: "address" }, { type: "uint256" }, { type: "address" }, { type: "uint256" }, { type: "uint128" }],
+        [USDT, MAX_ORDER_USDT, OWNER, BigInt(entry.firstId), KEEPER_FEE_USDT],
+      )
 ).slice(2);
 const api = `https://api.etherscan.io/v2/api?chainid=${CHAIN_ID}`;
 const form = new URLSearchParams({

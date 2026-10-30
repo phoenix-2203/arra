@@ -45,6 +45,9 @@ async function simulateSoon(params, tries = 4) {
     try {
       return await reader.simulateContract(params);
     } catch (e) {
+      // Paused vault: new orders are moving to a newer vault (an upgrade). Say so plainly.
+      const name = e?.cause?.data?.errorName ?? e?.data?.errorName;
+      if (name === "IsPaused") throw new Error("Arra is moving new orders to its upgraded vault right now. Nothing was sent. Please try again in a few minutes.");
       if (i >= tries - 1) throw e;
       await new Promise((r) => setTimeout(r, 1200));
     }
