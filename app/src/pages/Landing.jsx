@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { formatUnits } from "viem";
 import { api } from "../api.js";
-import { VAULT, EXPLORER } from "../chain.js";
+import { VAULT, EXPLORER, currentVault } from "../chain.js";
+import * as chain from "../chain.js";
 import { Cloth } from "../Adire.jsx";
 import Icon from "../Icon.jsx";
 import { navigate } from "../App.jsx";
@@ -18,6 +19,10 @@ const go = (path) => (e) => {
 // gets now, and what stays locked.
 function Calculator() {
   const [amount, setAmount] = useState("50");
+  const [cap, setCap] = useState(50);
+  useEffect(() => {
+    currentVault().then(() => setCap(Number(chain.MAX_ORDER) / 1e6));
+  }, []);
   const [pct, setPct] = useState(30);
   const [fx, setFx] = useState(null);
   const total = /^\d+(\.\d{0,2})?$/.test(amount) ? Number(amount) : 0;
@@ -67,7 +72,7 @@ function Calculator() {
         If it doesn't ship on time, the balance comes back to you automatically.
       </p>
       <a href="/new" className="button money" onClick={go("/new")}>Start this order</a>
-      {total > 50 ? <p className="calc-cap">While Arra is new, each order is capped at $50.</p> : null}
+      {total > cap ? <p className="calc-cap">While Arra is new, each order is capped at ${cap.toLocaleString("en-US")}.</p> : null}
     </div>
   );
 }
@@ -143,7 +148,7 @@ const FAQ = [
   ["What if the supplier never ships?", "If they don't accept by the accept-by date, all your money comes back. If they accept but don't ship by the ship-by date, the balance comes back. Arra's agent sends the refund automatically when the date passes."],
   ["What does it cost?", "Arra charges no fee. You pay the network fee (a fraction of a cent) and, if you pay in naira, Textile FX's 0.01% fee, which is already in the rate you see."],
   ["Does my supplier need crypto experience?", "They need a wallet on Celo, such as MiniPay. The order page opens in their language (English or Chinese), with the locked amount and one button to accept."],
-  ["What about large orders?", "While Arra is new, each order is capped at $50. The cap goes up as the contract builds a track record."],
+  ["What about large orders?", "While Arra is new, each order has a safety cap (now $500). It goes up as the contract builds a track record and after an outside audit."],
 ];
 
 export default function Landing({ wallet }) {

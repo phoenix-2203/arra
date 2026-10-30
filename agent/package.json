@@ -12,7 +12,8 @@
     "verify-vault": "node --env-file=.env scripts/verify-vault.js",
     "start": "node --env-file-if-exists=.env scripts/serve.js",
     "swap": "node --env-file=.env scripts/swap.js",
-    "order": "node --env-file=.env scripts/order.js"
+    "order": "node --env-file=.env scripts/order.js",
+    "set-max": "node --env-file=.env scripts/set-max-order.js"
   },
   "keywords": [],
   "author": "",

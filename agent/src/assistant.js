@@ -87,7 +87,7 @@ export function assistant({ key = process.env.ANTHROPIC_API_KEY, fetchFn = fetch
   let window = { start: Date.now(), n: 0 };
   return {
     enabled: !!key,
-    async chat(messages, today = new Date().toISOString().slice(0, 10)) {
+    async chat(messages, today = new Date().toISOString().slice(0, 10), cap = maxUsd) {
       if (!key) throw Object.assign(new Error("The order assistant isn't switched on"), { status: 503 });
       if (!Array.isArray(messages) || !messages.length || messages.length > MAX_TURNS) throw Object.assign(new Error("Start a new chat"), { status: 400 });
       const msgs = messages.map((m) => ({ role: m.role === "assistant" ? "assistant" : "user", content: clean(m.content, MAX_CHARS) || "…" }));
@@ -97,7 +97,7 @@ export function assistant({ key = process.env.ANTHROPIC_API_KEY, fetchFn = fetch
       const res = await fetchFn(API, {
         method: "POST",
         headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
-        body: JSON.stringify({ model: MODEL, max_tokens: 1200, system: systemPrompt(today, maxUsd), tools: [TOOL], tool_choice: { type: "tool", name: "respond" }, messages: msgs }),
+        body: JSON.stringify({ model: MODEL, max_tokens: 1200, system: systemPrompt(today, cap), tools: [TOOL], tool_choice: { type: "tool", name: "respond" }, messages: msgs }),
       });
       if (!res.ok) {
         console.error("assistant:", res.status, (await res.text().catch(() => "")).slice(0, 300));

@@ -10,7 +10,6 @@ import { toast } from "../toast.jsx";
 import Icon from "../Icon.jsx";
 import Assistant from "./Assistant.jsx";
 
-const MAX_ORDER = 50_000_000n; // $50 cap while Arra is new (set in the vault)
 const DAY = 86400;
 
 // What kind of deal: the wording and required fields adapt; the contract is the same.
@@ -141,9 +140,11 @@ export default function NewOrder({ wallet }) {
   const [v4, setV4] = useState(false);
   const [transitDays, setTransitDays] = useState(60);
   const [hasAI, setHasAI] = useState(false);
+  const [MAX_ORDER, setMaxOrder] = useState(50_000_000n); // the vault's safety cap while Arra is new
   useEffect(() => {
     currentVault().then(() => {
       setHasAI(chain.ASSISTANT);
+      setMaxOrder(chain.MAX_ORDER);
       setKeeperFee(chain.KEEPER_FEE);
       setV4(chain.VAULT_V4);
       if (chain.VAULT_V4) setCheckDays(7);
@@ -635,7 +636,7 @@ export default function NewOrder({ wallet }) {
           ) : null}
           {!datesOk && shipBy > acceptBy ? <p className="note bad">The {K.dateLabel.toLowerCase()} date must be within 180 days.</p> : null}
           {!datesOk && !shipBy ? <p className="note bad">Go back and pick a {K.dateLabel.toLowerCase()} date.</p> : null}
-          {tooBig ? <p className="note bad">While Arra is new, orders are capped at $50. Lower the quantity or split it into several orders.</p> : null}
+          {tooBig ? <p className="note bad">While Arra is new, orders are capped at ${usd(MAX_ORDER)}. Lower the quantity or split it into several orders.</p> : null}
           {short && !tooBig && !naira ? <p className="note bad">Your wallet has ${usd(balance)} USDT; this order needs ${usd(total)}. Choose naira above to convert the rest.</p> : null}
           {!short && !tooBig && !naira && gasUsdt > 0n && balance !== null && total + gasUsdt > balance ? <p className="note bad">The order plus $0.10 gas is more than your ${usd(balance)} USDT. Pick a CELO option or "Don't send".</p> : null}
           {short && !tooBig && naira && cngn !== null ? <p className="note bad">{notEnoughNaira(cngn)}</p> : null}

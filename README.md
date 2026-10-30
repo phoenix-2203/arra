@@ -220,14 +220,14 @@ agent.json   ERC-8004 agent card
 - **No admin access to money.** The owner can only pause new orders and change the per-order cap. Existing orders always run to completion.
 - **Every exit is to the buyer or the supplier** (plus, from v3, a fixed one-cent keeper fee; see below). 55 contract tests, including fuzzing and invariant runs (thousands of random calls) checking that the vault always holds exactly the sum of open balances and that money never goes anywhere else.
 - **Defensive checks.** Fee-on-transfer tokens are rejected, deposits are capped at 90% so at least 10% always stays locked, deadlines are bounded (ship within 180 days, check period 1–30 days), and re-entry is blocked.
-- **Small by design while new.** Orders are capped at $50 each during the pilot.
+- **Small by design while new.** Orders are capped at $500 each during the pilot (the owner can change the cap; it moves no money).
 - **Keys stay with their owners.** Scripts preview by default and only send with `--send`; private keys live only in local `.env` files.
 
 **Known limits (honest list, from our own review of the contract on 30 Oct 2026):**
 
 - **Disputes end by themselves (v4).** There's still no third-party judge, by design, but silence loses: an ignored split offer settles after 7 days and an unresolved dispute splits 50/50 after 30 days. Orders #1 to #5 on older vaults keep the older rule (the balance waits until both sides agree).
 - **USDT can freeze addresses.** Tether can blacklist a wallet; a payout to a frozen wallet would fail and the balance would wait until the other side refunds or splits.
-- **Not audited.** It is small (one contract, about 330 lines, OpenZeppelin building blocks) and well tested, which is why orders are capped at $50 until an outside audit.
+- **Not audited.** It is small (one contract, about 330 lines, OpenZeppelin building blocks) and well tested, which is why orders are capped at $500 until an outside audit.
 
 ## Run it
 

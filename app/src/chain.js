@@ -15,6 +15,8 @@ export let KEEPER_FEE = 0n;
 export let VAULT_V4 = false;
 // Whether the order assistant (Claude) is switched on for this server.
 export let ASSISTANT = false;
+// The vault's per-order safety cap (USDT units); the owner can raise it.
+export let MAX_ORDER = 50_000_000n;
 let health;
 export function currentVault() {
   health ??= fetch("/api/health")
@@ -24,6 +26,7 @@ export function currentVault() {
       KEEPER_FEE = BigInt(h.keeperFee ?? 0);
       VAULT_V4 = !!h.v4;
       ASSISTANT = !!h.assistant;
+      if (/^\d+$/.test(h.maxOrder ?? "")) MAX_ORDER = BigInt(h.maxOrder);
       return VAULT;
     })
     .catch(() => VAULT);

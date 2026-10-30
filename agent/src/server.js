@@ -45,6 +45,15 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
   // One vault (tests, simple setups) or several versions shown as one Arra.
   vaults ??= new VaultSet({ client, vaults: [{ address: vault, firstId: 1, history: history ?? new LogIndex({ client, vault }) }] });
   let statsCache = null;
+  // The vault's per-order cap (owner can change it), re-read at most once a minute.
+  let capCache = null;
+  const maxOrder = async () => {
+    if (!capCache || Date.now() - capCache.at > 60_000) {
+      const v = await client.readContract({ address: vaults.current, abi: vaultAbi, functionName: "maxOrder" }).catch(() => null);
+      capCache = { at: Date.now(), v: /^\d+$/.test(String(v ?? "")) ? String(v) : capCache?.v ?? "50000000" };
+    }
+    return capCache.v;
+  };
   // Claim tokens for firm quotes stay on the server; the browser only gets the rfqId.
   const claims = new Map();
   const usdUnits = (v) => {
@@ -99,7 +108,7 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
       // keeperFee: what the agent takes if it has to trigger a refund or payout (v3 vaults; 0 before).
       keeperFee ??= await client.readContract({ address: vaults.current, abi: vaultAbi, functionName: "keeperFee" }).then((v) => (/^\d+$/.test(String(v)) ? String(v) : "0")).catch(() => "0");
       const v4 = (await abiFor(client, vaults.current).catch(() => null)) === vaultAbi;
-      return [200, { ok: true, vault: vaults.current, vaults: vaults.addresses, keeperFee, v4, assistant: ai.enabled }];
+      return [200, { ok: true, vault: vaults.current, vaults: vaults.addresses, keeperFee, v4, assistant: ai.enabled, maxOrder: await maxOrder() }];
     },
 
     // Live totals for the homepage (cached for a minute).
@@ -111,7 +120,7 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
     // Order assistant: describe the deal in your own words; Claude fills the form.
     "POST /api/assistant": async (body) => {
       const today = /^\d{4}-\d{2}-\d{2}$/.test(body.today ?? "") ? body.today : undefined;
-      return [200, await ai.chat(body.messages, today)];
+      return [200, await ai.chat(body.messages, today, Math.floor(Number(await maxOrder()) / 1e6))];
     },
 
     // F7: check an order sheet and get its fingerprint before funding.
