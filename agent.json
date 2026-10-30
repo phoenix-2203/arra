@@ -28,5 +28,8 @@
       "agentRegistry": "eip155:42220:0x8004A169FB4a3325136EB29fA0ceB6D2e539a432"
     }
   ],
-  "vault": "eip155:42220:0x3da5f9d36d1ae8769a9460a7788a21c8041c7bb3"
+  "vault": "eip155:42220:0x5a1f66d1e8e905efb176a5f647d0b51d8a979422",
+  "previousVaults": [
+    "eip155:42220:0x3da5f9d36d1ae8769a9460a7788a21c8041c7bb3"
+  ]
 }

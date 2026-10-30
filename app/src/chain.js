@@ -8,7 +8,7 @@ import vaultAbi from "./vaultAbi.json";
 
 // Where new orders go. The server says which vault is current (after an upgrade,
 // older orders stay in older vaults and their pages use that order's vault).
-export let VAULT = "0x3da5f9d36d1ae8769a9460a7788a21c8041c7bb3";
+export let VAULT = "0x5a1f66d1e8e905efb176a5f647d0b51d8a979422";
 export let KEEPER_FEE = 0n;
 let health;
 export function currentVault() {

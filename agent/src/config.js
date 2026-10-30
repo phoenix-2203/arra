@@ -22,7 +22,9 @@ export const IDENTITY_REGISTRY = "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432";
 export const VAULTS = [
   // v2, 27 Oct 2026. Orders #1 onwards.
   { address: "0x3da5f9d36d1ae8769a9460a7788a21c8041c7bb3", firstId: 1, deployTx: "0xf8d8403f3574d1776a2d440e90fadbe49bb3d7706c5d49bc436a3dc3001bbe86" },
-  // v3 (keeper fee) is added here after deployment.
+  // v3, 30 Oct 2026: $0.01 keeper fee. Orders #5 onwards. v2 paused for new orders in
+  // tx 0x93874732b99e995a6df8664c93515670079fde854117ff3df63075df7f8ba126.
+  { address: "0x5a1f66d1e8e905efb176a5f647d0b51d8a979422", firstId: 5, deployTx: "0x94410e011e191691c0acd415872fe1fa1350d1042c403b9b2668fc1aa2c9b52c" },
 ];
 // Where new orders go. ARRA_VAULT in .env only matters if it names a vault not listed above.
 const envVault = process.env.ARRA_VAULT?.toLowerCase();

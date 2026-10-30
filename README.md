@@ -4,7 +4,7 @@
 
 Arra is escrow for importers buying anything from China and abroad (phones, solar panels, machine parts, clothes) and for any deal paid with a deposit and a balance. The buyer funds the order from naira or USDT at one locked rate. The supplier gets the deposit the moment they accept. The balance waits in an open contract on Celo that they can see but can't touch until the goods ship, and it comes back automatically if they don't.
 
-**Live app:** https://usearra.duckdns.org &nbsp;·&nbsp; **Vault:** [`0x3da5…7bb3` on Celoscan](https://celoscan.io/address/0x3da5f9d36d1ae8769a9460a7788a21c8041c7bb3) &nbsp;·&nbsp; **Source:** [verified on Sourcify](https://repo.sourcify.dev/42220/0x3da5f9d36d1ae8769a9460a7788a21c8041c7bb3) &nbsp;·&nbsp; **Agent:** ERC-8004 #9996
+**Live app:** https://usearra.duckdns.org &nbsp;·&nbsp; **Vault (v3):** [`0x5a1f…9422` on Celoscan](https://celoscan.io/address/0x5a1f66d1e8e905efb176a5f647d0b51d8a979422) &nbsp;·&nbsp; **Source:** [verified on Sourcify](https://repo.sourcify.dev/42220/0x5a1f66d1e8e905efb176a5f647d0b51d8a979422) &nbsp;·&nbsp; **Agent:** ERC-8004 #9996
 
 Built for the [Agents on Open Rails](https://www.loops.house/agents-on-open-rails) hackathon (Celo × Loops House), **Open Corridors: Textile FX** track.
 
@@ -148,9 +148,12 @@ The same contract protects any deal with a deposit and a balance. When creating 
 
 | What | Link |
 |---|---|
-| ArraVault | [`0x3da5f9d36d1ae8769a9460a7788a21c8041c7bb3`](https://celoscan.io/address/0x3da5f9d36d1ae8769a9460a7788a21c8041c7bb3) |
-| Vault deployment (tagged) | [`0xf8d840…be86`](https://celoscan.io/tx/0xf8d8403f3574d1776a2d440e90fadbe49bb3d7706c5d49bc436a3dc3001bbe86) |
-| Verified source (exact match) | [Sourcify](https://repo.sourcify.dev/42220/0x3da5f9d36d1ae8769a9460a7788a21c8041c7bb3) · [Blockscout](https://celo.blockscout.com/address/0x3da5f9d36d1ae8769a9460a7788a21c8041c7bb3?tab=contract) |
+| ArraVault v3 (new orders, keeper fee) | [`0x5a1f66d1e8e905efb176a5f647d0b51d8a979422`](https://celoscan.io/address/0x5a1f66d1e8e905efb176a5f647d0b51d8a979422) |
+| v3 deployment (tagged) | [`0x94410e…b52c`](https://celoscan.io/tx/0x94410e011e191691c0acd415872fe1fa1350d1042c403b9b2668fc1aa2c9b52c) |
+| ArraVault v2 (orders #1–#4) | [`0x3da5f9d36d1ae8769a9460a7788a21c8041c7bb3`](https://celoscan.io/address/0x3da5f9d36d1ae8769a9460a7788a21c8041c7bb3) |
+| v2 paused for new orders (tagged) | [`0x938747…a126`](https://celoscan.io/tx/0x93874732b99e995a6df8664c93515670079fde854117ff3df63075df7f8ba126) |
+| v2 deployment (tagged) | [`0xf8d840…be86`](https://celoscan.io/tx/0xf8d8403f3574d1776a2d440e90fadbe49bb3d7706c5d49bc436a3dc3001bbe86) |
+| Verified source (exact match) | v3: [Sourcify](https://repo.sourcify.dev/42220/0x5a1f66d1e8e905efb176a5f647d0b51d8a979422) · v2: [Sourcify](https://repo.sourcify.dev/42220/0x3da5f9d36d1ae8769a9460a7788a21c8041c7bb3) |
 | Agent identity #9996 (tagged) | [`0xc99e65…5a90`](https://celoscan.io/tx/0xc99e653aac82055dcefe99c1c5e7b4be6cefab39d4203a1bf73f4574a8935a90) |
 | First Textile FX swap, 1 USDT → 1,381.23 cNGN (tagged) | [`0xd1c5fd…e906`](https://celoscan.io/tx/0xd1c5fd631c02af304388e1040e1ad9726220547ba2658740ba425c3d7063e906) |
 | Agent wallet | [`0xF4Fa…7053`](https://celoscan.io/address/0xF4Fa62d294E5BcB514D27612998D7459c5D97053) |
@@ -162,7 +165,7 @@ A deployed contract can never be changed, and Arra's vault deliberately has no u
 | Version | What changed | Orders |
 |---|---|---|
 | v2 `0x3da5…7bb3` | The original | #1 onwards; now finishing its open orders, no new ones |
-| v3 | **Self-funding keeper:** whoever triggers a due refund or payout (normally Arra's agent) gets a fixed **$0.01** from that order, so the agent pays its own network fees. A buyer or supplier who does it themselves pays nothing. | Continues the numbering where v2 stopped |
+| v3 [`0x5a1f…9422`](https://celoscan.io/address/0x5a1f66d1e8e905efb176a5f647d0b51d8a979422) | **Self-funding keeper:** whoever triggers a due refund or payout (normally Arra's agent) gets a fixed **$0.01** from that order, so the agent pays its own network fees. A buyer or supplier who does it themselves pays nothing. | #5 onwards (continues where v2 stopped) |
 
 The app and API treat every version as one Arra: order numbers never overlap, every old link still works, History, receipts and totals combine all vaults, and the keeper watches all of them. Money in an open v2 order stays in v2 and finishes there, exactly as its rules say.
 
