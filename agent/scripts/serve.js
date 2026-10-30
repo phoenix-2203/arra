@@ -4,7 +4,7 @@
 import { fileURLToPath } from "node:url";
 import { createApp, listen } from "../src/server.js";
 import { publicClient, agentAccount, taggedWallet } from "../src/wallet.js";
-import { ARRA_VAULT, USDT_FEE_ADAPTER } from "../src/config.js";
+import { ARRA_VAULT, USDT, USDT_FEE_ADAPTER } from "../src/config.js";
 import { runKeeper } from "../src/keeper.js";
 import { LogIndex } from "../src/history.js";
 
@@ -32,7 +32,7 @@ console.log(`Arra on http://127.0.0.1:${PORT}  vault ${ARRA_VAULT}`);
 if (process.env.KEEPER === "1") {
   const wallet = taggedWallet(agentAccount());
   const tick = () =>
-    runKeeper({ client, wallet, vault: ARRA_VAULT, txOpts: { feeCurrency: USDT_FEE_ADAPTER } }).catch((e) =>
+    runKeeper({ client, wallet, vault: ARRA_VAULT, txOpts: { feeCurrency: USDT_FEE_ADAPTER }, feeToken: USDT }).catch((e) =>
       console.error("keeper error:", e.shortMessage ?? e.message),
     );
   tick();
