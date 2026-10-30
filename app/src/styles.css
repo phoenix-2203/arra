@@ -561,3 +561,5 @@ button:not(:disabled):active, .button:active, .chip:not(:disabled):active, .tab:
 .hero-copy h1.display { overflow-wrap: anywhere; }
 @media (max-width: 340px) { h1.display { font-size: 38px; } }
 .block.urgent { border-color: var(--alert); }
+.ol-meta .due { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--text-soft); white-space: nowrap; }
+.ol-meta .due.act { color: var(--mark); }

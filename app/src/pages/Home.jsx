@@ -7,6 +7,7 @@ import { usdtBalance, cngnBalance, hasWallet } from "../chain.js";
 import { navigate, short } from "../App.jsx";
 import { STRINGS } from "../i18n.js";
 import Icon from "../Icon.jsx";
+import { nextDeadline } from "../calendar.js";
 
 const t = STRINGS.en;
 const u = (v) => Number(formatUnits(BigInt(v), 6));
@@ -120,6 +121,7 @@ export default function Home({ wallet }) {
                   <div className="ol-meta">
                     <span className={`pill ${needs ? "act" : ""}`}>{t.status[o.status]}</span>
                     <span className="muted">{NEXT[role][o.status]}</span>
+                    {nextDeadline(o) ? <span className={`due ${needs ? "act" : ""}`}>{nextDeadline(o)}</span> : null}
                   </div>
                 </a>
               </li>

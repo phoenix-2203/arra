@@ -5,6 +5,7 @@ import { vaultCall, toUnits, EXPLORER, celoBalance, usdtBalance, sendCelo, sendU
 import { Cloth } from "../Adire.jsx";
 import { withToast } from "../toast.jsx";
 import TrackRecord from "../TrackRecord.jsx";
+import { downloadIcs, deadlines } from "../calendar.js";
 import { STRINGS, initialLang, saveLang } from "../i18n.js";
 import { short, navigate } from "../App.jsx";
 
@@ -197,6 +198,7 @@ export default function Order({ id, wallet }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
         <h1 style={{ fontSize: 24 }}>#{o.id} {s?.product ?? ""}</h1>
         <span className="row-gap">
+          {role !== "anyone" && deadlines(o, role, goods).length ? <button className="linkish" onClick={() => downloadIcs(o, role, `${location.origin}/o/${view.link}`, goods)}>{t.calendar}</button> : null}
           <a className="linkish" href={`/o/${view.link}/receipt`} onClick={(e) => { e.preventDefault(); navigate(`/o/${view.link}/receipt`); }}>{t.receipt}</a>
           <button className="linkish" onClick={switchLang}>{t.lang}</button>
         </span>

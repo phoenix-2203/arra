@@ -4,6 +4,7 @@ export const STRINGS = {
   en: {
     lang: "中文",
     receipt: "Receipt",
+    calendar: "Add to calendar",
     locked: "Locked for you",
     lockedFor: (name) => `Locked for ${name}`,
     held: "held in the vault",
@@ -138,6 +139,7 @@ export const STRINGS = {
   zh: {
     lang: "English",
     receipt: "收据",
+    calendar: "加入日历",
     locked: "已为您锁定",
     lockedFor: (name) => `已为 ${name} 锁定`,
     held: "存放在合约中",

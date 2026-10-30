@@ -69,6 +69,10 @@ NoNewPrivileges=true
 WantedBy=multi-user.target
 UNIT
 
+# Daily backup of order terms, address book and the link secret (see deploy/backup.sh).
+ln -sf "$DIR/deploy/backup.sh" /etc/cron.daily/arra-backup
+"$DIR/deploy/backup.sh" || echo "Backup failed (check /opt/arra-backups)"
+
 systemctl daemon-reload
 systemctl enable --now arra
 systemctl restart arra
