@@ -98,7 +98,7 @@ export const STRINGS = {
     },
     gas: {
       title: "Your supplier has no gas yet",
-      buyerNone: "Every action on Celo costs a tiny network fee (gas). Their wallet is empty, so they can't accept yet. Send them a little: 0.02 CELO covers dozens of actions.",
+      buyerNone: "Every action on Celo costs a tiny network fee (gas). Their wallet is empty, so they can't accept or update the order. Send them a little: 0.02 CELO covers dozens of actions.",
       buyerHasUsdt: "Their wallet has USDT but no CELO. If they use MiniPay or Valora that's fine, the fee comes out of USDT. In MetaMask they need CELO, so send a little to be safe.",
       sendCelo: (a) => `Send ${a} CELO`,
       sendUsdt: "Send $0.10 USDT",
@@ -249,7 +249,7 @@ export const STRINGS = {
     },
     gas: {
       title: "供应商还没有手续费",
-      buyerNone: "Celo 上每个操作都需要极少的网络手续费（gas）。对方钱包为空，暂时无法接单。请发送少量 CELO：0.02 CELO 足够几十次操作。",
+      buyerNone: "Celo 上每个操作都需要极少的网络手续费（gas）。对方钱包为空，暂时无法接单或更新订单。请发送少量 CELO：0.02 CELO 足够几十次操作。",
       buyerHasUsdt: "对方钱包有 USDT 但没有 CELO。如果使用 MiniPay 或 Valora，手续费会从 USDT 扣除。若使用 MetaMask 则需要 CELO。",
       sendCelo: (a) => `发送 ${a} CELO`,
       sendUsdt: "发送 0.10 USDT",
