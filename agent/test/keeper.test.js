@@ -136,3 +136,19 @@ test("activity: each wallet sees its own money in and out, newest first", async 
   assert.deepEqual(s.filter((r) => r.flow === "in").map((r) => [r.orderId, r.amount]).sort(), [[2, "14000000"], [2, "6000000"], [3, "2000000"]].sort());
   assert.equal((await idx.activity("0x000000000000000000000000000000000000dEaD")).length, 0);
 });
+
+test("activity: paying the last of the balance in parts is counted once", async () => {
+  const { LogIndex } = await import("../src/history.js");
+  const t0 = await now();
+  await send(agent, token, mock.abi, "mint", [buyer.address, parseUnits("10", 6)]);
+  await send(buyer, token, mock.abi, "approve", [vault, parseUnits("10", 6)]);
+  await send(buyer, vault, vaultAbi, "createOrder", [supplier.address, parseUnits("10", 6), 2000, BigInt(t0 + 86400), BigInt(t0 + 5 * 86400), 86400, `0x${"55".repeat(32)}`]);
+  const id = BigInt((await client.readContract({ address: vault, abi: vaultAbi, functionName: "nextId" })) - 1n);
+  await send(supplier, vault, vaultAbi, "accept", [id]);
+  await send(buyer, vault, vaultAbi, "releasePart", [id, parseUnits("3", 6)]);
+  await send(buyer, vault, vaultAbi, "releasePart", [id, parseUnits("5", 6)]); // the last $5: also emits BalanceReleased
+  const rows = (await new LogIndex({ client, vault, fromBlock: 0n, lag: 0n }).activity(supplier.address)).filter((r) => r.orderId === Number(id) && r.flow === "in");
+  assert.equal(rows.reduce((a, r) => a + BigInt(r.amount), 0n), parseUnits("10", 6), "deposit 2 + 3 + 5, not 15");
+  const steps = await new LogIndex({ client, vault, fromBlock: 0n, lag: 0n }).timeline(Number(id));
+  assert.deepEqual(steps.map((x) => x.event), ["OrderCreated", "OrderAccepted", "PartReleased", "PartReleased"], "no duplicate final step");
+});

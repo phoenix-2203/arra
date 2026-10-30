@@ -73,8 +73,11 @@ export class LogIndex {
   async timeline(id) {
     await this.sync();
     const mine = this.logs.filter((l) => l.args.id === BigInt(id));
+    // A final releasePart also emits BalanceReleased in the same transaction; show it once.
+    const partTx = new Set(mine.filter((l) => l.eventName === "PartReleased").map((l) => l.transactionHash));
     const out = [];
     for (const l of mine) {
+      if (l.eventName === "BalanceReleased" && partTx.has(l.transactionHash)) continue;
       const a = l.args;
       const amount = a.depositPaid ?? a.amount ?? a.total ?? a.toSupplier ?? null;
       out.push({
@@ -123,8 +126,12 @@ LogIndex.prototype.activity = async function activity(address) {
   for (const l of this.logs) {
     if (l.eventName === "OrderCreated") parties.set(l.args.id, { buyer: l.args.buyer.toLowerCase(), supplier: l.args.supplier.toLowerCase(), ref: l.args.ref });
   }
+  // Paying the last of the balance with releasePart emits PartReleased and
+  // BalanceReleased in the same transaction for the same money: count it once.
+  const partTx = new Set(this.logs.filter((l) => l.eventName === "PartReleased").map((l) => `${l.transactionHash}:${l.args.id}`));
   const rows = [];
   for (const l of this.logs) {
+    if (l.eventName === "BalanceReleased" && partTx.has(`${l.transactionHash}:${l.args.id}`)) continue;
     const p = parties.get(l.args.id);
     if (!p) continue;
     const role = p.buyer === me ? "buyer" : p.supplier === me ? "supplier" : null;

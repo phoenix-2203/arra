@@ -1,8 +1,11 @@
 // Turns an order's timeline into the money lines of its receipt.
 // `to` says where the money went: the vault, the supplier or the buyer.
 export function moneyRows(steps, order) {
+  // The last releasePart also emits BalanceReleased in the same transaction: count it once.
+  const partTx = new Set(steps.filter((s) => s.event === "PartReleased").map((s) => s.tx));
   const rows = [];
   for (const s of steps) {
+    if (s.event === "BalanceReleased" && partTx.has(s.tx)) continue;
     const base = { at: s.at, tx: s.tx };
     switch (s.event) {
       case "OrderCreated":
