@@ -61,7 +61,7 @@ contract ArraVaultTest is Test {
     function _create() internal returns (uint256 id) {
         vm.prank(buyer);
         id = vault.createOrder(
-            supplier, TOTAL, DEP, uint64(block.timestamp + 3 days), uint64(block.timestamp + 30 days), WINDOW, REF
+            supplier, TOTAL, DEP, uint64(block.timestamp + 3 days), uint64(block.timestamp + 30 days), WINDOW, 0, REF
         );
     }
 
@@ -150,27 +150,27 @@ contract ArraVaultTest is Test {
         uint64 s = uint64(block.timestamp + 30 days);
         vm.startPrank(buyer);
         vm.expectRevert(ArraVault.BadSupplier.selector);
-        vault.createOrder(address(0), TOTAL, DEP, a, s, WINDOW, REF);
+        vault.createOrder(address(0), TOTAL, DEP, a, s, WINDOW, 0, REF);
         vm.expectRevert(ArraVault.BadSupplier.selector);
-        vault.createOrder(buyer, TOTAL, DEP, a, s, WINDOW, REF);
+        vault.createOrder(buyer, TOTAL, DEP, a, s, WINDOW, 0, REF);
         vm.expectRevert(ArraVault.BadSupplier.selector);
-        vault.createOrder(address(vault), TOTAL, DEP, a, s, WINDOW, REF);
+        vault.createOrder(address(vault), TOTAL, DEP, a, s, WINDOW, 0, REF);
         vm.expectRevert(ArraVault.BadAmount.selector);
-        vault.createOrder(supplier, 0, DEP, a, s, WINDOW, REF);
+        vault.createOrder(supplier, 0, DEP, a, s, WINDOW, 0, REF);
         vm.expectRevert(ArraVault.BadAmount.selector);
-        vault.createOrder(supplier, 501e6, DEP, a, s, WINDOW, REF);
+        vault.createOrder(supplier, 501e6, DEP, a, s, WINDOW, 0, REF);
         vm.expectRevert(ArraVault.BadDeposit.selector);
-        vault.createOrder(supplier, TOTAL, 9_001, a, s, WINDOW, REF);
+        vault.createOrder(supplier, TOTAL, 9_001, a, s, WINDOW, 0, REF);
         vm.expectRevert(ArraVault.BadDates.selector);
-        vault.createOrder(supplier, TOTAL, DEP, uint64(block.timestamp), s, WINDOW, REF);
+        vault.createOrder(supplier, TOTAL, DEP, uint64(block.timestamp), s, WINDOW, 0, REF);
         vm.expectRevert(ArraVault.BadDates.selector);
-        vault.createOrder(supplier, TOTAL, DEP, s + 1, s, WINDOW, REF);
+        vault.createOrder(supplier, TOTAL, DEP, s + 1, s, WINDOW, 0, REF);
         vm.expectRevert(ArraVault.BadDates.selector);
-        vault.createOrder(supplier, TOTAL, DEP, a, uint64(block.timestamp + 181 days), WINDOW, REF);
+        vault.createOrder(supplier, TOTAL, DEP, a, uint64(block.timestamp + 181 days), WINDOW, 0, REF);
         vm.expectRevert(ArraVault.BadWindow.selector);
-        vault.createOrder(supplier, TOTAL, DEP, a, s, 1 hours, REF);
+        vault.createOrder(supplier, TOTAL, DEP, a, s, 1 hours, 0, REF);
         vm.expectRevert(ArraVault.BadWindow.selector);
-        vault.createOrder(supplier, TOTAL, DEP, a, s, 31 days, REF);
+        vault.createOrder(supplier, TOTAL, DEP, a, s, 31 days, 0, REF);
         vm.stopPrank();
     }
 
@@ -181,7 +181,7 @@ contract ArraVaultTest is Test {
         vm.startPrank(buyer);
         fee.approve(address(v), type(uint256).max);
         vm.expectRevert(ArraVault.TransferMismatch.selector);
-        v.createOrder(supplier, 100e18, DEP, uint64(block.timestamp + 1 days), uint64(block.timestamp + 2 days), WINDOW, REF);
+        v.createOrder(supplier, 100e18, DEP, uint64(block.timestamp + 1 days), uint64(block.timestamp + 2 days), WINDOW, 0, REF);
         vm.stopPrank();
     }
 
@@ -403,7 +403,7 @@ contract ArraVaultTest is Test {
         vault.setPaused(true);
         vm.prank(buyer);
         vm.expectRevert(ArraVault.IsPaused.selector);
-        vault.createOrder(supplier, TOTAL, DEP, uint64(block.timestamp + 1 days), uint64(block.timestamp + 2 days), WINDOW, REF);
+        vault.createOrder(supplier, TOTAL, DEP, uint64(block.timestamp + 1 days), uint64(block.timestamp + 2 days), WINDOW, 0, REF);
         vm.prank(buyer);
         vault.release(id);
         assertEq(usdt.balanceOf(supplier), TOTAL);
@@ -445,7 +445,7 @@ contract ArraVaultTest is Test {
         bps = uint16(bound(bps, 0, 9_000));
         vm.prank(buyer);
         uint256 id = vault.createOrder(
-            supplier, total, bps, uint64(block.timestamp + 1 days), uint64(block.timestamp + 2 days), WINDOW, REF
+            supplier, total, bps, uint64(block.timestamp + 1 days), uint64(block.timestamp + 2 days), WINDOW, 0, REF
         );
         assertEq(usdt.balanceOf(address(vault)), total);
         vm.prank(supplier);
@@ -489,7 +489,7 @@ contract Handler is Test {
         vm.prank(buyer);
         ids.push(
             vault.createOrder(
-                supplier, total, bps, uint64(block.timestamp + 1 days), uint64(block.timestamp + 3 days), 1 days, bytes32(0)
+                supplier, total, bps, uint64(block.timestamp + 1 days), uint64(block.timestamp + 3 days), 1 days, 2 days, bytes32(0)
             )
         );
     }
@@ -499,7 +499,7 @@ contract Handler is Test {
         uint256 id = ids[seed % ids.length];
         uint128 held = vault.getOrder(id).held;
         uint128 amt = held == 0 ? 0 : uint128(bound(amount, 0, held));
-        action = action % 13;
+        action = action % 16;
         if (action == 0) {
             vm.prank(supplier);
             try vault.accept(id) {} catch {}
@@ -536,6 +536,16 @@ contract Handler is Test {
             uint128 offered = vault.getSplitOffer(id).toSupplier;
             vm.prank(seed % 2 == 0 ? supplier : buyer);
             try vault.acceptSplit(id, offered) {} catch {}
+        } else if (action == 13) {
+            vm.prank(buyer);
+            try vault.confirmArrival(id) {} catch {}
+        } else if (action == 14) {
+            vm.prank(buyer);
+            try vault.extendDeadlines(id, uint64(block.timestamp + 1 days), uint64(block.timestamp + 2 days)) {} catch {}
+        } else if (action == 15) {
+            try vault.resolveDispute(id) {
+                keeperCalls++;
+            } catch {}
         } else {
             vm.warp(block.timestamp + 12 hours);
         }
@@ -606,7 +616,7 @@ contract ArraVaultKeeperFeeTest is Test {
     function _create(uint128 total) internal returns (uint256 id) {
         vm.prank(buyer);
         id = vault.createOrder(
-            supplier, total, DEP, uint64(block.timestamp + 1 days), uint64(block.timestamp + 10 days), 1 days, bytes32(0)
+            supplier, total, DEP, uint64(block.timestamp + 1 days), uint64(block.timestamp + 10 days), 1 days, 0, bytes32(0)
         );
     }
 
@@ -676,7 +686,7 @@ contract ArraVaultKeeperFeeTest is Test {
     function test_tinyOrdersRefused_soTheFeeStaysSmall() public {
         vm.prank(buyer);
         vm.expectRevert(ArraVault.BadAmount.selector);
-        vault.createOrder(supplier, 100_000, DEP, uint64(block.timestamp + 1 days), uint64(block.timestamp + 2 days), 1 days, bytes32(0));
+        vault.createOrder(supplier, 100_000, DEP, uint64(block.timestamp + 1 days), uint64(block.timestamp + 2 days), 1 days, 0, bytes32(0));
         _create(100_001); // just over ten fees is fine
     }
 
@@ -685,7 +695,7 @@ contract ArraVaultKeeperFeeTest is Test {
         // supplier keeps the deposit.
         vm.prank(buyer);
         uint256 id = vault.createOrder(
-            supplier, 110_000, 9_000, uint64(block.timestamp + 1 days), uint64(block.timestamp + 2 days), 1 days, bytes32(0)
+            supplier, 110_000, 9_000, uint64(block.timestamp + 1 days), uint64(block.timestamp + 2 days), 1 days, 0, bytes32(0)
         );
         vm.prank(supplier);
         vault.accept(id);
@@ -702,7 +712,7 @@ contract ArraVaultKeeperFeeTest is Test {
         bps = uint16(bound(bps, 0, 9_000));
         vm.prank(buyer);
         uint256 id = vault.createOrder(
-            supplier, total, bps, uint64(block.timestamp + 1 days), uint64(block.timestamp + 2 days), 1 days, bytes32(0)
+            supplier, total, bps, uint64(block.timestamp + 1 days), uint64(block.timestamp + 2 days), 1 days, 0, bytes32(0)
         );
         if (claimPath) {
             vm.prank(supplier);
@@ -720,5 +730,197 @@ contract ArraVaultKeeperFeeTest is Test {
         assertEq(usdt.balanceOf(keeper), FEE);
         assertEq(usdt.balanceOf(buyer) + usdt.balanceOf(supplier) + usdt.balanceOf(keeper), 100e6);
         assertEq(usdt.balanceOf(address(vault)), 0);
+    }
+}
+
+/// v4: deadlines move only later, the check period starts at arrival, silence loses a dispute.
+contract ArraVaultV4Test is Test {
+    MockUSDT usdt;
+    ArraVault vault;
+    address buyer = makeAddr("buyer");
+    address supplier = makeAddr("supplier");
+    address keeper = makeAddr("keeper");
+    uint128 constant FEE = 10_000;
+    uint128 constant TOTAL = 10e6;
+    uint16 constant DEP = 3_000; // $3 deposit, $7 balance
+    uint32 constant WINDOW = 7 days;
+    uint32 constant TRANSIT = 45 days;
+
+    function setUp() public {
+        usdt = new MockUSDT();
+        vault = new ArraVault(IERC20(address(usdt)), 50e6, makeAddr("owner"), 9, FEE);
+        usdt.mint(buyer, 100e6);
+        vm.prank(buyer);
+        usdt.approve(address(vault), type(uint256).max);
+    }
+
+    function _shipped() internal returns (uint256 id) {
+        vm.prank(buyer);
+        id = vault.createOrder(supplier, TOTAL, DEP, uint64(block.timestamp + 1 days), uint64(block.timestamp + 20 days), WINDOW, TRANSIT, bytes32(0));
+        vm.startPrank(supplier);
+        vault.accept(id);
+        vault.markShipped(id, bytes32(0));
+        vm.stopPrank();
+    }
+
+    function _disputed() internal returns (uint256 id) {
+        id = _shipped();
+        vm.prank(buyer);
+        vault.confirmArrival(id);
+        vm.prank(buyer);
+        vault.dispute(id);
+    }
+
+    // ---- check period from arrival ----
+    function test_supplierNotPaidBeforeGoodsCouldArrive() public {
+        uint256 id = _shipped();
+        vm.warp(block.timestamp + WINDOW + 1); // the old v3 rule would pay out here
+        vm.expectRevert(ArraVault.TooEarly.selector);
+        vault.claim(id);
+        vm.warp(block.timestamp + TRANSIT); // backstop: shipping + transit + window
+        vm.prank(keeper);
+        vault.claim(id);
+        assertEq(usdt.balanceOf(supplier), TOTAL - FEE);
+    }
+
+    function test_checkPeriodStartsAtConfirmedArrival() public {
+        uint256 id = _shipped();
+        vm.warp(block.timestamp + 10 days);
+        vm.prank(buyer);
+        vault.confirmArrival(id);
+        assertEq(vault.getOrder(id).arrivedAt, block.timestamp);
+        vm.warp(block.timestamp + WINDOW);
+        vm.prank(buyer);
+        vault.dispute(id); // still inside the window counted from arrival
+        assertEq(uint8(vault.getOrder(id).status), uint8(ArraVault.Status.Disputed));
+    }
+
+    function test_arrivalOnlyByBuyer_once_andBeforeBackstop() public {
+        uint256 id = _shipped();
+        vm.prank(supplier);
+        vm.expectRevert(ArraVault.NotBuyer.selector);
+        vault.confirmArrival(id);
+        vm.prank(buyer);
+        vault.confirmArrival(id);
+        vm.prank(buyer);
+        vm.expectRevert(ArraVault.WrongStatus.selector);
+        vault.confirmArrival(id);
+        uint256 late = _shipped();
+        vm.warp(block.timestamp + TRANSIT + 1);
+        vm.prank(buyer);
+        vm.expectRevert(ArraVault.TooLate.selector);
+        vault.confirmArrival(late); // backstop already started the period
+    }
+
+    // ---- moving deadlines ----
+    function test_buyerCanGiveMoreTime_evenAfterShipByPassed() public {
+        vm.prank(buyer);
+        uint256 id = vault.createOrder(supplier, TOTAL, DEP, uint64(block.timestamp + 1 days), uint64(block.timestamp + 5 days), WINDOW, TRANSIT, bytes32(0));
+        vm.prank(supplier);
+        vault.accept(id);
+        vm.warp(block.timestamp + 6 days); // late, but nobody has reclaimed yet
+        vm.prank(buyer);
+        vault.extendDeadlines(id, 0, uint64(block.timestamp + 10 days));
+        vm.expectRevert(ArraVault.TooEarly.selector);
+        vault.reclaim(id);
+        vm.prank(supplier);
+        vault.markShipped(id, bytes32(0)); // ships within the new date
+    }
+
+    function test_deadlinesNeverMoveEarlier_andOnlyByBuyer() public {
+        vm.prank(buyer);
+        uint256 id = vault.createOrder(supplier, TOTAL, DEP, uint64(block.timestamp + 2 days), uint64(block.timestamp + 5 days), WINDOW, 0, bytes32(0));
+        vm.prank(supplier);
+        vm.expectRevert(ArraVault.NotBuyer.selector);
+        vault.extendDeadlines(id, uint64(block.timestamp + 3 days), uint64(block.timestamp + 9 days));
+        vm.startPrank(buyer);
+        vm.expectRevert(ArraVault.BadDates.selector);
+        vault.extendDeadlines(id, uint64(block.timestamp + 1 days), uint64(block.timestamp + 9 days)); // accept-by earlier
+        vm.expectRevert(ArraVault.BadDates.selector);
+        vault.extendDeadlines(id, uint64(block.timestamp + 3 days), uint64(block.timestamp + 4 days)); // ship-by earlier
+        vm.expectRevert(ArraVault.BadDates.selector);
+        vault.extendDeadlines(id, uint64(block.timestamp + 3 days), uint64(block.timestamp + 181 days)); // too far
+        vault.extendDeadlines(id, uint64(block.timestamp + 3 days), uint64(block.timestamp + 9 days));
+        vm.stopPrank();
+        assertEq(vault.getOrder(id).acceptBy, block.timestamp + 3 days);
+        vm.prank(supplier);
+        vault.accept(id);
+        vm.prank(supplier);
+        vault.markShipped(id, bytes32(0));
+        vm.prank(buyer);
+        vm.expectRevert(ArraVault.WrongStatus.selector);
+        vault.extendDeadlines(id, 0, uint64(block.timestamp + 20 days)); // not after shipping
+    }
+
+    // ---- silence loses a dispute ----
+    function test_ignoredOfferSettlesAfterSevenDays() public {
+        uint256 id = _disputed();
+        vm.prank(supplier);
+        vault.proposeSplit(id, 5e6); // $5 of the $7 balance to the supplier
+        vm.warp(block.timestamp + 7 days);
+        vm.expectRevert(ArraVault.TooEarly.selector);
+        vault.resolveDispute(id);
+        vm.warp(block.timestamp + 1);
+        vm.prank(keeper);
+        vault.resolveDispute(id);
+        assertEq(usdt.balanceOf(supplier), 3e6 + 5e6, "deposit + offered share");
+        assertEq(usdt.balanceOf(keeper), FEE);
+        assertEq(usdt.balanceOf(buyer), 100e6 - TOTAL + 2e6 - FEE, "the rest, minus the keeper's cent");
+        assertEq(uint8(vault.getOrder(id).status), uint8(ArraVault.Status.Settled));
+    }
+
+    function test_counterOfferRestartsTheClock() public {
+        uint256 id = _disputed();
+        vm.prank(supplier);
+        vault.proposeSplit(id, 7e6);
+        vm.warp(block.timestamp + 6 days);
+        vm.prank(buyer);
+        vault.proposeSplit(id, 2e6); // buyer answers with a counter-offer
+        vm.warp(block.timestamp + 2 days);
+        vm.expectRevert(ArraVault.TooEarly.selector);
+        vault.resolveDispute(id);
+        vm.warp(block.timestamp + 6 days);
+        vault.resolveDispute(id); // the supplier ignored the counter for 7 days
+        assertEq(usdt.balanceOf(supplier), 3e6 + 2e6);
+    }
+
+    function test_anOldOfferCantSettleTheMomentAProblemIsRaised() public {
+        uint256 id = _shipped();
+        vm.prank(supplier);
+        vault.proposeSplit(id, 7e6); // offered while shipped, long before any dispute
+        vm.warp(block.timestamp + 20 days);
+        vm.prank(buyer);
+        vault.confirmArrival(id);
+        vm.prank(buyer);
+        vault.dispute(id);
+        vm.expectRevert(ArraVault.TooEarly.selector);
+        vault.resolveDispute(id); // the buyer still gets 7 days to answer
+        vm.warp(block.timestamp + 7 days + 1);
+        vault.resolveDispute(id);
+    }
+
+    function test_noOffersThirtyDaysThenFiftyFifty() public {
+        uint256 id = _disputed();
+        vm.warp(block.timestamp + 30 days);
+        vm.expectRevert(ArraVault.TooEarly.selector);
+        vault.resolveDispute(id);
+        vm.warp(block.timestamp + 1);
+        vm.prank(buyer); // a party triggers it: no fee
+        vault.resolveDispute(id);
+        assertEq(usdt.balanceOf(supplier), 3e6 + 3.5e6);
+        assertEq(usdt.balanceOf(buyer), 100e6 - TOTAL + 3.5e6);
+    }
+
+    function test_resolveOnlyForDisputes() public {
+        uint256 id = _shipped();
+        vm.warp(block.timestamp + 60 days);
+        vm.expectRevert(ArraVault.WrongStatus.selector);
+        vault.resolveDispute(id);
+    }
+
+    function test_transitIsBounded() public {
+        vm.prank(buyer);
+        vm.expectRevert(ArraVault.BadWindow.selector);
+        vault.createOrder(supplier, TOTAL, DEP, uint64(block.timestamp + 1 days), uint64(block.timestamp + 2 days), WINDOW, 121 days, bytes32(0));
     }
 }

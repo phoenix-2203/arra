@@ -20,7 +20,10 @@ import {Ownable, Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step
 ///             buyer releasePart()/release()  -> balance (or part) to supplier
 ///             supplier cancel()              -> balance back to buyer
 ///             proposeSplit() + acceptSplit() -> agreed split, settled in one transaction
+///           Shipped  -- buyer confirmArrival() starts the check window (else shippedAt + transit)
 ///           Shipped  -- window passes with no dispute, claim() --> Released to supplier
+///           Disputed -- ignored offer (7 days) or 30 days unresolved, resolveDispute() --> Settled
+///           Pending|Active -- buyer extendDeadlines() moves accept-by / ship-by later
 ///           Active   -- ship-by passes with no shipment, reclaim() --> Refunded to buyer
 ///         claim and reclaim can be triggered by anyone (the Arra agent automates them); the
 ///         funds still go only to the fixed party, except a fixed keeper fee (set once at
@@ -28,6 +31,10 @@ import {Ownable, Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step
 ///         so the agent that keeps deadlines pays for itself. The owner can pause new orders
 ///         and set the size cap, but can never move, freeze or redirect funds.
 ///         v3: keeper fee, and order numbers can start after a previous vault's.
+///         v4: the buyer can move deadlines later (never earlier); the check period starts when
+///         the buyer confirms arrival (or after a transit backstop); a dispute can't freeze money
+///         forever: an ignored split offer settles after 7 days, and 30 days after the problem
+///         was raised the balance is split 50/50.
 contract ArraVault is ReentrancyGuard, Ownable2Step {
     using SafeERC20 for IERC20;
 
@@ -54,17 +61,24 @@ contract ArraVault is ReentrancyGuard, Ownable2Step {
         uint32 disputeWindow; // seconds the buyer has to dispute after shipment
         Status status;
         bytes32 ref; // fingerprint (hash) of the agreed order sheet
+        uint32 transit; // v4: longest expected time from shipping to arrival (0 = delivered on the spot)
+        uint64 arrivedAt; // v4: when the buyer confirmed arrival (0 if not)
+        uint64 disputedAt; // v4: when the buyer raised a problem (0 if not)
     }
 
     struct SplitOffer {
         address proposer;
         uint128 toSupplier; // the rest of `held` goes to the buyer
+        uint64 at; // v4: when the offer was made
     }
 
     uint16 public constant MAX_DEPOSIT_BPS = 9_000; // at least 10% is always locked
     uint32 public constant MIN_DISPUTE_WINDOW = 1 days;
     uint32 public constant MAX_DISPUTE_WINDOW = 30 days;
     uint64 public constant MAX_SHIP_PERIOD = 180 days;
+    uint32 public constant MAX_TRANSIT = 120 days;
+    uint64 public constant DISPUTE_REPLY = 7 days; // an offer ignored this long can be settled
+    uint64 public constant DISPUTE_MAX = 30 days; // after this, an unresolved dispute splits 50/50
 
     IERC20 public immutable token;
     /// @notice Paid from the order to whoever triggers a due claim/reclaim, unless that is the
@@ -90,6 +104,9 @@ contract ArraVault is ReentrancyGuard, Ownable2Step {
     event OrderAccepted(uint256 indexed id, address indexed supplier, uint256 depositPaid);
     event OrderShipped(uint256 indexed id, bytes32 trackingHash, uint64 shippedAt);
     event OrderDisputed(uint256 indexed id);
+    event OrderArrived(uint256 indexed id, uint64 arrivedAt);
+    event DeadlinesExtended(uint256 indexed id, uint64 acceptBy, uint64 shipBy);
+    event DisputeResolved(uint256 indexed id, bool byDefault);
     event PartReleased(uint256 indexed id, uint256 amount, uint256 remaining);
     event SplitProposed(uint256 indexed id, address indexed proposer, uint256 toSupplier, uint256 toBuyer);
     event SplitSettled(uint256 indexed id, uint256 toSupplier, uint256 toBuyer);
@@ -149,6 +166,7 @@ contract ArraVault is ReentrancyGuard, Ownable2Step {
         uint64 acceptBy,
         uint64 shipBy,
         uint32 disputeWindow,
+        uint32 transit,
         bytes32 ref
     ) external nonReentrant returns (uint256 id) {
         if (paused) revert IsPaused();
@@ -160,6 +178,7 @@ contract ArraVault is ReentrancyGuard, Ownable2Step {
             revert BadDates();
         }
         if (disputeWindow < MIN_DISPUTE_WINDOW || disputeWindow > MAX_DISPUTE_WINDOW) revert BadWindow();
+        if (transit > MAX_TRANSIT) revert BadWindow();
 
         uint128 deposit = uint128((uint256(total) * depositBps) / 10_000);
 
@@ -175,7 +194,10 @@ contract ArraVault is ReentrancyGuard, Ownable2Step {
             shippedAt: 0,
             disputeWindow: disputeWindow,
             status: Status.Pending,
-            ref: ref
+            ref: ref,
+            transit: transit,
+            arrivedAt: 0,
+            disputedAt: 0
         });
 
         // Hold the full amount, and reject tokens that take a fee on transfer.
@@ -214,9 +236,38 @@ contract ArraVault is ReentrancyGuard, Ownable2Step {
         Order storage o = _orders[id];
         if (msg.sender != o.buyer) revert NotBuyer();
         if (o.status != Status.Shipped) revert WrongStatus();
-        if (block.timestamp > uint256(o.shippedAt) + o.disputeWindow) revert TooLate();
+        if (block.timestamp > uint256(_checkStart(o)) + o.disputeWindow) revert TooLate();
         o.status = Status.Disputed;
+        o.disputedAt = uint64(block.timestamp);
         emit OrderDisputed(id);
+    }
+
+    /// @notice Buyer confirms the goods arrived; their check period starts now. Only before the
+    ///         transit backstop (shipping + transit), after which the period has started anyway.
+    function confirmArrival(uint256 id) external {
+        Order storage o = _orders[id];
+        if (msg.sender != o.buyer) revert NotBuyer();
+        if (o.status != Status.Shipped || o.arrivedAt != 0) revert WrongStatus();
+        if (block.timestamp > uint256(o.shippedAt) + o.transit) revert TooLate();
+        o.arrivedAt = uint64(block.timestamp);
+        emit OrderArrived(id, uint64(block.timestamp));
+    }
+
+    /// @notice Buyer gives the supplier more time: deadlines can only move later. Pending: accept-by
+    ///         and ship-by; accepted: ship-by (even after it passed, as long as nobody has reclaimed).
+    function extendDeadlines(uint256 id, uint64 newAcceptBy, uint64 newShipBy) external {
+        Order storage o = _orders[id];
+        if (msg.sender != o.buyer) revert NotBuyer();
+        if (o.status == Status.Pending) {
+            if (newAcceptBy < o.acceptBy || newAcceptBy <= block.timestamp) revert BadDates();
+            o.acceptBy = newAcceptBy;
+        } else if (o.status != Status.Active) {
+            revert WrongStatus();
+        }
+        if (newShipBy < o.shipBy || newShipBy < o.acceptBy || newShipBy <= block.timestamp) revert BadDates();
+        if (newShipBy > block.timestamp + MAX_SHIP_PERIOD) revert BadDates();
+        o.shipBy = newShipBy;
+        emit DeadlinesExtended(id, o.acceptBy, newShipBy);
     }
 
     // --------------------------------------------------------------- supplier
@@ -269,7 +320,7 @@ contract ArraVault is ReentrancyGuard, Ownable2Step {
         if (msg.sender != o.buyer && msg.sender != o.supplier) revert NotParty();
         _requireLive(o);
         if (toSupplier > o.held) revert BadAmount();
-        _splits[id] = SplitOffer({proposer: msg.sender, toSupplier: toSupplier});
+        _splits[id] = SplitOffer({proposer: msg.sender, toSupplier: toSupplier, at: uint64(block.timestamp)});
         emit SplitProposed(id, msg.sender, toSupplier, o.held - toSupplier);
     }
 
@@ -298,7 +349,7 @@ contract ArraVault is ReentrancyGuard, Ownable2Step {
     function claim(uint256 id) external nonReentrant {
         Order storage o = _orders[id];
         if (o.status != Status.Shipped) revert WrongStatus();
-        if (block.timestamp <= uint256(o.shippedAt) + o.disputeWindow) revert TooEarly();
+        if (block.timestamp <= uint256(_checkStart(o)) + o.disputeWindow) revert TooEarly();
         uint128 fee = _takeKeeperFee(o);
         _payOut(id, o, o.supplier, Status.Released);
         _sendKeeperFee(id, fee);
@@ -320,6 +371,33 @@ contract ArraVault is ReentrancyGuard, Ownable2Step {
         _sendKeeperFee(id, fee);
     }
 
+    /// @notice Ends a dispute nobody is resolving. Callable by anyone (the Arra agent automates it):
+    ///         a split offer the other side ignored for DISPUTE_REPLY settles as offered; with no
+    ///         settlement DISPUTE_MAX after the problem was raised, what's held splits 50/50.
+    function resolveDispute(uint256 id) external nonReentrant {
+        Order storage o = _orders[id];
+        if (o.status != Status.Disputed) revert WrongStatus();
+        SplitOffer memory offer = _splits[id];
+        // The reply clock never starts before the dispute, so an old offer made earlier can't
+        // settle the moment a problem is raised: the other side always gets DISPUTE_REPLY.
+        uint256 offeredAt = offer.at > o.disputedAt ? offer.at : o.disputedAt;
+        bool stale = offer.proposer != address(0) && block.timestamp > offeredAt + DISPUTE_REPLY;
+        bool expired = block.timestamp > uint256(o.disputedAt) + DISPUTE_MAX;
+        if (!stale && !expired) revert TooEarly();
+        uint128 fee = _takeKeeperFee(o);
+        uint128 held = o.held;
+        uint128 toSupplier = stale ? (offer.toSupplier < held ? offer.toSupplier : held) : held / 2;
+        uint128 toBuyer = held - toSupplier;
+        o.held = 0;
+        o.status = Status.Settled;
+        delete _splits[id];
+        if (toSupplier > 0) token.safeTransfer(o.supplier, toSupplier);
+        if (toBuyer > 0) token.safeTransfer(o.buyer, toBuyer);
+        emit SplitSettled(id, toSupplier, toBuyer);
+        emit DisputeResolved(id, !stale);
+        _sendKeeperFee(id, fee);
+    }
+
     // ------------------------------------------------------------------ owner
 
     function setMaxOrder(uint256 maxOrder_) external onlyOwner {
@@ -334,6 +412,11 @@ contract ArraVault is ReentrancyGuard, Ownable2Step {
     }
 
     // --------------------------------------------------------------- internal
+
+    /// @dev The buyer's check period starts at confirmed arrival, else at the transit backstop.
+    function _checkStart(Order storage o) private view returns (uint64) {
+        return o.arrivedAt != 0 ? o.arrivedAt : o.shippedAt + o.transit;
+    }
 
     function _requireLive(Order storage o) private view {
         if (o.status != Status.Active && o.status != Status.Shipped && o.status != Status.Disputed) {
