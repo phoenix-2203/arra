@@ -244,8 +244,9 @@ The app treats every version as one Arra: order numbers never overlap, old links
 | Check | Where | Result |
 |---|---|---|
 | 55 contract tests: every path, deadlines, splits, keeper fee, v4 rules, plus fuzzing and invariant runs checking that the vault always holds exactly the open balances and money only leaves to the buyer, the supplier or the one-cent fee | `contracts/test/ArraVault.t.sol` (Foundry) | all pass |
-| 44 agent tests: API, order sheets, vague-term check, invites, signed notes, tracking, track record, link previews, Textile client, keeper, order assistant | `agent/test/` | all pass |
+| 45 agent tests: API, order sheets (vague terms, impossible dates, tiny totals), invites, signed notes, tracking, track record, link previews, Textile client, keeper, order assistant | `agent/test/` | all pass |
 | Mixed v3 + v4 vaults served as one Arra on a local chain | `agent/test/` with Anvil | pass |
+| The real app in a browser against a local chain with the v4 vault: full order, part payments, buyer cancel, supplier decline and refund, extended deadline, problem report with split and counter-offer, terms-first invite; every balance checked to the cent | Playwright + Anvil | all match |
 | Source on mainnet matches this repo exactly | Sourcify | exact match, v2, v3, v4 |
 | Naira → USDT → locked order on mainnet through Textile FX | [`0xc9e673…`](https://celoscan.io/tx/0xc9e673ac56ea2fde09f3f5c356b53ee906784491701be78955420b5c17d0673c), [`0xe08ff4…`](https://celoscan.io/tx/0xe08ff4ee88fa2d2c19eb95236c0657747cb8cecf3cec03e51f1dfa84943a0622) | works |
 | Attribution tag on every agent and app transaction | `npm run verify-tag` and the decoded tag on each tx | `celo_00cfddd372fa` |
@@ -262,6 +263,7 @@ The app treats every version as one Arra: order numbers never overlap, old links
 - **Not audited.** One contract, about 450 lines on OpenZeppelin building blocks, well tested, which is why each order is capped at **$500** until an outside audit.
 - **No judge.** By design there's no third party; instead, silence settles (7 days for an ignored offer, 50/50 at 30 days). Orders #1–#5 on older vaults wait until both sides agree.
 - **USDT can freeze wallets.** A payout to a wallet Tether has frozen would fail and the balance would wait for a refund or split.
+- **Order details aren't secret.** Amounts and wallets are public on Celo like any blockchain payment, and the order sheet (product, supplier name) can be seen by anyone with the order's link or one of its wallet addresses. Don't put anything confidential in it.
 - **Arra can't see the goods.** It checks container numbers and keeps signed evidence, but it can't inspect a carton. Independent inspection is on the roadmap.
 - **One agent today.** If it's down, anyone (including the buyer or supplier) can call the same refund or payout themselves, for free.
 
