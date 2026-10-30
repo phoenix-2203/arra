@@ -102,7 +102,7 @@ test("split offers show up as an action for the other side only", async () => {
 
 test("history: each order's steps in order, with times and transactions; homepage totals", async () => {
   const { LogIndex, vaultStats } = await import("../src/history.js");
-  const idx = new LogIndex({ client, vault, fromBlock: 0n, chunk: 3n }); // tiny chunks to exercise paging
+  const idx = new LogIndex({ client, vault, fromBlock: 0n, chunk: 3n, lag: 0n }); // tiny chunks to exercise paging
   const t1 = await idx.timeline(1);
   assert.deepEqual(t1.map((s) => s.event), ["OrderCreated", "BalanceRefunded"]);
   assert.equal(t1[0].amount, "10000000");
@@ -126,7 +126,7 @@ test("history: each order's steps in order, with times and transactions; homepag
 
 test("activity: each wallet sees its own money in and out, newest first", async () => {
   const { LogIndex } = await import("../src/history.js");
-  const idx = new LogIndex({ client, vault, fromBlock: 0n });
+  const idx = new LogIndex({ client, vault, fromBlock: 0n, lag: 0n });
   const b = await idx.activity(buyer.address.toLowerCase());
   // Buyer locked $10, $20, $10 and got order 1's $10 back; deposits/releases are info rows.
   assert.equal(b.filter((r) => r.flow === "out").reduce((s, r) => s + BigInt(r.amount), 0n), parseUnits("40", 6));

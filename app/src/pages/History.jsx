@@ -35,12 +35,13 @@ export default function History({ wallet }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("all");
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     if (!account) return;
     setError("");
-    api.activity(account).then(setData).catch((e) => setError(e.message));
-  }, [account]);
+    api.activity(account).then(setData).catch((e) => setError(e.status >= 500 || !e.status ? "Your history couldn't be loaded just now. Please try again in a moment." : e.message));
+  }, [account, attempt]);
 
   if (!account) {
     return (
@@ -98,7 +99,12 @@ export default function History({ wallet }) {
         ))}
       </div>
 
-      {error ? <p className="note bad">{error}</p> : null}
+      {error ? (
+        <div className="note bad row-gap" style={{ justifyContent: "space-between", width: "100%" }}>
+          <span>{error}</span>
+          <button className="secondary auto small-btn" onClick={() => setAttempt((n) => n + 1)}>Try again</button>
+        </div>
+      ) : null}
       {!data && !error ? <p className="muted">Loading your history…</p> : null}
       {data && rows.length === 0 ? (
         <div className="empty">

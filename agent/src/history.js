@@ -7,7 +7,8 @@ const EVENTS = vaultAbi.filter((e) => e.type === "event");
 const ORDER_EVENTS = new Set(["OrderCreated", "OrderAccepted", "OrderShipped", "OrderDisputed", "PartReleased", "SplitProposed", "SplitSettled", "BalanceReleased", "BalanceRefunded"]);
 
 export class LogIndex {
-  constructor({ client, vault, fromBlock, chunk = 20_000n }) {
+  constructor({ client, vault, fromBlock, chunk = 20_000n, lag = 2n }) {
+    this.lag = lag;
     this.client = client;
     this.vault = vault;
     this.next = fromBlock != null ? BigInt(fromBlock) : null;
@@ -20,11 +21,25 @@ export class LogIndex {
   async sync() {
     if (this.syncing) return this.syncing;
     this.syncing = (async () => {
-      const head = await this.client.getBlockNumber({ cacheTime: 0 });
+      // Stay 2 blocks behind the tip: public nodes can be a block or two apart,
+      // and asking a lagging node for a block it hasn't seen fails.
+      const tip = await this.client.getBlockNumber({ cacheTime: 0 });
+      const head = tip > this.lag ? tip - this.lag : tip;
       if (this.next == null) this.next = head > 500_000n ? head - 500_000n : 0n;
+      let failures = 0;
       while (this.next <= head) {
         const to = this.next + this.chunk - 1n < head ? this.next + this.chunk - 1n : head;
-        const logs = await this.client.getLogs({ address: this.vault, events: EVENTS, fromBlock: this.next, toBlock: to, strict: true });
+        let logs;
+        try {
+          logs = await this.client.getLogs({ address: this.vault, events: EVENTS, fromBlock: this.next, toBlock: to, strict: true });
+        } catch (e) {
+          // Too big a range for this node, or a hiccup: read smaller pieces and retry.
+          if (++failures > 6) throw e;
+          if (this.chunk > 1_000n) this.chunk /= 2n;
+          await new Promise((r) => setTimeout(r, 400 * failures));
+          continue;
+        }
+        failures = 0;
         for (const l of logs) if (ORDER_EVENTS.has(l.eventName)) this.logs.push(l);
         this.next = to + 1n;
       }
@@ -37,7 +52,16 @@ export class LogIndex {
   async time(blockNumber) {
     const k = blockNumber.toString();
     if (!this.blockTimes.has(k)) {
-      const b = await this.client.getBlock({ blockNumber });
+      let b;
+      for (let i = 0; ; i++) {
+        try {
+          b = await this.client.getBlock({ blockNumber });
+          break;
+        } catch (e) {
+          if (i >= 3) throw e;
+          await new Promise((r) => setTimeout(r, 500 * (i + 1)));
+        }
+      }
       this.blockTimes.set(k, Number(b.timestamp));
     }
     return this.blockTimes.get(k);

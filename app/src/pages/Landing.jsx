@@ -112,7 +112,7 @@ const CASES = [
 ];
 
 const STEPS = [
-  ["sheet", "Write the order sheet", "Exact quantities, sizes and materials. Arra flags vague words like \"good quality\" and fingerprints the sheet so nobody can change it."],
+  ["sheet", "Write the order sheet", "Exact quantities, models, sizes and specs, whatever you're buying. Arra flags vague words like \"good quality\" and fingerprints the sheet so nobody can change it."],
   ["lock", "Lock the money", "Pay in USDT or naira. Textile FX gives one firm rate for the whole order, so a weak naira next month can't hurt you."],
   ["signature", "Supplier accepts", "They sign from their own wallet, proving it's theirs, and get the deposit instantly. The balance stays locked."],
   ["ship", "They ship", "They enter the container number. Arra checks it's a real one before anyone relies on it."],
@@ -131,7 +131,7 @@ const FEATURES = [
 const USES = [
   ["ship", "Imports from China", "The deposit goes to the factory when they accept; the balance waits for the container."],
   ["wallet", "Diaspora projects at home", "Fund a build or a business in Nigeria and release money stage by stage as the work is done, not on promises."],
-  ["sheet", "Made-to-order", "Tailors, furniture makers, fabricators. Half for materials up front, the rest when it's ready and checked."],
+  ["sheet", "Made-to-order", "Furniture, signage, fabrication, custom outfits. Half for materials up front, the rest when it's ready and checked."],
   ["clock", "Events", "Caterers, decorators, DJs, venues. Book with a deposit, pay the balance after the day, settle a split if something falls short."],
   ["code", "Freelance and agency work", "Milestones without a platform holding your money, for local clients or clients abroad."],
   ["signature", "Online vendors", "A safer alternative to pay-on-delivery. The fingerprinted order sheet settles \"what I ordered vs what I got\"."],
@@ -153,7 +153,7 @@ export default function Landing({ wallet }) {
         <div className="hero-copy">
           <h1 className="display">Pay the deposit. Keep the balance locked until it ships.</h1>
           <p className="lede-lg">
-            Arra is escrow for importers buying from China, and for any deal paid with a deposit and a balance. Your supplier gets their deposit the moment they accept. The rest waits in an open contract they can see but can't touch until the goods ship.
+            Arra is escrow for importers buying anything from China and abroad, from phones and solar panels to machine parts and clothes, and for any deal paid with a deposit and a balance. Your supplier gets their deposit the moment they accept. The rest waits in an open contract they can see but can't touch until the goods ship.
           </p>
           <div className="hero-cta">
             <a href="/new" className="button money" onClick={go("/new")}>Start an order</a>

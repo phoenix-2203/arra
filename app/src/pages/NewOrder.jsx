@@ -14,28 +14,45 @@ const DAY = 86400;
 const KINDS = {
   goods: {
     label: "Goods shipped to me", short: "Shipped goods", hint: "Imports and anything sent by sea, air or courier", icon: "ship",
-    payee: "Supplier", payeeName: "Supplier's business name", namePh: "Guangzhou Hengli Textiles",
-    product: "What are you buying?", productPh: "Men's cotton T-shirts, crew neck", qtyPh: "500", units: ["pieces", "cartons", "kg", "metres", "sets", "pairs", "dozen"],
-    pricePh: "2.35", details: ["Size", "Colour", "Material", "Weight", "Model", "Per carton"],
-    detailPh: { Size: "150 M, 200 L, 150 XL", Colour: "Navy, Pantone 19-4052", Material: "100% combed cotton, 180 gsm", Weight: "Under 15 kg per carton", Model: "SKU TS-180-NV", "Per carton": "50 pieces, each in a polybag" },
-    checkLabel: "How you'll check the goods", checkPh: "Photos of 5 random cartons before shipping",
+    payee: "Supplier", payeeName: "Supplier's business name", namePh: "Shenzhen Brightway Trading Co.",
+    product: "What are you buying?", units: ["pieces", "cartons", "sets", "pairs", "kg", "metres", "dozen"],
+    details: ["Model or spec", "Size", "Colour", "Condition", "Brand", "Per carton"],
+    // The hints rotate through different goods, because Arra isn't for one kind of product.
+    examples: [
+      { product: "Android smartphones, 6.5-inch", qty: "50", price: "85", d: { "Model or spec": "128 GB storage, 6 GB RAM, dual SIM", Colour: "25 black, 25 blue", Size: "6.5-inch screen", Condition: "New, sealed box, UK-plug charger", Brand: "The brand agreed in the quote, no substitutes", "Per carton": "10 phones per carton" } },
+      { product: "Solar panels, 450 W", qty: "20", price: "68", d: { "Model or spec": "450 W monocrystalline, 25-year warranty", Colour: "Black frame", Size: "2094 × 1038 × 35 mm", Condition: "New, no cracks, with test report", Brand: "Tier-1 cells as in the datasheet", "Per carton": "2 panels per pallet box" } },
+      { product: "Men's sneakers", qty: "120", price: "9.50", d: { "Model or spec": "Rubber sole, lace-up", Colour: "White and black, 60 each", Size: "Sizes 40 to 45, 20 pairs each", Condition: "New, each pair boxed", Brand: "Unbranded, our logo on the tongue", "Per carton": "12 pairs per carton" } },
+      { product: "Body lotion, 400 ml bottles", qty: "600", price: "1.20", d: { "Model or spec": "Shea butter formula, NAFDAC-ready label", Colour: "White bottle, green cap", Size: "400 ml", Condition: "Sealed, expiry at least 24 months away", Brand: "Our label artwork, version 3", "Per carton": "24 bottles per carton" } },
+      { product: "Spare parts: car brake pads", qty: "200", price: "4.80", d: { "Model or spec": "Front pads for Toyota Corolla 2010–2018", Colour: "Black backing plate", Size: "OEM part 04465-02220", Condition: "New, not refurbished", Brand: "Same factory as the sample", "Per carton": "20 sets per carton" } },
+    ],
+    checkLabel: "How you'll check the goods", checkPh: "Photos and a video of the goods before shipping",
     dateLabel: "Ship by", notDone: "Not shipped by", depositHint: "Chinese suppliers usually ask for 30%.",
   },
   custom: {
-    label: "Made to order", short: "Made to order", hint: "Tailoring, furniture, fabrication, event decor", icon: "sheet",
-    payee: "Maker", payeeName: "Maker's business name", namePh: "Ade's Tailoring",
-    product: "What's being made?", productPh: "Agbada, 3-piece, aso-oke", qtyPh: "1", units: ["piece", "set", "pair", "metres"],
-    pricePh: "35", details: ["Measurements", "Colour", "Material", "Finish", "Fitting date"],
-    detailPh: { Measurements: "Chest 42 in, length 56 in", Colour: "Navy with gold embroidery", Material: "Aso-oke", Finish: "Hand-stitched hems", "Fitting date": "20 November" },
-    checkLabel: "How you'll check it", checkPh: "Fitting before collection",
+    label: "Made to order", short: "Made to order", hint: "Furniture, signage, fabrication, custom outfits", icon: "sheet",
+    payee: "Maker", payeeName: "Maker's business name", namePh: "Ade's Workshop",
+    product: "What's being made?", units: ["piece", "set", "pair", "metres"],
+    details: ["Measurements", "Colour", "Material", "Finish", "Check date"],
+    examples: [
+      { product: "Dining table, 6-seater", qty: "1", price: "45", d: { Measurements: "180 × 90 cm, 76 cm high", Colour: "Dark walnut stain", Material: "Solid mahogany, no MDF", Finish: "Matte lacquer, 2 coats", "Check date": "Inspect at the workshop on 20 Nov" } },
+      { product: "Shop signage, lit 3D letters", qty: "1", price: "40", d: { Measurements: "3 m wide, letters 40 cm tall", Colour: "White face, black sides", Material: "Acrylic with LED backlight", Finish: "Mounted and wired on site", "Check date": "Switched on and checked on 25 Nov" } },
+      { product: "Wedding outfits, matching set", qty: "2", price: "30", d: { Measurements: "As in the measurement sheet sent on WhatsApp", Colour: "Emerald green with gold", Material: "Fabric chosen at the first visit", Finish: "Fully lined, hand-finished", "Check date": "Final fitting on 18 Nov" } },
+      { product: "Steel security door", qty: "1", price: "48", d: { Measurements: "210 × 120 cm, double leaf", Colour: "Bronze", Material: "2 mm steel sheet", Finish: "Rust-proof paint, 3 locks", "Check date": "Installed and tested on 22 Nov" } },
+    ],
+    checkLabel: "How you'll check it", checkPh: "Inspect before it's delivered or installed",
     dateLabel: "Ready by", notDone: "Not delivered by", depositHint: "Makers often ask for half up front to buy materials.",
   },
   service: {
     label: "A service or project", short: "Service", hint: "Freelance work, building projects, events, repairs", icon: "code",
     payee: "Provider", payeeName: "Provider's name", namePh: "Tunde Studio",
-    product: "What's being delivered?", productPh: "Logo and brand kit", qtyPh: "1", units: ["project", "hours", "days", "items"],
-    pricePh: "40", details: ["Deliverables", "Revisions", "File format", "Meetings"],
-    detailPh: { Deliverables: "3 logo concepts", Revisions: "2 rounds of changes", "File format": "SVG and PNG", Meetings: "Weekly 30-minute call" },
+    product: "What's being delivered?", units: ["project", "hours", "days", "items"],
+    details: ["Deliverables", "Revisions", "Format", "Meetings"],
+    examples: [
+      { product: "Logo and brand kit", qty: "1", price: "40", d: { Deliverables: "3 logo concepts, 1 final", Revisions: "2 rounds of changes", Format: "SVG and PNG files", Meetings: "Weekly 30-minute call" } },
+      { product: "Online store website", qty: "1", price: "50", d: { Deliverables: "Home, shop, cart and checkout pages", Revisions: "2 rounds", Format: "Live on our domain, with logins handed over", Meetings: "Demo at each stage" } },
+      { product: "Event catering for 80 guests", qty: "1", price: "45", d: { Deliverables: "Jollof, fried rice, chicken, drinks", Revisions: "Menu fixed 7 days before", Format: "Served hot, staff on site 4 hours", Meetings: "Tasting on 15 Nov" } },
+      { product: "Bathroom renovation", qty: "1", price: "50", d: { Deliverables: "Tiling, new toilet and shower, plumbing", Revisions: "Snag list fixed within 7 days", Format: "Photos at each stage", Meetings: "Site visit at each stage" } },
+    ],
     checkLabel: "How you'll check it", checkPh: "Review call before final files",
     dateLabel: "Deliver by", notDone: "Not delivered by", depositHint: "Use the balance as milestones: release part at each stage.",
   },
@@ -56,7 +73,7 @@ const blankSheet = {
   quantity: "",
   unit: "pieces",
   unitPriceUsd: "",
-  details: [{ label: "Size", value: "" }, { label: "Material", value: "" }],
+  details: [{ label: "Model or spec", value: "" }, { label: "Size", value: "" }],
   packaging: "",
   inspection: "",
   shipBy: "",
@@ -123,6 +140,14 @@ export default function NewOrder({ wallet }) {
   const [gasPick, setGasPick] = useState(null);
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
   const K = KINDS[f.kind];
+  // Rotate the example every few seconds until they start typing what they're buying.
+  const [exIdx, setExIdx] = useState(0);
+  useEffect(() => {
+    if (step !== 2 || f.product) return;
+    const t = setInterval(() => setExIdx((i) => i + 1), 3200);
+    return () => clearInterval(t);
+  }, [step, f.product]);
+  const ex = K.examples[exIdx % K.examples.length];
   const setKind = (k) => setF({ ...f, kind: k, unit: KINDS[k].units[0], details: KINDS[k].details.slice(0, 2).map((label) => ({ label, value: "" })) });
   const setDetail = (i, value) => setF({ ...f, details: f.details.map((d, j) => (j === i ? { ...d, value } : d)) });
   const addDetail = (label) => setF({ ...f, details: [...f.details, { label, value: "" }] });
@@ -326,13 +351,13 @@ export default function NewOrder({ wallet }) {
 
       {step === 2 && (
         <section className="stack">
-          <label className="field"><span>{K.product}</span><input value={f.product} onChange={set("product")} placeholder={K.productPh} /></label>
+          <label className="field"><span>{K.product}</span><input value={f.product} onChange={set("product")} placeholder={ex.product} /></label>
           <div className="qty-row">
-            <label className="field"><span>How many</span><input inputMode="numeric" value={f.quantity} onChange={(e) => setF({ ...f, quantity: e.target.value.replace(/[^\d]/g, "") })} placeholder={K.qtyPh} /></label>
+            <label className="field"><span>How many</span><input inputMode="numeric" value={f.quantity} onChange={(e) => setF({ ...f, quantity: e.target.value.replace(/[^\d]/g, "") })} placeholder={ex.qty} /></label>
             <label className="field"><span>Unit</span>
               <select value={f.unit} onChange={set("unit")}>{K.units.map((u) => <option key={u} value={u}>{u}</option>)}</select>
             </label>
-            <label className="field"><span>Price each ($)</span><input inputMode="decimal" value={f.unitPriceUsd} onChange={(e) => setF({ ...f, unitPriceUsd: e.target.value.replace(/[^\d.]/g, "") })} placeholder={K.pricePh} /></label>
+            <label className="field"><span>Price each ($)</span><input inputMode="decimal" value={f.unitPriceUsd} onChange={(e) => setF({ ...f, unitPriceUsd: e.target.value.replace(/[^\d.]/g, "") })} placeholder={ex.price} /></label>
           </div>
           {liveTotal !== null ? <p className="live-total num">Total <strong>${liveTotal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></p> : null}
 
@@ -342,7 +367,7 @@ export default function NewOrder({ wallet }) {
               {f.details.map((d, i) => (
                 <div key={i} className="detail-row">
                   <span className="detail-label">{d.label || "Detail"}</span>
-                  <input value={d.value} onChange={(e) => setDetail(i, e.target.value)} placeholder={K.detailPh[d.label] ?? "Be specific: numbers, colours, materials"} aria-label={d.label || "Detail"} />
+                  <input value={d.value} onChange={(e) => setDetail(i, e.target.value)} placeholder={ex.d[d.label] ?? "Be specific: numbers, sizes, model, colour"} aria-label={d.label || "Detail"} />
                   <button type="button" className="detail-x" aria-label={`Remove ${d.label || "detail"}`} onClick={() => removeDetail(i)}>×</button>
                 </div>
               ))}
@@ -351,7 +376,7 @@ export default function NewOrder({ wallet }) {
               {unusedDetails.map((d) => <button key={d} type="button" className="chip" onClick={() => addDetail(d)}>+ {d}</button>)}
               <button type="button" className="chip" onClick={() => addDetail("")}>+ Other</button>
             </div>
-            <small>Use numbers and exact words. "Good quality" can't be checked; "180 gsm cotton" can.</small>
+            <small>Use numbers and exact words. "Good quality" can't be checked; "{ex.d[K.details[0]] ?? "128 GB, sealed box"}" can.</small>
           </div>
 
           <div className="field">
@@ -379,7 +404,7 @@ export default function NewOrder({ wallet }) {
             <div className="stack">
               {f.kind === "goods" ? <label className="field"><span>Port or city</span><input value={f.port} onChange={set("port")} placeholder="Guangzhou" /></label> : null}
               {f.kind === "custom" ? <label className="field"><span>Collection or delivery</span><input value={f.handover} onChange={set("handover")} placeholder="Delivered to Lekki Phase 1" /></label> : null}
-              {f.kind !== "service" ? <label className="field"><span>Packaging</span><input value={f.packaging} onChange={set("packaging")} placeholder="50 per carton, each in a polybag" /></label> : null}
+              {f.kind !== "service" ? <label className="field"><span>Packaging</span><input value={f.packaging} onChange={set("packaging")} placeholder={ex.d["Per carton"] ?? "10 per carton, each in its own box"} /></label> : null}
               <label className="field"><span>{K.checkLabel}</span><input value={f.inspection} onChange={set("inspection")} placeholder={K.checkPh} /></label>
             </div>
           </details>

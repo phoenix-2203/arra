@@ -65,7 +65,7 @@ export const STRINGS = {
     deliverBy: "Deliver by",
     markDelivered: "Mark as delivered",
     deliveryNote: "What was delivered (optional)",
-    deliveryNoteHint: "A short note, like \"final files sent\" or \"collected at fitting\". It's fingerprinted with the order.",
+    deliveryNoteHint: "A short note, like \"final files sent\" or \"installed on site\". It's fingerprinted with the order.",
     toast: {
       confirm: "Confirm in your wallet",
       pending: "Sending to Celo…",

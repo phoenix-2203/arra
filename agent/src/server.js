@@ -144,7 +144,14 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
     "GET /api/activity": async (_b, url) => {
       const who = url.searchParams.get("address");
       if (!who || !isAddress(who, { strict: false })) return [400, { error: "address required" }];
-      const rows = (await history.activity(who)).map(({ ref, ...r }) => ({ ...r, link: links.code(r.orderId), product: loadSheet(ref)?.sheet?.product ?? null, counterpartyName: r.role === "buyer" ? loadSheet(ref)?.sheet?.supplier ?? null : null }));
+      let raw;
+      try {
+        raw = await history.activity(who);
+      } catch (e) {
+        console.error("activity:", e.shortMessage ?? e.message);
+        return [503, { error: "Your history couldn't be loaded from the Celo network just now. Please try again in a moment." }];
+      }
+      const rows = raw.map(({ ref, ...r }) => ({ ...r, link: links.code(r.orderId), product: loadSheet(ref)?.sheet?.product ?? null, counterpartyName: r.role === "buyer" ? loadSheet(ref)?.sheet?.supplier ?? null : null }));
       const sum = (flow) => rows.filter((r) => r.flow === flow).reduce((s, r) => s + BigInt(r.amount), 0n).toString();
       return [200, { rows, totals: { in: sum("in"), out: sum("out") } }];
     },
@@ -179,6 +186,7 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
           try {
             return send(res, 200, { steps: await history.timeline(id) });
           } catch (e) {
+            console.error("timeline:", e.shortMessage ?? e.message);
             return send(res, 200, { steps: null, error: "History is temporarily unavailable" });
           }
         }

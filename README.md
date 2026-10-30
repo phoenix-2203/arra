@@ -2,7 +2,7 @@
 
 **Pay the deposit. Keep the balance locked until it ships.**
 
-Arra is escrow for importers buying from China, and for any deal paid with a deposit and a balance. The buyer funds the order from naira or USDT at one locked rate. The supplier gets the deposit the moment they accept. The balance waits in an open contract on Celo that they can see but can't touch until the goods ship, and it comes back automatically if they don't.
+Arra is escrow for importers buying anything from China and abroad (phones, solar panels, machine parts, clothes) and for any deal paid with a deposit and a balance. The buyer funds the order from naira or USDT at one locked rate. The supplier gets the deposit the moment they accept. The balance waits in an open contract on Celo that they can see but can't touch until the goods ship, and it comes back automatically if they don't.
 
 **Live app:** https://usearra.duckdns.org &nbsp;·&nbsp; **Vault:** [`0x3da5…7bb3` on Celoscan](https://celoscan.io/address/0x3da5f9d36d1ae8769a9460a7788a21c8041c7bb3) &nbsp;·&nbsp; **Source:** [verified on Sourcify](https://repo.sourcify.dev/42220/0x3da5f9d36d1ae8769a9460a7788a21c8041c7bb3) &nbsp;·&nbsp; **Agent:** ERC-8004 #9996
 
@@ -129,7 +129,7 @@ Each one answers a documented way these deals fail.
 The same contract protects any deal with a deposit and a balance. When creating an order the buyer picks **goods shipped**, **made to order**, or **a service or project**, and the wording and required fields adapt (for example "Mark as delivered" instead of a container number). The deal type is part of the fingerprinted sheet.
 
 - **Diaspora projects at home:** fund a build or business and release money stage by stage as work is done.
-- **Made-to-order:** tailoring, furniture, fabrication.
+- **Made-to-order:** furniture, signage, fabrication, custom outfits.
 - **Events:** caterers, decorators, DJs, venues.
 - **Freelance and agency work:** milestones without a platform holding the money.
 - **Online vendors:** a safer alternative to pay-on-delivery.
