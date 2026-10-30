@@ -169,6 +169,38 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
     },
   };
 
+  // What a shared link shows in WhatsApp and other apps. For an order link:
+  // the amount, what it's for and what happens next.
+  async function previewFor(pathname, req) {
+    const proto = req.headers["x-forwarded-proto"] ?? (req.headers.host?.startsWith("127.") ? "http" : "https");
+    const origin = `${proto}://${req.headers.host ?? "localhost"}`;
+    const meta = { image: `${origin}/og.png`, url: origin + pathname };
+    const m = pathname.match(/^\/o\/([A-Za-z0-9]{1,10})(\/receipt)?$/);
+    if (!m) return meta;
+    try {
+      const id = await toId(m[1]);
+      const v = id && (await orderView(id, null));
+      if (!v) return meta;
+      const { order: o, sheet } = v;
+      const s = sheet?.sheet;
+      const money = (x) => `$${(Number(x) / 1e6).toFixed(2)}`;
+      const what = s ? `${s.product}${s.quantity ? `, ${s.quantity} ${s.unit}` : ""}` : `Order #${o.id}`;
+      if (m[2]) {
+        meta.title = `Receipt for order #${o.id} · Arra`;
+        meta.description = `${what}. Total ${money(o.total)} USDT on Celo.`;
+      } else if (o.status === "Pending") {
+        meta.title = `${money(o.total)} locked for ${s?.supplier ?? "you"} · Arra`;
+        meta.description = `${what}. ${BigInt(o.deposit) > 0n ? `${money(o.deposit)} deposit paid the moment you accept; the` : "The"} balance is released when it ${s && (s.kind ?? "goods") !== "goods" ? "is delivered" : "ships"}. Money held in an open contract on Celo.`;
+      } else {
+        meta.title = `Order #${o.id}: ${what} · Arra`;
+        meta.description = `${money(o.total)} USDT order. ${explain(o, now())}`;
+      }
+    } catch {
+      /* fall back to the general preview */
+    }
+    return meta;
+  }
+
   return async function handle(req, res) {
     const url = new URL(req.url, "http://x");
     try {
@@ -210,6 +242,10 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
         const [status, payload] = await route(body, url);
         return send(res, status, payload);
       }
+      // App pages: give link previews the right title, text and an absolute image URL.
+      if (req.method === "GET" && !extname(url.pathname) && staticDir && existsSync(join(staticDir, "index.html"))) {
+        return sendPage(res, req, await previewFor(url.pathname, req), staticDir);
+      }
       return serveStatic(staticDir, url.pathname, res, req);
     } catch (e) {
       send(res, e.status ?? 500, { error: e.status ? e.message : "Something went wrong" });
@@ -222,6 +258,32 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
 // from ~590 KB to ~180 KB, which matters a lot on mobile data.
 const gzCache = new Map();
 const COMPRESS = new Set([".html", ".js", ".css", ".svg", ".json", ".webmanifest"]);
+
+const escapeHtml = (v) => String(v).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+
+function sendPage(res, req, meta, dir) {
+  let html = readFileSync(join(dir, "index.html"), "utf8");
+  const set = (prop, value) => {
+    if (value == null) return;
+    const re = new RegExp(`(<meta (?:property|name)="${prop}" content=")[^"]*(")`);
+    // Function replacers, so "$20" in the text isn't read as a regex group.
+    html = re.test(html) ? html.replace(re, (_, a, b) => a + escapeHtml(value) + b) : html.replace("</head>", () => `<meta property="${prop}" content="${escapeHtml(value)}" />\n</head>`);
+  };
+  set("og:image", meta.image);
+  set("og:url", meta.url);
+  set("og:title", meta.title);
+  set("og:description", meta.description);
+  if (meta.description) set("description", meta.description);
+  if (meta.title) html = html.replace(/<title>[^<]*<\/title>/, () => `<title>${escapeHtml(meta.title)}</title>`);
+  const headers = { "content-type": MIME[".html"], "cache-control": "no-cache", vary: "accept-encoding" };
+  let body = Buffer.from(html);
+  if (/\bgzip\b/.test(req.headers["accept-encoding"] ?? "")) {
+    body = gzipSync(body);
+    headers["content-encoding"] = "gzip";
+  }
+  res.writeHead(200, headers);
+  res.end(body);
+}
 
 function serveStatic(dir, pathname, res, req) {
   if (!dir || !existsSync(dir)) return send(res, 404, { error: "App not built" });

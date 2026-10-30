@@ -58,7 +58,7 @@ before(async () => {
   dir = mkdtempSync(join(tmpdir(), "arra-srv-"));
   const staticDir = join(dir, "dist");
   mkdirSync(staticDir);
-  writeFileSync(join(staticDir, "index.html"), "<!doctype html><title>Arra</title>");
+  writeFileSync(join(staticDir, "index.html"), '<!doctype html><head><title>Arra</title><meta name="description" content="x" /><meta property="og:title" content="Arra" /><meta property="og:image" content="/og.png" /></head>');
   server = await listen(createApp({ client: fakeClient, vault: "0xvault", dataDir: join(dir, "data"), staticDir, now: () => T, textile: fakeTextile }), 0);
   base = `http://127.0.0.1:${server.address().port}`;
 });
@@ -126,6 +126,18 @@ test("private links: each order has an unguessable code that opens it", async ()
   assert.equal(a.resolve(a.code(11), 10), null, "only existing orders");
 });
 
+test("shared order links get a preview with the amount and what it's for", async () => {
+  await post("/api/sheets", { sheet });
+  const [, page] = await get("/o/1");
+  assert.match(page, /<title>Order #1: Cotton T-shirts, crew neck, 10 pieces · Arra<\/title>/);
+  assert.match(page, /og:image" content="http:\/\/127\.0\.0\.1:\d+\/og\.png"/);
+  assert.match(page, /og:description" content="\$20\.00 USDT order\./);
+  const [, home] = await get("/");
+  assert.match(home, /<title>Arra<\/title>/);
+  const [, receipt] = await get("/o/1/receipt");
+  assert.match(receipt, /Receipt for order #1/);
+});
+
 test("my orders, container check, errors and the app shell", async () => {
   const [, list] = await get(`/api/orders?address=${SUPPLIER}`);
   assert.equal(list.orders.length, 1);
@@ -135,8 +147,9 @@ test("my orders, container check, errors and the app shell", async () => {
   const bad = await fetch(base + "/api/sheet/review", { method: "POST", body: "{" });
   assert.equal(bad.status, 400);
   const [s, html] = await get("/o/1");
+  assert.match(html, /og:description" content="\$20\.00 USDT order\. Accepted\. Deposit paid; \$14\.00 stays locked/, "dollar amounts survive");
   assert.equal(s, 200);
-  assert.match(html, /<title>Arra/);
+  assert.match(html, /Arra<\/title>/);
   const [, traversal] = await get("/../../etc/passwd");
   assert.match(traversal, /<title>Arra/);
 });
