@@ -21,7 +21,7 @@ test('a specific sheet has no issues', () => {
 test('vague words are flagged with a plain explanation', () => {
   const issues = reviewSheet({ ...good, specs: ['good quality cotton', 'same as sample'] });
   assert.equal(issues.length, 2);
-  assert.match(issues[0].problem, /can't be measured/);
+  assert.match(issues[0].problem, /mean different things/);
 });
 
 test('missing and malformed fields are flagged', () => {

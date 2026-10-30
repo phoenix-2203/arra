@@ -47,3 +47,10 @@ test("assistant can run on Gemini (free tier) through the OpenAI-style endpoint"
   assert.equal(JSON.stringify(sent.body.tools).includes('"enum":[0,20,30,50]'), false);
   assert.deepEqual(r.draft, { product: "Phones", depositPct: 30 });
 });
+
+test("cleanDraft drops vague packaging, inspection and details", () => {
+  const d = cleanDraft({ packaging: "Standard", inspection: "Good quality check", details: [{ label: "Item 1", value: "10 × Samsung S10, $10 each" }, { label: "Condition", value: "Normal" }] });
+  assert.equal(d.packaging, undefined);
+  assert.equal(d.inspection, undefined);
+  assert.deepEqual(d.details, [{ label: "Item 1", value: "10 × Samsung S10, $10 each" }]);
+});

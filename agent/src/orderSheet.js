@@ -16,7 +16,7 @@ const REQUIRED_BY_KIND = {
 };
 
 // Phrases that have lost real disputes because nobody can measure them.
-const VAGUE = [
+export const VAGUE = [
   /good quality/i,
   /high quality/i,
   /same as (the )?sample/i,
@@ -60,7 +60,8 @@ export function reviewSheet(sheet) {
     if (typeof text !== 'string') continue;
     for (const re of VAGUE) {
       if (re.test(text)) {
-        issues.push({ field, problem: `"${text.match(re)[0]}" can't be measured. Say exactly what it means (size, weight, material, colour code, tolerance).` });
+        const optional = field === 'packaging' || field === 'inspection';
+        issues.push({ field, problem: `"${text.match(re)[0].trim()}" can mean different things to you and the supplier, which is how disputes start. Say exactly what you expect (for example: size, quantity per box, material, colour)${optional ? ', or leave this empty' : ''}.` });
         break;
       }
     }
