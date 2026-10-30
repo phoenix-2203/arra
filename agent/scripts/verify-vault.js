@@ -50,7 +50,9 @@ try {
       job = await (await fetch(`https://sourcify.dev/server/v2/verify/${body.verificationId}`)).json();
       if (job.isJobCompleted) break;
     }
-    if (job?.contract?.match || job?.contract?.runtimeMatch) {
+    if (job?.error?.customCode === "already_verified") {
+      console.log("Sourcify  : already verified");
+    } else if (job?.contract?.match || job?.contract?.runtimeMatch) {
       console.log(`Sourcify  : verified (${job.contract.match || job.contract.runtimeMatch} match)`);
     } else {
       console.log("Sourcify  : not verified", JSON.stringify(job?.error ?? job));
