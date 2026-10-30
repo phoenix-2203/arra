@@ -264,6 +264,13 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
             return send(res, 200, invites.claim(inv[1], body.address));
           }
         }
+        const invAct = url.pathname.match(/^\/api\/invites\/([A-Za-z0-9]{12})\/(draft|agree|suggest)$/);
+        if (invAct && req.method === "POST") {
+          const body = await readJson(req);
+          if (invAct[2] === "draft") return send(res, 200, invites.setDraft(invAct[1], body.sheet));
+          if (invAct[2] === "agree") return send(res, 200, invites.agree(invAct[1], body.address, body.ref));
+          return send(res, 200, invites.suggest(invAct[1], body.address, body.text));
+        }
         // Notes and evidence: list, upload a photo, add a signed note.
         const nt = url.pathname.match(/^\/api\/orders\/([A-Za-z0-9]{1,10})\/(notes|photos)$/);
         if (nt) {

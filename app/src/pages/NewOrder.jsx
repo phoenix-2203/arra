@@ -130,6 +130,7 @@ export default function NewOrder({ wallet }) {
   const [invite, setInvite] = useState(null); // { code, address }
   const [inviteErr, setInviteErr] = useState("");
   const [inviteCopied, setInviteCopied] = useState(false);
+  const [lockAnyway, setLockAnyway] = useState(false);
   const [review, setReview] = useState(null);
   const [depositPct, setDepositPct] = useState(30);
   const [acceptDays, setAcceptDays] = useState(3);
@@ -167,18 +168,17 @@ export default function NewOrder({ wallet }) {
   // Rotate the example every few seconds until they start typing what they're buying.
   const [exIdx, setExIdx] = useState(0);
   // Wait for the supplier to open the invite and connect their wallet.
+  const agreedNow = invite?.agreedRef && invite.agreedRef === invite.draftRef;
   useEffect(() => {
-    if (!invite?.code || invite.address) return;
+    if (!invite?.code || (invite.address && (step !== 3 || agreedNow))) return;
     const t = setInterval(() => {
       api.invite(invite.code).then((v) => {
-        if (v.address) {
-          setInvite((x) => ({ ...x, address: v.address }));
-          setSupplierAddr(v.address);
-        }
+        setInvite(v);
+        if (v.address) setSupplierAddr(v.address);
       }).catch(() => {});
     }, 3000);
     return () => clearInterval(t);
-  }, [invite?.code, invite?.address]);
+  }, [invite?.code, invite?.address, step, agreedNow]);
   useEffect(() => {
     if (step !== 2 || f.product) return;
     const t = setInterval(() => setExIdx((i) => i + 1), 3200);
@@ -481,13 +481,40 @@ export default function NewOrder({ wallet }) {
           {review?.ready ? <p className="note ok">Clear and specific. This sheet will be fingerprinted with the order, so neither side can change it later.</p> : null}
           <div className="row">
             <button className="secondary" onClick={() => setStep(1)}>Back</button>
-            <button disabled={!review?.ready} onClick={() => setStep(3)}>Next</button>
+            <button disabled={!review?.ready} onClick={() => {
+              // Terms first: send the draft to the supplier's invite page to agree to.
+              if (invite?.code) api.inviteDraft(invite.code, sheet).then(setInvite).catch(() => {});
+              setStep(3);
+            }}>{invite?.code ? "Next: send these terms to agree" : "Next"}</button>
           </div>
         </section>
       )}
 
       {step === 3 && review?.ready && (
         <section className="stack">
+          {invite?.code ? (
+            agreedNow ? (
+              <p className="note ok">✓ {f.supplier} agreed to these exact terms. Lock the money and they can accept straight away.</p>
+            ) : (
+              <div className={`block stack ${invite.changeRequest ? "urgent" : ""}`}>
+                {invite.changeRequest ? (
+                  <>
+                    <p className="small"><strong>{f.supplier} suggested a change:</strong></p>
+                    <p className="note">"{invite.changeRequest.text}"</p>
+                    <p className="small muted">Go back and edit the order; they'll be asked to agree to the new version.</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="small"><strong>Waiting for {f.supplier} to agree to these terms.</strong> Like Escrow.com and Alibaba, Arra lets both sides agree what's being bought before any money moves. They'll see the order on the link you sent and tap Agree or suggest a change.</p>
+                    <div className="row-gap">
+                      <a className="button secondary auto small-btn" href={`https://wa.me/?text=${encodeURIComponent(`I've written up the order on Arra. Please check the terms and tap Agree: ${location.origin}/invite/${invite.code}`)}`} target="_blank" rel="noreferrer">Remind them on WhatsApp</a>
+                      <button type="button" className="linkish" onClick={() => setLockAnyway(true)}>Lock without waiting</button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )
+          ) : null}
           <div className="block stack summary">
             <p className="muted small">{f.quantity} {f.unit} of {f.product}, from {f.supplier}</p>
             <div className="row">
@@ -576,7 +603,7 @@ export default function NewOrder({ wallet }) {
           {busy ? <p className="note">{busy}</p> : null}
           <div className="row">
             <button className="secondary" disabled={!!busy} onClick={() => setStep(2)}>Back</button>
-            <button className="money" disabled={!!busy || !datesOk || tooBig || short || (!naira && balance !== null && total + gasUsdt > balance)} onClick={lock}>{naira && needUsdt > 0n && fxCngn ? `Convert ${ngn(fxCngn)} and lock $${usd(total)}` : `Lock $${usd(total)}`}{gas !== "none" ? " + send gas" : ""}</button>
+            <button className="money" disabled={!!busy || (invite?.code && !agreedNow && !lockAnyway) || !datesOk || tooBig || short || (!naira && balance !== null && total + gasUsdt > balance)} onClick={lock}>{naira && needUsdt > 0n && fxCngn ? `Convert ${ngn(fxCngn)} and lock $${usd(total)}` : `Lock $${usd(total)}`}{gas !== "none" ? " + send gas" : ""}</button>
           </div>
         </section>
       )}

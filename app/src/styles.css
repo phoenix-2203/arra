@@ -574,3 +574,9 @@ button:not(:disabled):active, .button:active, .chip:not(:disabled):active, .tab:
 .note-ok { color: var(--mark); font-weight: 600; }
 textarea { width: 100%; box-sizing: border-box; font: inherit; color: var(--text); background: var(--bg); border: 1.5px solid var(--edge); border-radius: 12px; padding: 12px 14px; resize: vertical; }
 label.button { cursor: pointer; }
+.mini-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; counter-reset: s; }
+.mini-steps li { counter-increment: s; font-size: 12px; color: var(--text-soft); border-top: 3px solid var(--line); padding-top: 6px; }
+.mini-steps li::before { content: counter(s) " "; font-weight: 700; }
+.mini-steps li.done { border-color: var(--mark); color: var(--text); }
+.mini-steps li.on { border-color: var(--mark); color: var(--text); font-weight: 600; }
+.mini-steps { margin-top: 8px !important; }

@@ -256,3 +256,21 @@ test("notes: only the buyer or supplier can post, signed by their wallet; change
   assert.equal(list.find((n) => n.kind === "change").agreedBy, buyerAcc.address);
   srv.close();
 });
+
+test("terms first: the supplier agrees to exactly this draft; any edit resets it; or they suggest a change", async () => {
+  const [, { code }] = await post("/api/invites", { buyer: BUYER, name: "Brightway" });
+  const [, d1] = await post(`/api/invites/${code}/draft`, { sheet });
+  assert.equal(d1.draftRef, sheetRef(sheet));
+  assert.equal((await post(`/api/invites/${code}/agree`, { address: SUPPLIER, ref: `0x${"00".repeat(32)}` }))[0], 409, "agreeing to an old version fails");
+  const [as, agreed] = await post(`/api/invites/${code}/agree`, { address: SUPPLIER, ref: d1.draftRef });
+  assert.equal(as, 200);
+  assert.equal(agreed.agreedRef, d1.draftRef);
+  assert.equal(agreed.address, SUPPLIER, "agreeing also gives the buyer the wallet");
+  const changed = { ...sheet, quantity: 12 };
+  const [, d2] = await post(`/api/invites/${code}/draft`, { sheet: changed });
+  assert.equal(d2.agreedRef, null, "editing the terms resets the agreement");
+  const [, sug] = await post(`/api/invites/${code}/suggest`, { address: SUPPLIER, text: "12 is fine but ship by 20 Dec" });
+  assert.equal(sug.changeRequest.text, "12 is fine but ship by 20 Dec");
+  assert.equal((await post(`/api/invites/${code}/agree`, { address: "0x3333333333333333333333333333333333333333", ref: d2.draftRef }))[0], 409, "a different wallet can't agree for them");
+  assert.equal((await get(`/api/invites/${code}`))[1].draft.quantity, 12);
+});
