@@ -127,6 +127,11 @@ export default function NewOrder({ wallet }) {
   const [review, setReview] = useState(null);
   const [depositPct, setDepositPct] = useState(30);
   const [acceptDays, setAcceptDays] = useState(3);
+  // Demo mode (/new?demo=1): a 5-minute accept window, so the agent's automatic
+  // refund can be shown live. The contract allows any future deadline.
+  const demo = typeof location !== "undefined" && new URLSearchParams(location.search).has("demo");
+  const FIVE_MIN = 5 / (24 * 60);
+  const acceptText = acceptDays < 1 ? `${Math.round(acceptDays * 24 * 60)} minutes` : `${acceptDays} day${acceptDays > 1 ? "s" : ""}`;
   const [checkDays, setCheckDays] = useState(7);
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
@@ -219,7 +224,7 @@ export default function NewOrder({ wallet }) {
   const deposit = (total * BigInt(depositPct * 100)) / 10000n;
   const usd = (v) => Number(formatUnits(v, 6)).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const now = Math.floor(Date.now() / 1000);
-  const acceptBy = now + acceptDays * DAY;
+  const acceptBy = now + Math.round(acceptDays * DAY);
   const shipBy = f.shipBy ? Math.floor(Date.parse(`${f.shipBy}T23:59:59Z`) / 1000) : 0;
   const datesOk = shipBy > acceptBy && shipBy <= now + 180 * DAY;
   const supplierOk = f.supplier.trim() && isAddress(supplierAddr) && supplierAddr.toLowerCase() !== account.toLowerCase() && payee && payee.status !== "invalid" && (payee.status !== "changed" || phoneConfirmed);
@@ -262,7 +267,7 @@ export default function NewOrder({ wallet }) {
       // One notification per wallet confirmation, so the buyer always knows what's happening.
       let current = null;
       const { id } = await lockOrder(
-        { buyer: account, supplier: supplierAddr, total, depositBps: depositPct * 100, acceptBy, shipBy, disputeWindow: checkDays * DAY, ref },
+        { buyer: account, supplier: supplierAddr, total, depositBps: depositPct * 100, acceptBy: Math.floor(Date.now() / 1000) + Math.round(acceptDays * DAY), shipBy, disputeWindow: checkDays * DAY, ref },
         (s) => {
           if (current) current.update({ kind: "ok", title: "USDT allowed", spinner: false });
           setBusy(s === "approve" ? "Step 1 of 2: allow Arra's vault to take the USDT. Confirm in your wallet." : "Step 2 of 2: lock the money. Confirm in your wallet.");
@@ -477,14 +482,14 @@ export default function NewOrder({ wallet }) {
           <div className="block stack">
             <div className="field">
               <span className="field-label">{K.payee} must accept within</span>
-              <Chips label="Accept within" value={acceptDays} onChange={setAcceptDays} options={[[1, "1 day"], [3, "3 days"], [7, "7 days"]]} />
+              <Chips label="Accept within" value={acceptDays} onChange={setAcceptDays} options={[...(demo ? [[FIVE_MIN, "5 min (demo)"]] : []), [1, "1 day"], [3, "3 days"], [7, "7 days"]]} />
             </div>
             <div className="field">
               <span className="field-label">Your time to check it after {f.kind === "goods" ? "shipping" : "delivery"}</span>
               <Chips label="Check period" value={checkDays} onChange={setCheckDays} options={[[3, "3 days"], [7, "7 days"], [14, "14 days"]]} />
             </div>
             <ul className="small muted stack" style={{ paddingLeft: 18, margin: 0 }}>
-              <li>Not accepted in {acceptDays} day{acceptDays > 1 ? "s" : ""}: all ${usd(total)} comes back to you.</li>
+              <li>Not accepted in {acceptText}: all ${usd(total)} comes back to you.</li>
               <li>{K.notDone} {new Date(`${f.shipBy}T12:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}: the ${usd(total - deposit)} balance comes back to you.</li>
               <li>No problem raised within {checkDays} days: the balance pays the {K.payee.toLowerCase()}.</li>
             </ul>

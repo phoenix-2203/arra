@@ -36,6 +36,8 @@ if (process.env.KEEPER === "1") {
       console.error("keeper error:", e.shortMessage ?? e.message),
     );
   tick();
-  setInterval(tick, 10 * 60 * 1000);
-  console.log("Keeper on: checks deadlines every 10 minutes");
+  // KEEPER_EVERY_MIN=1 while recording a demo; 10 minutes is plenty normally.
+  const every = Math.max(1, Number(process.env.KEEPER_EVERY_MIN ?? 10));
+  setInterval(tick, every * 60 * 1000);
+  console.log(`Keeper on: checks deadlines every ${every} minute${every > 1 ? "s" : ""}`);
 }
