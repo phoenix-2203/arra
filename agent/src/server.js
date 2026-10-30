@@ -8,7 +8,7 @@ import { isAddress } from "viem";
 import { reviewSheet, sheetRef, sheetTotal, canonicalSheet } from "./orderSheet.js";
 import { PayeeBook } from "./payeeBook.js";
 import { checkContainerNumber } from "./container.js";
-import { nextActions, explain } from "./vault.js";
+import { nextActions, explain, vaultAbi } from "./vault.js";
 import { textileClient, ngnPerUsd, rampSupportsCelo, TextileError } from "./textile.js";
 import { LogIndex } from "./history.js";
 import { VaultSet } from "./vaults.js";
@@ -83,7 +83,11 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
   }
 
   const routes = {
-    "GET /api/health": async () => [200, { ok: true, vault: vaults.current, vaults: vaults.addresses }],
+    "GET /api/health": async () => {
+      // keeperFee: what the agent takes if it has to trigger a refund or payout (v3 vaults; 0 before).
+      keeperFee ??= await client.readContract({ address: vaults.current, abi: vaultAbi, functionName: "keeperFee" }).then(String).catch(() => "0");
+      return [200, { ok: true, vault: vaults.current, vaults: vaults.addresses, keeperFee }];
+    },
 
     // Live totals for the homepage (cached for a minute).
     "GET /api/stats": async () => {
@@ -208,6 +212,7 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
   }
 
   const pngCache = new Map();
+  let keeperFee = null;
 
   return async function handle(req, res) {
     const url = new URL(req.url, "http://x");

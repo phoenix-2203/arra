@@ -6,7 +6,22 @@ import { celo } from "viem/chains";
 import { withAttribution } from "@celo/attribution-tags";
 import vaultAbi from "./vaultAbi.json";
 
-export const VAULT = "0x3da5f9d36d1ae8769a9460a7788a21c8041c7bb3";
+// Where new orders go. The server says which vault is current (after an upgrade,
+// older orders stay in older vaults and their pages use that order's vault).
+export let VAULT = "0x3da5f9d36d1ae8769a9460a7788a21c8041c7bb3";
+export let KEEPER_FEE = 0n;
+let health;
+export function currentVault() {
+  health ??= fetch("/api/health")
+    .then((r) => r.json())
+    .then((h) => {
+      if (h.vault) VAULT = h.vault;
+      KEEPER_FEE = BigInt(h.keeperFee ?? 0);
+      return VAULT;
+    })
+    .catch(() => VAULT);
+  return health;
+}
 export const USDT = "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e";
 export const USDT_FEE_ADAPTER = "0x0E2A3e05bc9A16F5292A6170456A710cb89C6f72";
 export const TAG = "celo_00cfddd372fa";
@@ -127,6 +142,7 @@ export const sendUsdt = (to, usd, opts) => write(USDT, erc20, "transfer", [to, t
 export const usdtBalance = (who) => reader.readContract({ address: USDT, abi: erc20, functionName: "balanceOf", args: [who] });
 
 export async function lockOrder({ buyer, supplier, total, depositBps, acceptBy, shipBy, disputeWindow, ref }, onStep = () => {}, onSent = () => {}) {
+  const VAULT = await currentVault();
   const allowance = await reader.readContract({ address: USDT, abi: erc20, functionName: "allowance", args: [buyer, VAULT] });
   if (allowance < total) {
     onStep("approve");
@@ -145,7 +161,8 @@ export async function lockOrder({ buyer, supplier, total, depositBps, acceptBy, 
 }
 
 // One function per button. Names match the contract.
-export const vaultCall = (functionName, args, opts) => write(VAULT, vaultAbi, functionName, args, opts);
+// `vault`: the vault this order lives in (the order page passes it).
+export const vaultCall = (functionName, args, opts, vault = VAULT) => write(vault, vaultAbi, functionName, args, opts);
 
 // ---- Naira payment (F11): cNGN -> exactly the USDT the order needs, on Textile FX ----
 export const CNGN = "0xF6829D7393dAe24509eb1E52eE8e572e2E271a4f";

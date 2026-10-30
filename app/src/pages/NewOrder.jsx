@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { formatUnits, isAddress, parseEther } from "viem";
 import { api } from "../api.js";
-import { lockOrder, usdtBalance, cngnBalance, convertNairaToUsdt, celoBalance, sendCelo, sendUsdt, GAS_ENOUGH } from "../chain.js";
+import { lockOrder, usdtBalance, cngnBalance, convertNairaToUsdt, celoBalance, sendCelo, sendUsdt, GAS_ENOUGH, currentVault } from "../chain.js";
+import * as chain from "../chain.js";
 import { withToast } from "../toast.jsx";
 import { navigate } from "../App.jsx";
 import { toast } from "../toast.jsx";
@@ -127,6 +128,11 @@ export default function NewOrder({ wallet }) {
   const [review, setReview] = useState(null);
   const [depositPct, setDepositPct] = useState(30);
   const [acceptDays, setAcceptDays] = useState(3);
+  // The agent's fee if it has to step in at a deadline (from the current vault).
+  const [keeperFee, setKeeperFee] = useState(0n);
+  useEffect(() => {
+    currentVault().then(() => setKeeperFee(chain.KEEPER_FEE));
+  }, []);
   // Demo mode (/new?demo=1): a 5-minute accept window, so the agent's automatic
   // refund can be shown live. The contract allows any future deadline.
   const demo = typeof location !== "undefined" && new URLSearchParams(location.search).has("demo");
@@ -492,6 +498,7 @@ export default function NewOrder({ wallet }) {
               <li>Not accepted in {acceptText}: all ${usd(total)} comes back to you.</li>
               <li>{K.notDone} {new Date(`${f.shipBy}T12:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}: the ${usd(total - deposit)} balance comes back to you.</li>
               <li>No problem raised within {checkDays} days: the balance pays the {K.payee.toLowerCase()}.</li>
+              {keeperFee > 0n ? <li>Arra's agent makes these automatic refunds and payouts for you, for ${usd(keeperFee)} taken from that amount. Do it yourself first and there's no fee.</li> : null}
             </ul>
           </div>
 

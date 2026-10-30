@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { connect, hasWallet, isMiniPay, setSigner, VAULT, EXPLORER } from "./chain.js";
+import { connect, hasWallet, isMiniPay, setSigner, currentVault, VAULT, EXPLORER } from "./chain.js";
 import { Wordmark } from "./Adire.jsx";
 import Home from "./pages/Home.jsx";
 import Landing from "./pages/Landing.jsx";
@@ -56,6 +56,12 @@ export default function App() {
   const [path, setPath] = useState(location.pathname);
   const [account, setAccount] = useState(null);
   const [connectError, setConnectError] = useState("");
+
+  // Learn which vault takes new orders (links in the footer and homepage follow it).
+  const [, setVaultKnown] = useState(false);
+  useEffect(() => {
+    currentVault().then(() => setVaultKnown(true));
+  }, []);
 
   useEffect(() => {
     const onPop = () => setPath(location.pathname);

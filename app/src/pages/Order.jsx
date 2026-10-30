@@ -151,7 +151,7 @@ export default function Order({ id, wallet }) {
     const before = `${o.status}:${o.held}:${o.splitOffer?.toSupplier ?? ""}`;
     const amount = name === "releasePart" ? usd(args[1]) : null;
     try {
-      const hash = await withToast((cb) => vaultCall(name, args, cb), {
+      const hash = await withToast((cb) => vaultCall(name, args, cb, o.vault), {
         confirm: t.toast.confirm,
         pending: t.toast.pending,
         done: t.toast.done[name] ? t.toast.done[name](amount) : t.done,
