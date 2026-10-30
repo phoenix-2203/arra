@@ -8,9 +8,10 @@ import { isAddress } from "viem";
 import { reviewSheet, sheetRef, sheetTotal, canonicalSheet } from "./orderSheet.js";
 import { PayeeBook } from "./payeeBook.js";
 import { checkContainerNumber } from "./container.js";
-import { readOrder, orderCount, nextActions, explain } from "./vault.js";
+import { nextActions, explain } from "./vault.js";
 import { textileClient, ngnPerUsd, rampSupportsCelo, TextileError } from "./textile.js";
-import { LogIndex, vaultStats } from "./history.js";
+import { LogIndex } from "./history.js";
+import { VaultSet } from "./vaults.js";
 import { OrderLinks, LINK_RE } from "./links.js";
 import { orderPreviewPng } from "./ogImage.js";
 
@@ -37,7 +38,9 @@ async function readJson(req) {
   }
 }
 
-export function createApp({ client, vault, dataDir, staticDir, now = () => Math.floor(Date.now() / 1000), textile = textileClient(), history = new LogIndex({ client, vault }), links = null }) {
+export function createApp({ client, vault, dataDir, staticDir, now = () => Math.floor(Date.now() / 1000), textile = textileClient(), history = null, vaults = null, links = null }) {
+  // One vault (tests, simple setups) or several versions shown as one Arra.
+  vaults ??= new VaultSet({ client, vaults: [{ address: vault, firstId: 1, history: history ?? new LogIndex({ client, vault }) }] });
   let statsCache = null;
   // Claim tokens for firm quotes stay on the server; the browser only gets the rfqId.
   const claims = new Map();
@@ -59,12 +62,12 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
   const payees = new PayeeBook(join(dataDir, "payees.json"));
   links ??= new OrderLinks(join(dataDir, "link-secret"));
   // An order can be addressed by its private link code or (old links) its number.
-  const toId = async (x) => (/^\d{1,9}$/.test(x) ? Number(x) : links.resolve(x, await orderCount(client, vault)));
+  const toId = async (x) => (/^\d{1,9}$/.test(x) ? Number(x) : links.resolve(x, await vaults.count()));
   const sheetPath = (ref) => join(sheetsDir, `${ref.toLowerCase()}.json`);
   const loadSheet = (ref) => (existsSync(sheetPath(ref)) ? JSON.parse(readFileSync(sheetPath(ref), "utf8")) : null);
 
   async function orderView(id, viewer) {
-    const o = await readOrder(client, vault, id);
+    const o = await vaults.read(id);
     if (!o) return null;
     const sheet = loadSheet(o.ref);
     const t = now();
@@ -80,11 +83,11 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
   }
 
   const routes = {
-    "GET /api/health": async () => [200, { ok: true, vault }],
+    "GET /api/health": async () => [200, { ok: true, vault: vaults.current, vaults: vaults.addresses }],
 
     // Live totals for the homepage (cached for a minute).
     "GET /api/stats": async () => {
-      if (!statsCache || Date.now() - statsCache.at > 60_000) statsCache = { at: Date.now(), data: await vaultStats(client, vault) };
+      if (!statsCache || Date.now() - statsCache.at > 60_000) statsCache = { at: Date.now(), data: await vaults.stats() };
       return [200, statsCache.data];
     },
 
@@ -147,7 +150,7 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
       if (!who || !isAddress(who, { strict: false })) return [400, { error: "address required" }];
       let raw;
       try {
-        raw = await history.activity(who);
+        raw = await vaults.activity(who);
       } catch (e) {
         console.error("activity:", e.shortMessage ?? e.message);
         return [503, { error: "Your history couldn't be loaded from the Celo network just now. Please try again in a moment." }];
@@ -160,7 +163,7 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
     "GET /api/orders": async (_b, url) => {
       const who = url.searchParams.get("address");
       if (!who || !isAddress(who, { strict: false })) return [400, { error: "address required" }];
-      const n = await orderCount(client, vault);
+      const n = await vaults.count();
       const mine = [];
       for (let id = n; id >= 1 && mine.length < 50; id--) {
         const view = await orderView(id, who);
@@ -235,7 +238,7 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
           const id = await toId(tl[1]);
           if (!id) return send(res, 404, { error: "No such order" });
           try {
-            return send(res, 200, { steps: await history.timeline(id) });
+            return send(res, 200, { steps: await vaults.timeline(id) });
           } catch (e) {
             console.error("timeline:", e.shortMessage ?? e.message);
             return send(res, 200, { steps: null, error: "History is temporarily unavailable" });

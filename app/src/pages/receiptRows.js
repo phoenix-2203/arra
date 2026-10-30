@@ -23,6 +23,9 @@ export function moneyRows(steps, order) {
       case "BalanceRefunded":
         rows.push({ ...base, what: "Returned to the buyer", amount: s.amount, to: "buyer" });
         break;
+      case "KeeperPaid":
+        rows.push({ ...base, what: "Fee to Arra's agent for the automatic refund or payout", amount: s.amount, to: "keeper" });
+        break;
       case "SplitSettled":
         if (s.amount !== "0") rows.push({ ...base, what: "Agreed split: supplier's share", amount: s.amount, to: "supplier" });
         if (s.toBuyer && s.toBuyer !== "0") rows.push({ ...base, what: "Agreed split: buyer's share returned", amount: s.toBuyer, to: "buyer" });

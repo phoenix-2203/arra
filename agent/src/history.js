@@ -4,7 +4,7 @@
 import { vaultAbi, readOrder, orderCount } from "./vault.js";
 
 const EVENTS = vaultAbi.filter((e) => e.type === "event");
-const ORDER_EVENTS = new Set(["OrderCreated", "OrderAccepted", "OrderShipped", "OrderDisputed", "PartReleased", "SplitProposed", "SplitSettled", "BalanceReleased", "BalanceRefunded"]);
+const ORDER_EVENTS = new Set(["OrderCreated", "OrderAccepted", "OrderShipped", "OrderDisputed", "PartReleased", "SplitProposed", "SplitSettled", "BalanceReleased", "BalanceRefunded", "KeeperPaid"]);
 
 export class LogIndex {
   constructor({ client, vault, fromBlock, chunk = 4_000n, lag = 2n }) {
@@ -79,7 +79,7 @@ export class LogIndex {
     for (const l of mine) {
       if (l.eventName === "BalanceReleased" && partTx.has(l.transactionHash)) continue;
       const a = l.args;
-      const amount = a.depositPaid ?? a.amount ?? a.total ?? a.toSupplier ?? null;
+      const amount = a.depositPaid ?? a.amount ?? a.total ?? a.toSupplier ?? a.fee ?? null;
       out.push({
         event: l.eventName,
         at: await this.time(l.blockNumber),
@@ -113,6 +113,8 @@ export function moneyFor(event, a) {
       return { buyer: ["in", amt(a.amount), "Refunded to you"], supplier: ["info", amt(a.amount), "Refunded to the buyer"] };
     case "SplitSettled":
       return { buyer: ["in", amt(a.toBuyer), "Your share of the agreed split"], supplier: ["in", amt(a.toSupplier), "Your share of the agreed split"] };
+    case "KeeperPaid": // v3 vaults: one cent to whoever triggered a due refund or payout
+      return { buyer: ["info", amt(a.fee), "Fee to the agent that made the automatic refund or payout"], supplier: ["info", amt(a.fee), "Fee to the agent that made the automatic refund or payout"] };
     default:
       return null; // shipped, disputed, split offered: no money moved
   }

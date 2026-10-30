@@ -152,3 +152,40 @@ test("activity: paying the last of the balance in parts is counted once", async 
   const steps = await new LogIndex({ client, vault, fromBlock: 0n, lag: 0n }).timeline(Number(id));
   assert.deepEqual(steps.map((x) => x.event), ["OrderCreated", "OrderAccepted", "PartReleased", "PartReleased"], "no duplicate final step");
 });
+
+test("two vault versions served as one Arra: numbers continue, keeper fee, combined history", async () => {
+  const { VaultSet } = await import("../src/vaults.js");
+  const before = Number(await client.readContract({ address: vault, abi: vaultAbi, functionName: "nextId" }));
+  const v3 = (await client.waitForTransactionReceipt({
+    hash: await as(agent).deployContract({ abi: vaultAbi, bytecode: vaultArtifact.bytecode, args: [token, parseUnits("50", 6), agent.address, BigInt(before), 10_000n] }),
+  })).contractAddress;
+  const set = new VaultSet({ client, lag: 0n, vaults: [{ address: vault, firstId: 1, fromBlock: 0n }, { address: v3, firstId: before, fromBlock: 0n }] });
+  assert.equal(set.current, v3);
+  assert.equal(await set.count(), before - 1, "nothing new yet");
+
+  const t0 = await now();
+  await send(agent, token, mock.abi, "mint", [buyer.address, parseUnits("5", 6)]);
+  await send(buyer, token, mock.abi, "approve", [v3, parseUnits("5", 6)]);
+  await send(buyer, v3, vaultAbi, "createOrder", [supplier.address, parseUnits("5", 6), 2000, BigInt(t0 + 3600), BigInt(t0 + 86400), 86400, `0x${"66".repeat(32)}`]);
+  assert.equal(await set.count(), before, "the new vault's first order continues the numbering");
+  assert.equal(set.vaultFor(before), v3);
+  assert.equal(set.vaultFor(1), vault);
+  assert.equal((await set.read(1)).vault, vault);
+  assert.equal((await set.read(before)).vault, v3);
+
+  // The agent's keeper refunds it after the deadline and earns one cent.
+  await warp(3601);
+  const keeper = taggedWallet(agent, local, RPC);
+  const agentBefore = await balance(agent.address);
+  const res = await runKeeper({ client, wallet: keeper, vault: v3, now: await now(), log: () => {} });
+  assert.deepEqual(res.map((r) => [r.id, r.action, r.status]), [[before, "reclaim", "success"]]);
+  assert.equal(await balance(agent.address) - agentBefore, 10_000n, "the keeper pays for itself");
+
+  const steps = await set.timeline(before);
+  assert.deepEqual(steps.map((x) => x.event), ["OrderCreated", "BalanceRefunded", "KeeperPaid"]);
+  const act = await set.activity(buyer.address);
+  assert.ok(act.some((r) => r.orderId === 1), "old vault's orders are still in the history");
+  assert.equal(act.find((r) => r.orderId === before && r.event === "BalanceRefunded").amount, String(5_000_000 - 10_000));
+  const st = await set.stats();
+  assert.ok(st.orders >= before, "totals include both vaults");
+});

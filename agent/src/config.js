@@ -16,8 +16,21 @@ export const USDT_DECIMALS = 6;
 
 export const IDENTITY_REGISTRY = "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432";
 
-// Deployed on Celo mainnet 27 Oct 2026, tx 0xf8d8403f3574d1776a2d440e90fadbe49bb3d7706c5d49bc436a3dc3001bbe86
-export const ARRA_VAULT = process.env.ARRA_VAULT || "0x3da5f9d36d1ae8769a9460a7788a21c8041c7bb3";
+// Every Arra vault, oldest first. Contracts can't be edited, so an upgrade is a new
+// vault: new orders go to the last one, old orders finish where they are, and order
+// numbers never overlap (firstId), so the app shows them all as one Arra.
+export const VAULTS = [
+  // v2, 27 Oct 2026. Orders #1 onwards.
+  { address: "0x3da5f9d36d1ae8769a9460a7788a21c8041c7bb3", firstId: 1, deployTx: "0xf8d8403f3574d1776a2d440e90fadbe49bb3d7706c5d49bc436a3dc3001bbe86" },
+  // v3 (keeper fee) is added here after deployment.
+];
+// Where new orders go. ARRA_VAULT in .env only matters if it names a vault not listed above.
+const envVault = process.env.ARRA_VAULT?.toLowerCase();
+if (envVault && !VAULTS.some((v) => v.address.toLowerCase() === envVault)) {
+  VAULTS.push({ address: envVault, firstId: Number(process.env.ARRA_VAULT_FIRST_ID ?? 1), deployTx: process.env.ARRA_VAULT_DEPLOY_TX });
+}
+export const ARRA_VAULT = VAULTS.at(-1).address;
+export const KEEPER_FEE_USDT = 10_000n; // $0.01, for vaults from v3
 
 // Safety: the vault's per-order cap at launch, in USDT units ($50).
 export const MAX_ORDER_USDT = 50n * 10n ** 6n;

@@ -37,6 +37,7 @@ export default function Receipt({ id, wallet }) {
   const rows = moneyRows(steps, o);
   const paidToSupplier = rows.filter((r) => r.to === "supplier").reduce((a, r) => a + BigInt(r.amount), 0n);
   const backToBuyer = rows.filter((r) => r.to === "buyer").reduce((a, r) => a + BigInt(r.amount), 0n);
+  const keeperFee = rows.filter((r) => r.to === "keeper").reduce((a, r) => a + BigInt(r.amount), 0n);
   const number = `ARRA-${String(o.id).padStart(6, "0")}`;
   const statusText = o.status === "Shipped" && s && (s.kind ?? "goods") !== "goods" ? t.statusDelivered : t.status[o.status];
 
@@ -98,6 +99,7 @@ export default function Receipt({ id, wallet }) {
             <tr><td colSpan="3">Order total</td><td className="r num">{money(o.total)}</td></tr>
             <tr><td colSpan="3">Paid to the supplier</td><td className="r num">{money(paidToSupplier)}</td></tr>
             {backToBuyer > 0n ? <tr><td colSpan="3">Returned to the buyer</td><td className="r num">{money(backToBuyer)}</td></tr> : null}
+            {keeperFee > 0n ? <tr><td colSpan="3">Agent fee (automatic refund or payout)</td><td className="r num">{money(keeperFee)}</td></tr> : null}
             <tr className="rc-strong"><td colSpan="3">Still held in the vault</td><td className="r num">{money(o.held)}</td></tr>
           </tfoot>
         </table>
@@ -118,7 +120,7 @@ export default function Receipt({ id, wallet }) {
         </section>
 
         <footer className="rc-foot">
-          <p>Every payment above is a public transaction on the Celo network and can be checked on Celoscan. The money was held by the Arra vault contract ({VAULT}), not by Arra.</p>
+          <p>Every payment above is a public transaction on the Celo network and can be checked on Celoscan. The money was held by the Arra vault contract ({o.vault ?? VAULT}), not by Arra.</p>
           <p>Terms fingerprint: <span className="num rc-addr">{o.ref}</span>{s ? " The agreed terms match this fingerprint." : ""}</p>
           <p>{location.host}/o/{view.link}</p>
         </footer>
