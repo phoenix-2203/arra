@@ -17,7 +17,7 @@ Built for [Agents on Open Rails](https://www.loops.house/agents-on-open-rails) (
 
 ## Contents
 
-[The problem](#the-problem) · [Why nothing fixes it today](#why-nothing-fixes-it-today) · [What Arra does](#what-arra-does) · [A real order, step by step](#a-real-order-step-by-step) · [When money moves](#when-money-moves) · [Features](#features) · [Use cases](#use-cases) · [How it compares](#how-it-compares) · [Why Celo and Textile](#why-celo-and-textile) · [Potential](#potential) · [Live on mainnet](#live-on-mainnet) · [What has been verified](#what-has-been-verified) · [Trust model and limits](#trust-model-and-limits) · [Architecture](#architecture) · [Run it](#run-it) · [Roadmap](#roadmap)
+[The problem](#the-problem) · [Why nothing fixes it today](#why-nothing-fixes-it-today) · [Returns](#returns-what-locking-the-rate-is-worth) · [What Arra does](#what-arra-does) · [A real order, step by step](#a-real-order-step-by-step) · [When money moves](#when-money-moves) · [Features](#features) · [Use cases](#use-cases) · [How it compares](#how-it-compares) · [Why Celo and Textile](#why-celo-and-textile) · [Potential](#potential) · [Live on mainnet](#live-on-mainnet) · [What has been verified](#what-has-been-verified) · [Trust model and limits](#trust-model-and-limits) · [Architecture](#architecture) · [Run it](#run-it) · [Roadmap](#roadmap)
 
 ---
 
@@ -46,6 +46,23 @@ And the supplier has a problem too. They ask for a deposit because they can't se
 | **Escrow.com** | Holds everything until delivery, so the supplier gets no deposit. **Minimum fee $50** plus a $25 international wire ([Escrow.com fee calculator](https://www.escrow.com/fee-calculator)): $75 on a $500 order is 15%. |
 | **Bank transfer (T/T)** | What almost everyone uses. No protection once sent, and the account number can be swapped by a scammer. |
 
+## Returns: what locking the rate is worth
+
+Most of an import order is paid weeks after the deposit. If the naira falls in between, the same dollar balance costs far more naira, and that comes straight out of the importer's margin. Arra converts the whole order at **one firm Textile FX rate on day one**, so the balance can't get more expensive.
+
+A real case, with official rates:
+
+| A $10,000 order, 30% deposit | Naira per $1 | Naira for the $7,000 balance |
+|---|---|---|
+| Order placed, 13 June 2023 | ₦471 ([AllAfrica](https://allafrica.com/stories/202506100251.html)) | ₦3,297,000 |
+| Balance due, 31 July 2023 | ₦756.94 ([Nairametrics, FMDQ data](https://nairametrics.com/2023/08/01/end-of-july-exchange-rate-parallel-market-depreciates-by-11-5-gains-1-6-on-ie-window/)) | ₦5,298,580 |
+| **Extra the importer had to find** | | **₦2,001,580 (+61%)** |
+| **With Arra** (converted once, on day one) | ₦471 | **₦3,297,000, no extra** |
+
+It isn't a one-off: the naira lost **40.9%** against the dollar over 2024 ([Nairametrics](https://nairametrics.com/2024/12/31/exchange-rate-ends-2024-at-n1535-1-marking-a-40-9-depreciation)). Rates can also move the other way, and in 2026 the naira has been firmer (about ₦1,374 per $1 in our own Textile fill). Arra doesn't bet on either direction. It removes the bet, the way a bank forward contract would, which small importers rarely get.
+
+The cost of that certainty: Textile FX's **0.01%** fee, already in the quoted rate, plus a network fee of a fraction of a cent. Arra charges nothing today.
+
 ## What Arra does
 
 Arra keeps the balance where both sides can see it and neither side can grab it:
@@ -70,9 +87,9 @@ flowchart LR
 
 | # | Tunde (buyer) | Phoenix Store (supplier) | The money |
 |---|---|---|---|
-| 1 | Opens **New order** and types: *"30 phones from Phoenix Store: 10 Samsung S10 at $10 and 20 iPhone 15 Pro at $15."* The **order assistant** fills the form and asks for what's missing: date, details, deposit, shipping. | | Not moved |
-| 2 | Sends Phoenix Store an **invite link** on WhatsApp. | Opens it (in English or Chinese), reads the exact terms, connects the wallet they want to be paid in, taps **Agree** or suggests a change. | Not moved |
-| 3 | Arra checks the order sheet (no "good quality" or "standard": things a judge could never check) and fingerprints it. | | Not moved |
+| 1 | Opens **New order** and types: *"30 phones from Phoenix Store: 10 Samsung S10 at $10 and 20 iPhone 15 Pro at $15."* The **order assistant** fills the form and asks for what's missing: date and details. Arra refuses terms nobody could check ("good quality", "standard") and fingerprints the sheet. | | Not moved |
+| 2 | Sends Phoenix Store **one link** on WhatsApp. | In one visit: reads the exact terms (in English or Chinese), connects the wallet they want to be paid in and taps **Agree**, or suggests a change. | Not moved |
+| 3 | Sees "✓ Phoenix Store agreed", with the wallet's last characters to confirm on a call. Deposit 30%, shipping by sea and a 7-day check are pre-set; one tap changes them. | | Not moved |
 | 4 | Pays **from naira**: Textile FX quotes one firm rate, converts cNGN into exactly the USDT needed, and Arra locks it. | Gets a link showing the full amount locked, the terms, and the deadlines. | **$400 locked** in the vault |
 | 5 | | Taps **Accept** from the agreed wallet. | **$120 deposit** → supplier, instantly |
 | 6 | | Makes and packs the goods, taps **Mark shipped** with the container number (Arra checks its ISO 6346 check digit, so made-up numbers are refused). | $280 still locked |
@@ -124,9 +141,10 @@ Money can only ever leave the vault to the buyer, the supplier, or that one-cent
 
 **Making the order**
 - **Order assistant.** Describe the deal like a message; the assistant fills the form, works out totals for mixed items, turns "in 2 weeks" into a date, and asks one question at a time. It never handles wallet addresses. Runs on Claude or, free, on Gemini.
-- **Terms agreed first.** The supplier reads and agrees to the exact order before any money moves (like Escrow.com and Trade Assurance), or suggests a change.
+- **Terms agreed first, in one visit.** The buyer describes the order, then sends one link: the supplier reads the exact terms, connects their wallet and agrees (or suggests a change) before any money moves, like Escrow.com and Trade Assurance.
+- **Smart defaults.** Deposit, shipping method, accept window and check period come pre-set for the kind of deal; one tap to change.
 - **Clear order sheet.** Arra refuses terms nobody can check ("good quality", "standard", "same as sample", "N/A") and stores the sheet's fingerprint onchain, so neither side can change it later.
-- **Three kinds of deal.** Shipped goods, made to order, or a service or project; the wording and fields adapt.
+- **Three kinds of deal.** Shipped goods (the default), made to order, or a service or project: a small switch, and the wording adapts.
 
 **Paying**
 - **Pay from naira at one locked rate.** Textile FX converts cNGN into exactly the USDT the order needs, at one firm quote, in one transaction. A weaker naira next month can't touch it.
@@ -145,10 +163,11 @@ Money can only ever leave the vault to the buyer, the supplier, or that one-cent
 - **Pay in parts**, like milestones: some on the bill of lading, the rest on arrival.
 - **Problem report** with reason, photo and the refund you want, signed by your wallet. The supplier accepts or counters; silence doesn't freeze the money.
 - **Signed notes and evidence.** Photos and agreed changes, signed by each side's wallet, so nobody can fake or edit them.
-- **Automatic refunds and payouts.** Arra's agent watches every deadline and sends the transaction itself.
+- **Automatic refunds and payouts.** Arra's agent watches every deadline and sends the transaction itself, paying its fee in USDT (refilled by its $0.01 fees) or CELO, so it never needs a manual top-up.
 
 **Keeping records**
 - Onchain **timeline**, **history** of every payment in and out (CSV download), printable **receipts**, calendar reminders, and private order links whose previews show the order in WhatsApp and Telegram.
+- **Private by default.** Orders open only by their private link code, like an invoice link. "Your orders" and History need one free wallet signature, remembered on the device for 30 days, so nobody can list another wallet's orders.
 - **English and Chinese** throughout the supplier's side.
 
 ## Use cases
@@ -244,7 +263,7 @@ The app treats every version as one Arra: order numbers never overlap, old links
 | Check | Where | Result |
 |---|---|---|
 | 55 contract tests: every path, deadlines, splits, keeper fee, v4 rules, plus fuzzing and invariant runs checking that the vault always holds exactly the open balances and money only leaves to the buyer, the supplier or the one-cent fee | `contracts/test/ArraVault.t.sol` (Foundry) | all pass |
-| 45 agent tests: API, order sheets (vague terms, impossible dates, tiny totals), invites, signed notes, tracking, track record, link previews, Textile client, keeper, order assistant | `agent/test/` | all pass |
+| 47 agent tests: API, order sheets (vague terms, impossible dates, tiny totals), wallet sign-in, private links, invites, signed notes, tracking, track record, link previews, Textile client, keeper, order assistant | `agent/test/` | all pass |
 | Mixed v3 + v4 vaults served as one Arra on a local chain | `agent/test/` with Anvil | pass |
 | The real app in a browser against a local chain with the v4 vault: full order, part payments, buyer cancel, supplier decline and refund, extended deadline, problem report with split and counter-offer, terms-first invite; every balance checked to the cent | Playwright + Anvil | all match |
 | Source on mainnet matches this repo exactly | Sourcify | exact match, v2, v3, v4 |
@@ -263,7 +282,7 @@ The app treats every version as one Arra: order numbers never overlap, old links
 - **Not audited.** One contract, about 450 lines on OpenZeppelin building blocks, well tested, which is why each order is capped at **$500** until an outside audit.
 - **No judge.** By design there's no third party; instead, silence settles (7 days for an ignored offer, 50/50 at 30 days). Orders #1–#5 on older vaults wait until both sides agree.
 - **USDT can freeze wallets.** A payout to a wallet Tether has frozen would fail and the balance would wait for a refund or split.
-- **Order details aren't secret.** Amounts and wallets are public on Celo like any blockchain payment, and the order sheet (product, supplier name) can be seen by anyone with the order's link or one of its wallet addresses. Don't put anything confidential in it.
+- **Links are keys.** Amounts and wallets are public on Celo like any blockchain payment. The order sheet (product, supplier name) is private to whoever holds the order's link, so share links only with the other side. The first five orders, shared before private codes, still open by number.
 - **Arra can't see the goods.** It checks container numbers and keeps signed evidence, but it can't inspect a carton. Independent inspection is on the roadmap.
 - **One agent today.** If it's down, anyone (including the buyer or supplier) can call the same refund or payout themselves, for free.
 

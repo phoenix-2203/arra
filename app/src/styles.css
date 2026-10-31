@@ -621,3 +621,18 @@ label.button { cursor: pointer; }
 .pulse { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--mark); margin-right: 6px; vertical-align: middle; animation: pulse 1.4s infinite ease-in-out; }
 @keyframes pulse { 0%, 100% { opacity: .3; transform: scale(.85); } 50% { opacity: 1; transform: scale(1.15); } }
 @media (prefers-reduced-motion: reduce) { .pulse { animation: none; } }
+
+/* Landing: returns (rate locked on day one) */
+.ret-grid { display: grid; gap: 14px; }
+@media (min-width: 860px) { .ret-grid { grid-template-columns: 1.2fr 1fr; } }
+.ret-card { border: 1.5px solid var(--edge); border-radius: 18px; background: var(--surface); padding: 22px; display: grid; gap: 14px; align-content: start; }
+.ret-card .label { color: var(--text-soft); font-size: 14px; margin: 0; }
+.ret-card dl { margin: 0; display: grid; gap: 0; }
+.ret-card dl > div { display: flex; justify-content: space-between; gap: 14px; padding: 12px 0; border-top: 1px solid var(--line); }
+.ret-card dt { color: var(--text-soft); font-size: 15px; }
+.ret-card dd { margin: 0; font-weight: 600; text-align: right; white-space: nowrap; }
+.ret-card .hl dt { color: var(--text); font-weight: 600; }
+.ret-card .hl dd { color: var(--alert); font-family: var(--display); font-size: 20px; }
+.ret-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.ret-list li { color: var(--text-soft); font-size: 15px; }
+.ret-list strong { display: block; color: var(--text); font-family: var(--display); font-size: 26px; letter-spacing: -0.02em; }

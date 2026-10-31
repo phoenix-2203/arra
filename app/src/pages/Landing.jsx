@@ -185,6 +185,31 @@ export default function Landing({ wallet }) {
         </div>
       </section>
 
+      <section className="band returns" id="returns">
+        <h2 className="section-title">Lock the rate, keep your margin</h2>
+        <p className="lede-lg" style={{ marginBottom: 22 }}>Importers pay the deposit today and the balance weeks later. If the naira falls in between, the same balance costs far more. Arra converts the whole order at one firm Textile FX rate on day one, so the price you agreed is the price you pay.</p>
+        <div className="ret-grid">
+          <div className="ret-card">
+            <p className="label">A real case: a $10,000 order, $7,000 balance</p>
+            <dl>
+              <div><dt>Balance at the 13 Jun 2023 rate (₦471)</dt><dd className="num">₦3,297,000</dd></div>
+              <div><dt>Same balance on 31 Jul 2023 (₦756.94)</dt><dd className="num">₦5,298,580</dd></div>
+              <div className="hl"><dt>Extra the importer had to find</dt><dd className="num">₦2,001,580 (+61%)</dd></div>
+            </dl>
+            <p className="small muted">Rates: <a href="https://allafrica.com/stories/202506100251.html" target="_blank" rel="noreferrer">AllAfrica</a>, <a href="https://nairametrics.com/2023/08/01/end-of-july-exchange-rate-parallel-market-depreciates-by-11-5-gains-1-6-on-ie-window/" target="_blank" rel="noreferrer">Nairametrics (FMDQ)</a>. With Arra the balance was converted once, on day one: no extra.</p>
+          </div>
+          <div className="ret-card">
+            <p className="label">Why it matters</p>
+            <ul className="ret-list">
+              <li><strong className="num">−40.9%</strong> The naira's fall against the dollar in 2024 alone (<a href="https://nairametrics.com/2024/12/31/exchange-rate-ends-2024-at-n1535-1-marking-a-40-9-depreciation" target="_blank" rel="noreferrer">Nairametrics</a>).</li>
+              <li><strong className="num">0.01%</strong> Textile FX's fee, already in the rate you see.</li>
+              <li><strong className="num">$0</strong> Arra's fee. You pay a network fee of a fraction of a cent.</li>
+            </ul>
+            <p className="small muted">Rates can also move in your favour; locking removes the gamble either way, the way a bank forward contract would, which small importers rarely get.</p>
+          </div>
+        </div>
+      </section>
+
       <section className="band" id="how">
         <h2 className="section-title">How it works</h2>
         <ol className="flow">
