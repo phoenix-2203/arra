@@ -28,7 +28,7 @@ if (mode === 'stills') {
   fs.mkdirSync(HERE + 'stills', { recursive: true });
   for (const s of args.map(Number)) {
     await page.evaluate((t) => window.seek(t), s);
-    await page.screenshot({ path: `${HERE}stills/t${s.toFixed(1).padStart(6, '0')}.jpg`, type: 'jpeg', quality: 85 });
+    await page.screenshot({ path: `${HERE}stills/t${s.toFixed(1).padStart(6, '0')}.jpg`, type: 'jpeg', quality: 95 });
   }
 } else {
   const FPS = 30, from = Number(args[0] ?? 0), to = Number(args[1] ?? TL.total), out = args[2] ?? HERE + 'frames.mp4';
