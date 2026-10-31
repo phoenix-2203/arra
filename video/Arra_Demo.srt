@@ -1,0 +1,155 @@
+1
+00:00:01,200 --> 00:00:03,728
+In Lagos, a phone importer sends a
+
+2
+00:00:03,728 --> 00:00:06,617
+thirty percent deposit to a supplier in Shenzhen.
+
+3
+00:00:07,317 --> 00:00:09,417
+The other seventy percent is still to
+
+4
+00:00:09,417 --> 00:00:11,818
+come. That balance is where it goes wrong.
+
+5
+00:00:13,218 --> 00:00:16,054
+Goods that never arrive. Payments redirected by
+
+6
+00:00:16,054 --> 00:00:19,295
+a fake "our bank details have changed" message.
+
+7
+00:00:19,895 --> 00:00:22,157
+A naira that can lose a third of
+
+8
+00:00:22,157 --> 00:00:24,418
+its value between the deposit and the balance.
+
+9
+00:00:25,118 --> 00:00:28,694
+And letters of credit have all but disappeared, so most of
+
+10
+00:00:28,694 --> 00:00:32,595
+this trade moves by plain bank transfer, with no protection at all.
+
+11
+00:00:33,995 --> 00:00:38,807
+Arra fixes that. Pay the deposit. Keep the balance locked until it ships.
+
+12
+00:00:39,507 --> 00:00:41,997
+The money sits in an open contract on
+
+13
+00:00:41,997 --> 00:00:44,798
+Celo: not with Arra, and not with the supplier.
+
+14
+00:00:46,198 --> 00:00:48,776
+Start by describing the order, like a
+
+15
+00:00:48,776 --> 00:00:51,723
+message. Arra's assistant turns it into clear terms.
+
+16
+00:00:52,523 --> 00:00:55,858
+Words nobody can check, like "good quality", are refused,
+
+17
+00:00:55,858 --> 00:00:59,563
+and the terms are fingerprinted so they can't change later.
+
+18
+00:01:00,863 --> 00:01:05,332
+Then send your supplier one link. They read the exact terms, in English
+
+19
+00:01:05,332 --> 00:01:09,802
+or Chinese, connect the wallet they want to be paid in, and agree.
+
+20
+00:01:10,602 --> 00:01:12,912
+No account numbers copied from a chat,
+
+21
+00:01:12,912 --> 00:01:15,551
+so a scammer's look-alike address can't slip in.
+
+22
+00:01:16,851 --> 00:01:21,031
+Pay in dollars, or straight from naira. Textile FX converts exactly
+
+23
+00:01:21,031 --> 00:01:25,211
+what you need, at one firm rate, the moment you lock.
+
+24
+00:01:26,211 --> 00:01:28,870
+The supplier accepts and gets the deposit
+
+25
+00:01:28,870 --> 00:01:31,908
+instantly. The balance waits until the goods ship.
+
+26
+00:01:33,308 --> 00:01:37,642
+That one rate matters. In 2023, an importer with a
+
+27
+00:01:37,642 --> 00:01:42,409
+seven-thousand-dollar balance needed two million naira more, just seven weeks later.
+
+28
+00:01:43,309 --> 00:01:45,971
+With Arra, that balance was paid for on day one.
+
+29
+00:01:47,771 --> 00:01:50,901
+When the goods arrive, check them. Everything's right? Pay the
+
+30
+00:01:50,901 --> 00:01:54,032
+balance with one tap, all at once or in parts.
+
+31
+00:01:54,932 --> 00:01:58,062
+Something wrong? Report it with a photo and say what
+
+32
+00:01:58,062 --> 00:02:01,193
+you want back. The supplier accepts or makes an offer.
+
+33
+00:02:02,493 --> 00:02:07,869
+If the supplier never accepts, or never ships, Arra's agent refunds you automatically.
+
+34
+00:02:08,469 --> 00:02:13,354
+Silence can't freeze the money: an ignored offer goes through after seven days.
+
+35
+00:02:13,954 --> 00:02:16,379
+And nobody, not even Arra, can send it
+
+36
+00:02:16,379 --> 00:02:18,803
+anywhere but to the buyer or the supplier.
+
+37
+00:02:20,203 --> 00:02:24,437
+Arra is live on Celo mainnet today, with a verified
+
+38
+00:02:24,437 --> 00:02:28,671
+contract, a registered agent, and naira orders filled through Textile.
+
+39
+00:02:30,771 --> 00:02:33,028
+Arra. Trade with anyone, without the worry.

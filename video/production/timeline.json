@@ -1,0 +1,393 @@
+{
+ "scenes": [
+  {
+   "id": "hook",
+   "start": 0.0,
+   "dur": 13.218,
+   "lines": [
+    {
+     "at": 1.2,
+     "local": 1.2,
+     "dur": 5.417,
+     "text": "In Lagos, a phone importer sends a thirty percent deposit to a supplier in Shenzhen.",
+     "file": "lines/00_00.wav"
+    },
+    {
+     "at": 7.317,
+     "local": 7.317,
+     "dur": 4.501,
+     "text": "The other seventy percent is still to come. That balance is where it goes wrong.",
+     "file": "lines/00_01.wav"
+    }
+   ]
+  },
+  {
+   "id": "problem",
+   "start": 12.618,
+   "dur": 21.277,
+   "lines": [
+    {
+     "at": 13.218,
+     "local": 0.6,
+     "dur": 6.077,
+     "text": "Goods that never arrive. Payments redirected by a fake \"our bank details have changed\" message.",
+     "file": "lines/01_00.wav"
+    },
+    {
+     "at": 19.895,
+     "local": 7.277,
+     "dur": 4.523,
+     "text": "A naira that can lose a third of its value between the deposit and the balance.",
+     "file": "lines/01_01.wav"
+    },
+    {
+     "at": 25.118,
+     "local": 12.5,
+     "dur": 7.477,
+     "text": "And letters of credit have all but disappeared, so most of this trade moves by plain bank transfer, with no protection at all.",
+     "file": "lines/01_02.wav"
+    }
+   ]
+  },
+  {
+   "id": "intro",
+   "start": 33.295,
+   "dur": 12.903,
+   "lines": [
+    {
+     "at": 33.995,
+     "local": 0.7,
+     "dur": 4.812,
+     "text": "Arra fixes that. Pay the deposit. Keep the balance locked until it ships.",
+     "file": "lines/02_00.wav"
+    },
+    {
+     "at": 39.507,
+     "local": 6.212,
+     "dur": 5.291,
+     "text": "The money sits in an open contract on Celo: not with Arra, and not with the supplier.",
+     "file": "lines/02_01.wav"
+    }
+   ]
+  },
+  {
+   "id": "describe",
+   "start": 45.598,
+   "dur": 15.265,
+   "lines": [
+    {
+     "at": 46.198,
+     "local": 0.6,
+     "dur": 5.525,
+     "text": "Start by describing the order, like a message. Arra's assistant turns it into clear terms.",
+     "file": "lines/03_00.wav"
+    },
+    {
+     "at": 52.523,
+     "local": 6.925,
+     "dur": 7.04,
+     "text": "Words nobody can check, like \"good quality\", are refused, and the terms are fingerprinted so they can't change later.",
+     "file": "lines/03_01.wav"
+    }
+   ]
+  },
+  {
+   "id": "link",
+   "start": 60.263,
+   "dur": 16.588,
+   "lines": [
+    {
+     "at": 60.863,
+     "local": 0.6,
+     "dur": 8.939,
+     "text": "Then send your supplier one link. They read the exact terms, in English or Chinese, connect the wallet they want to be paid in, and agree.",
+     "file": "lines/04_00.wav"
+    },
+    {
+     "at": 70.602,
+     "local": 10.339,
+     "dur": 4.949,
+     "text": "No account numbers copied from a chat, so a scammer's look-alike address can't slip in.",
+     "file": "lines/04_01.wav"
+    }
+   ]
+  },
+  {
+   "id": "pay",
+   "start": 76.251,
+   "dur": 17.057,
+   "lines": [
+    {
+     "at": 76.851,
+     "local": 0.6,
+     "dur": 8.36,
+     "text": "Pay in dollars, or straight from naira. Textile FX converts exactly what you need, at one firm rate, the moment you lock.",
+     "file": "lines/05_00.wav"
+    },
+    {
+     "at": 86.211,
+     "local": 9.96,
+     "dur": 5.697,
+     "text": "The supplier accepts and gets the deposit instantly. The balance waits until the goods ship.",
+     "file": "lines/05_01.wav"
+    }
+   ]
+  },
+  {
+   "id": "returns",
+   "start": 92.708,
+   "dur": 15.063,
+   "lines": [
+    {
+     "at": 93.308,
+     "local": 0.6,
+     "dur": 9.101,
+     "text": "That one rate matters. In 2023, an importer with a seven-thousand-dollar balance needed two million naira more, just seven weeks later.",
+     "file": "lines/06_00.wav"
+    },
+    {
+     "at": 103.309,
+     "local": 10.601,
+     "dur": 2.662,
+     "text": "With Arra, that balance was paid for on day one.",
+     "file": "lines/06_01.wav"
+    }
+   ]
+  },
+  {
+   "id": "deliver",
+   "start": 107.171,
+   "dur": 15.322,
+   "lines": [
+    {
+     "at": 107.771,
+     "local": 0.6,
+     "dur": 6.261,
+     "text": "When the goods arrive, check them. Everything's right? Pay the balance with one tap, all at once or in parts.",
+     "file": "lines/07_00.wav"
+    },
+    {
+     "at": 114.932,
+     "local": 7.761,
+     "dur": 6.261,
+     "text": "Something wrong? Report it with a photo and say what you want back. The supplier accepts or makes an offer.",
+     "file": "lines/07_01.wav"
+    }
+   ]
+  },
+  {
+   "id": "safety",
+   "start": 121.893,
+   "dur": 18.21,
+   "lines": [
+    {
+     "at": 122.493,
+     "local": 0.6,
+     "dur": 5.376,
+     "text": "If the supplier never accepts, or never ships, Arra's agent refunds you automatically.",
+     "file": "lines/08_00.wav"
+    },
+    {
+     "at": 128.469,
+     "local": 6.576,
+     "dur": 4.885,
+     "text": "Silence can't freeze the money: an ignored offer goes through after seven days.",
+     "file": "lines/08_01.wav"
+    },
+    {
+     "at": 133.954,
+     "local": 12.061,
+     "dur": 4.849,
+     "text": "And nobody, not even Arra, can send it anywhere but to the buyer or the supplier.",
+     "file": "lines/08_02.wav"
+    }
+   ]
+  },
+  {
+   "id": "proof",
+   "start": 139.503,
+   "dur": 10.968,
+   "lines": [
+    {
+     "at": 140.203,
+     "local": 0.7,
+     "dur": 8.468,
+     "text": "Arra is live on Celo mainnet today, with a verified contract, a registered agent, and naira orders filled through Textile.",
+     "file": "lines/09_00.wav"
+    }
+   ]
+  },
+  {
+   "id": "close",
+   "start": 149.871,
+   "dur": 8.657,
+   "lines": [
+    {
+     "at": 150.771,
+     "local": 0.9,
+     "dur": 2.257,
+     "text": "Arra. Trade with anyone, without the worry.",
+     "file": "lines/10_00.wav"
+    }
+   ]
+  }
+ ],
+ "lines": [
+  {
+   "scene": "hook",
+   "at": 1.2,
+   "dur": 5.417,
+   "text": "In Lagos, a phone importer sends a thirty percent deposit to a supplier in Shenzhen.",
+   "file": "lines/00_00.wav"
+  },
+  {
+   "scene": "hook",
+   "at": 7.317,
+   "dur": 4.501,
+   "text": "The other seventy percent is still to come. That balance is where it goes wrong.",
+   "file": "lines/00_01.wav"
+  },
+  {
+   "scene": "problem",
+   "at": 13.218,
+   "dur": 6.077,
+   "text": "Goods that never arrive. Payments redirected by a fake \"our bank details have changed\" message.",
+   "file": "lines/01_00.wav"
+  },
+  {
+   "scene": "problem",
+   "at": 19.895,
+   "dur": 4.523,
+   "text": "A naira that can lose a third of its value between the deposit and the balance.",
+   "file": "lines/01_01.wav"
+  },
+  {
+   "scene": "problem",
+   "at": 25.118,
+   "dur": 7.477,
+   "text": "And letters of credit have all but disappeared, so most of this trade moves by plain bank transfer, with no protection at all.",
+   "file": "lines/01_02.wav"
+  },
+  {
+   "scene": "intro",
+   "at": 33.995,
+   "dur": 4.812,
+   "text": "Arra fixes that. Pay the deposit. Keep the balance locked until it ships.",
+   "file": "lines/02_00.wav"
+  },
+  {
+   "scene": "intro",
+   "at": 39.507,
+   "dur": 5.291,
+   "text": "The money sits in an open contract on Celo: not with Arra, and not with the supplier.",
+   "file": "lines/02_01.wav"
+  },
+  {
+   "scene": "describe",
+   "at": 46.198,
+   "dur": 5.525,
+   "text": "Start by describing the order, like a message. Arra's assistant turns it into clear terms.",
+   "file": "lines/03_00.wav"
+  },
+  {
+   "scene": "describe",
+   "at": 52.523,
+   "dur": 7.04,
+   "text": "Words nobody can check, like \"good quality\", are refused, and the terms are fingerprinted so they can't change later.",
+   "file": "lines/03_01.wav"
+  },
+  {
+   "scene": "link",
+   "at": 60.863,
+   "dur": 8.939,
+   "text": "Then send your supplier one link. They read the exact terms, in English or Chinese, connect the wallet they want to be paid in, and agree.",
+   "file": "lines/04_00.wav"
+  },
+  {
+   "scene": "link",
+   "at": 70.602,
+   "dur": 4.949,
+   "text": "No account numbers copied from a chat, so a scammer's look-alike address can't slip in.",
+   "file": "lines/04_01.wav"
+  },
+  {
+   "scene": "pay",
+   "at": 76.851,
+   "dur": 8.36,
+   "text": "Pay in dollars, or straight from naira. Textile FX converts exactly what you need, at one firm rate, the moment you lock.",
+   "file": "lines/05_00.wav"
+  },
+  {
+   "scene": "pay",
+   "at": 86.211,
+   "dur": 5.697,
+   "text": "The supplier accepts and gets the deposit instantly. The balance waits until the goods ship.",
+   "file": "lines/05_01.wav"
+  },
+  {
+   "scene": "returns",
+   "at": 93.308,
+   "dur": 9.101,
+   "text": "That one rate matters. In 2023, an importer with a seven-thousand-dollar balance needed two million naira more, just seven weeks later.",
+   "file": "lines/06_00.wav"
+  },
+  {
+   "scene": "returns",
+   "at": 103.309,
+   "dur": 2.662,
+   "text": "With Arra, that balance was paid for on day one.",
+   "file": "lines/06_01.wav"
+  },
+  {
+   "scene": "deliver",
+   "at": 107.771,
+   "dur": 6.261,
+   "text": "When the goods arrive, check them. Everything's right? Pay the balance with one tap, all at once or in parts.",
+   "file": "lines/07_00.wav"
+  },
+  {
+   "scene": "deliver",
+   "at": 114.932,
+   "dur": 6.261,
+   "text": "Something wrong? Report it with a photo and say what you want back. The supplier accepts or makes an offer.",
+   "file": "lines/07_01.wav"
+  },
+  {
+   "scene": "safety",
+   "at": 122.493,
+   "dur": 5.376,
+   "text": "If the supplier never accepts, or never ships, Arra's agent refunds you automatically.",
+   "file": "lines/08_00.wav"
+  },
+  {
+   "scene": "safety",
+   "at": 128.469,
+   "dur": 4.885,
+   "text": "Silence can't freeze the money: an ignored offer goes through after seven days.",
+   "file": "lines/08_01.wav"
+  },
+  {
+   "scene": "safety",
+   "at": 133.954,
+   "dur": 4.849,
+   "text": "And nobody, not even Arra, can send it anywhere but to the buyer or the supplier.",
+   "file": "lines/08_02.wav"
+  },
+  {
+   "scene": "proof",
+   "at": 140.203,
+   "dur": 8.468,
+   "text": "Arra is live on Celo mainnet today, with a verified contract, a registered agent, and naira orders filled through Textile.",
+   "file": "lines/09_00.wav"
+  },
+  {
+   "scene": "close",
+   "at": 150.771,
+   "dur": 2.257,
+   "text": "Arra. Trade with anyone, without the worry.",
+   "file": "lines/10_00.wav"
+  }
+ ],
+ "total": 158.528,
+ "crossfade": 0.6
+}

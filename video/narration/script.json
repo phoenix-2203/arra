@@ -1,0 +1,145 @@
+[
+ {
+  "scene": "hook",
+  "lines": [
+   {
+    "text": "In Lagos, a phone importer sends a thirty percent deposit to a supplier in Shenzhen.",
+    "say": "In Lagos, a phone importer sends a thirty percent deposit to a supplier in Shenzhen."
+   },
+   {
+    "text": "The other seventy percent is still to come. That balance is where it goes wrong.",
+    "say": "The other seventy percent is still to come. That balance is where it goes wrong."
+   }
+  ]
+ },
+ {
+  "scene": "problem",
+  "lines": [
+   {
+    "text": "Goods that never arrive. Payments redirected by a fake \"our bank details have changed\" message.",
+    "say": "Goods that never arrive. Payments redirected by a fake message: our bank details have changed."
+   },
+   {
+    "text": "A naira that can lose a third of its value between the deposit and the balance.",
+    "say": "A Nyra that can lose a third of its value, between the deposit and the balance."
+   },
+   {
+    "text": "And letters of credit have all but disappeared, so most of this trade moves by plain bank transfer, with no protection at all.",
+    "say": "And letters of credit have all but disappeared. So most of this trade moves by plain bank transfer, with no protection at all."
+   }
+  ]
+ },
+ {
+  "scene": "intro",
+  "lines": [
+   {
+    "text": "Arra fixes that. Pay the deposit. Keep the balance locked until it ships.",
+    "say": "Ahra fixes that. Pay the deposit. Keep the balance locked, until it ships."
+   },
+   {
+    "text": "The money sits in an open contract on Celo: not with Arra, and not with the supplier.",
+    "say": "The money sits in an open contract on Sello. Not with Ahra, and not with the supplier."
+   }
+  ]
+ },
+ {
+  "scene": "describe",
+  "lines": [
+   {
+    "text": "Start by describing the order, like a message. Arra's assistant turns it into clear terms.",
+    "say": "Start by describing the order, like a message. Ahra's assistant turns it into clear terms."
+   },
+   {
+    "text": "Words nobody can check, like \"good quality\", are refused, and the terms are fingerprinted so they can't change later.",
+    "say": "Words nobody can check, like good quality, are refused. And the terms are fingerprinted, so they can't change later."
+   }
+  ]
+ },
+ {
+  "scene": "link",
+  "lines": [
+   {
+    "text": "Then send your supplier one link. They read the exact terms, in English or Chinese, connect the wallet they want to be paid in, and agree.",
+    "say": "Then, send your supplier one link. They read the exact terms, in English or Chinese, connect the wallet they want to be paid in, and agree."
+   },
+   {
+    "text": "No account numbers copied from a chat, so a scammer's look-alike address can't slip in.",
+    "say": "No account numbers copied from a chat. So a scammer's look-alike address can't slip in."
+   }
+  ]
+ },
+ {
+  "scene": "pay",
+  "lines": [
+   {
+    "text": "Pay in dollars, or straight from naira. Textile FX converts exactly what you need, at one firm rate, the moment you lock.",
+    "say": "Pay in dollars, or straight from Nyra. Textile F X converts exactly what you need, at one firm rate, the moment you lock."
+   },
+   {
+    "text": "The supplier accepts and gets the deposit instantly. The balance waits until the goods ship.",
+    "say": "The supplier accepts, and gets the deposit instantly. The balance waits, until the goods ship."
+   }
+  ]
+ },
+ {
+  "scene": "returns",
+  "lines": [
+   {
+    "text": "That one rate matters. In 2023, an importer with a seven-thousand-dollar balance needed two million naira more, just seven weeks later.",
+    "say": "That one rate matters. In twenty twenty-three, an importer with a seven thousand dollar balance needed two million Nyra more, just seven weeks later."
+   },
+   {
+    "text": "With Arra, that balance was paid for on day one.",
+    "say": "With Ahra, that balance was paid for on day one."
+   }
+  ]
+ },
+ {
+  "scene": "deliver",
+  "lines": [
+   {
+    "text": "When the goods arrive, check them. Everything's right? Pay the balance with one tap, all at once or in parts.",
+    "say": "When the goods arrive, check them. Everything's right? Pay the balance with one tap. All at once, or in parts."
+   },
+   {
+    "text": "Something wrong? Report it with a photo and say what you want back. The supplier accepts or makes an offer.",
+    "say": "Something wrong? Report it with a photo, and say what you want back. The supplier accepts, or makes an offer."
+   }
+  ]
+ },
+ {
+  "scene": "safety",
+  "lines": [
+   {
+    "text": "If the supplier never accepts, or never ships, Arra's agent refunds you automatically.",
+    "say": "If the supplier never accepts, or never ships, Ahra's agent refunds you automatically."
+   },
+   {
+    "text": "Silence can't freeze the money: an ignored offer goes through after seven days.",
+    "say": "Silence can't freeze the money. An ignored offer goes through after seven days."
+   },
+   {
+    "text": "And nobody, not even Arra, can send it anywhere but to the buyer or the supplier.",
+    "say": "And nobody, not even Ahra, can send it anywhere but to the buyer, or the supplier."
+   }
+  ]
+ },
+ {
+  "scene": "proof",
+  "lines": [
+   {
+    "text": "Arra is live on Celo mainnet today, with a verified contract, a registered agent, and naira orders filled through Textile.",
+    "say": "Ahra is live on Sello main net today. With a verified contract, a registered agent, and Nyra orders filled through Textile."
+   }
+  ]
+ },
+ {
+  "scene": "close",
+  "lines": [
+   {
+    "text": "Arra. Trade with anyone, without the worry.",
+    "say": "Ahra. Trade with anyone, without the worry."
+   }
+  ]
+ }
+]

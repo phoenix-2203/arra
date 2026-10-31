@@ -1,0 +1,276 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<title>Arra film</title>
+<style>
+@font-face { font-family: "D"; src: url("/agent/assets/fonts/BricolageGrotesque_700Bold.ttf"); font-weight: 700; }
+@font-face { font-family: "S"; src: url("/agent/assets/fonts/InstrumentSans_400Regular.ttf"); font-weight: 400; }
+@font-face { font-family: "S"; src: url("/agent/assets/fonts/InstrumentSans_600SemiBold.ttf"); font-weight: 600; }
+:root { --bg:#090a07; --surface:#121410; --edge:#2f3329; --line:#23261f; --text:#eef2ea; --soft:#8d9288; --lime:#ccff3d; --ink:#0b0d05; --alert:#ff7a6b; }
+* { box-sizing: border-box; }
+html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: var(--bg); color: var(--text); font-family: "S", sans-serif; -webkit-font-smoothing: antialiased; }
+#stage { position: absolute; inset: 0; }
+.scene { position: absolute; inset: 0; opacity: 0; overflow: hidden; background: radial-gradient(1200px 800px at 82% 8%, rgba(204,255,61,.10), transparent 60%), var(--bg); }
+.abs { position: absolute; }
+.d { font-family: "D", sans-serif; font-weight: 700; letter-spacing: -0.02em; }
+.lime { color: var(--lime); } .soft { color: var(--soft); } .alert { color: var(--alert); }
+.h1 { font-size: 96px; line-height: 1; } .h2 { font-size: 64px; line-height: 1.05; } .h3 { font-size: 40px; line-height: 1.15; }
+.kicker { font-size: 26px; font-weight: 600; color: var(--soft); letter-spacing: .02em; text-transform: uppercase; }
+.card { background: var(--surface); border: 2px solid var(--edge); border-radius: 28px; }
+.chrome { background: linear-gradient(100deg, #8f948b 0%, #f4f7f0 28%, #c6cbc1 52%, #f7faf3 74%, #a7aca2 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.word { font-family: "D"; font-weight: 700; letter-spacing: -0.03em; }
+.phone { position: absolute; width: 430px; height: 931px; border-radius: 58px; background: #000; padding: 12px; box-shadow: 0 0 0 2px #2f3329, 0 60px 120px -40px rgba(0,0,0,.9), 0 0 120px -30px rgba(204,255,61,.18); }
+.phone .vp { position: relative; width: 100%; height: 100%; border-radius: 47px; overflow: hidden; background: var(--bg); }
+.phone .vp img { position: absolute; left: 0; top: 0; width: 100%; }
+.phone .notch { position: absolute; top: 22px; left: 50%; width: 120px; height: 32px; margin-left: -60px; border-radius: 20px; background: #000; z-index: 3; }
+.tag { position: absolute; left: 70px; bottom: 50px; font-size: 22px; color: var(--soft); background: rgba(238,242,234,.05); border: 1px solid var(--line); padding: 9px 18px; border-radius: 999px; }
+.chip { display: inline-flex; align-items: center; gap: 12px; border-radius: 999px; padding: 14px 26px; font-size: 28px; font-weight: 600; background: rgba(204,255,61,.12); color: var(--lime); border: 2px solid rgba(204,255,61,.45); white-space: nowrap; }
+.chip.w { background: rgba(238,242,234,.06); color: var(--text); border-color: var(--edge); }
+.dot { width: 14px; height: 14px; border-radius: 50%; background: var(--lime); display: inline-block; }
+.step { font-size: 30px; color: var(--soft); margin: 0 0 18px; display: flex; gap: 18px; align-items: baseline; }
+.step b { font-family: "D"; color: var(--lime); font-size: 34px; width: 46px; }
+.callout { position: absolute; background: var(--surface); border: 2px solid rgba(204,255,61,.5); border-radius: 22px; padding: 22px 28px; font-size: 28px; box-shadow: 0 30px 60px -30px rgba(0,0,0,.8); }
+.callout small { display: block; font-size: 21px; color: var(--soft); margin-top: 6px; }
+.prob { position: absolute; top: 300px; width: 520px; height: 430px; padding: 40px; }
+.prob .big { font-family: "D"; font-size: 84px; line-height: 1; letter-spacing: -0.03em; margin: 22px 0 18px; }
+.prob p { font-size: 28px; line-height: 1.35; margin: 0; color: var(--text); }
+.prob .src { position: absolute; left: 40px; bottom: 34px; font-size: 20px; color: var(--soft); }
+.row { display: grid; grid-template-columns: 1fr 240px 480px; gap: 20px; padding: 26px 0; border-top: 2px solid var(--line); font-size: 32px; align-items: baseline; }
+.row .n { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+.tile { position: absolute; top: 330px; width: 520px; height: 420px; padding: 44px; }
+.tile h3 { font-family: "D"; font-size: 44px; margin: 26px 0 16px; letter-spacing: -0.02em; line-height: 1.05; }
+.tile p { font-size: 27px; color: var(--soft); line-height: 1.4; margin: 0; }
+.tile .ico { width: 72px; height: 72px; border-radius: 20px; background: var(--lime); color: var(--ink); display: grid; place-items: center; font-family: "D"; font-size: 38px; }
+.proofrow { display: grid; grid-template-columns: 520px 1fr; padding: 22px 0; border-top: 2px solid var(--line); font-size: 30px; }
+.proofrow .h { font-family: ui-monospace, Menlo, monospace; color: var(--lime); font-size: 28px; }
+svg { overflow: visible; }
+</style></head>
+<body>
+<div id="stage"></div>
+<script>
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const eo = (x) => 1 - Math.pow(1 - x, 3);
+const io = (x) => (x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+const P = (t, t0, d = .6) => clamp((t - t0) / d);
+const IMG = (n) => `/video/assets/screens/${n}.png`;
+const TL = window.TL;
+const stage = document.getElementById('stage');
+const $ = (html) => { const d = document.createElement('div'); d.innerHTML = html.trim(); return d.firstElementChild; };
+const show = (el, p, dy = 30) => { el.style.opacity = p; el.style.transform = `translateY(${(1 - eo(p)) * dy}px)`; };
+const L = (id, i) => TL.scenes.find((s) => s.id === id).lines[i]?.local ?? 0;
+function phone(x, y, imgs, scale = 1) {
+  const el = $(`<div class="phone" style="left:${x}px;top:${y}px;transform-origin:50% 50%;transform:scale(${scale})"><div class="notch"></div><div class="vp">${imgs.map((n) => `<img src="${IMG(n)}" style="opacity:0">`).join('')}</div></div>`);
+  el.imgs = [...el.querySelectorAll('img')];
+  return el;
+}
+// show image i of a phone (crossfade from the previous), with an optional pan (0..1 of the overflow)
+function screen(ph, weights, pans = []) {
+  ph.imgs.forEach((im, i) => {
+    im.style.opacity = weights[i] ?? 0;
+    const over = im.naturalWidth ? Math.max(0, (im.naturalHeight * 406) / im.naturalWidth - 907) : 0;
+    im.style.transform = `translateY(${-(pans[i] ?? 0) * over}px)`;
+  });
+}
+const fade = (u, at, d = .5) => P(u, at, d);
+const tag = (txt) => `<div class="tag">${txt}</div>`;
+const REAL = 'Real Arra interface · test network, illustrative amounts';
+
+const scenes = {};
+// ------------------------------------------------------------------ 1 hook
+scenes.hook = () => {
+  const s = $(`<div class="scene">
+    <div class="abs kicker" style="left:140px;top:150px">A deposit-and-balance deal</div>
+    <div class="abs d h2" id="c1" style="left:140px;top:600px;font-size:72px">Lagos</div>
+    <div class="abs d h2" id="c2" style="right:140px;top:600px;font-size:72px;text-align:right">Shenzhen</div>
+    <svg class="abs" style="left:0;top:0" width="1920" height="1080"><path id="arc" d="M 330 580 Q 960 180 1590 580" fill="none" stroke="#3a3f33" stroke-width="4" stroke-dasharray="14 14"/></svg>
+    <div class="abs chip" id="coin" style="left:0;top:0">30% deposit</div>
+    <div class="abs card" id="bal" style="left:640px;top:720px;width:640px;padding:34px 40px;text-align:center"><div class="kicker">Still to pay</div><div class="d" style="font-size:92px;margin-top:8px">70%</div></div>
+    <div class="abs d h2" id="t1" style="left:0;right:0;top:250px;text-align:center;font-size:76px">That balance is <span class="alert">where it goes wrong.</span></div>
+  </div>`);
+  const arc = s.querySelector('#arc');
+  return { el: s, at(u) {
+    show(s.querySelector('#c1'), fade(u, .2)); show(s.querySelector('#c2'), fade(u, .6));
+    const k = io(clamp((u - 1.6) / 3.6)); const len = arc.getTotalLength(); const pt = arc.getPointAtLength(len * k);
+    const coin = s.querySelector('#coin'); coin.style.opacity = fade(u, 1.4) * (1 - P(u, 9, .6)); coin.style.transform = `translate(${pt.x - 120}px, ${pt.y - 40}px)`;
+    show(s.querySelector('#bal'), fade(u, L('hook', 1) + .3));
+    const bl = s.querySelector('#bal'); bl.style.opacity = fade(u, L('hook', 1) + .3);
+    show(s.querySelector('#t1'), fade(u, L('hook', 1) + 2.6, .7));
+  } };
+};
+// ------------------------------------------------------------------ 2 problem
+scenes.problem = () => {
+  const s = $(`<div class="scene">
+    <div class="abs kicker" style="left:140px;top:150px">What goes wrong today</div>
+    <div class="abs d h2" style="left:140px;top:190px">Three ways a balance is lost</div>
+    <div class="prob card" id="p1" style="left:140px"><div class="kicker">Goods never arrive</div><div class="big">₦60m</div><p>lost by two importers who paid a naira-to-yuan middleman</p><div class="src">New Telegraph, May 2025</div></div>
+    <div class="prob card" id="p2" style="left:700px"><div class="kicker">Payment redirected</div><div class="big">$2.8bn</div><p>lost to "our bank details have changed" fraud in 2024</p><div class="src">FBI IC3, via Nacha</div></div>
+    <div class="prob card" id="p3" style="left:1260px"><div class="kicker">Naira falls</div><div class="big alert" style="font-size:66px">₦471 → ₦755</div><p>per dollar in a single day, 14 June 2023</p><div class="src">AllAfrica</div></div>
+    <div class="abs" id="lc" style="left:140px;top:790px;width:1640px;padding:30px 40px;border-radius:24px;background:rgba(255,122,107,.08);border:2px solid rgba(255,122,107,.35);font-size:32px">Letters of credit: <b>$506m</b> in nine months of 2024, <span class="alert">down 52.5%</span> · Chinese goods into Nigeria: <b>$24.9bn</b> in 2025 <span class="soft" style="font-size:22px"> · THISDAY (CBN data), BusinessDay</span></div>
+  </div>`);
+  return { el: s, at(u) {
+    show(s.querySelector('#p1'), fade(u, L('problem', 0) + .2)); show(s.querySelector('#p2'), fade(u, L('problem', 0) + 2.6));
+    show(s.querySelector('#p3'), fade(u, L('problem', 1) + .2)); show(s.querySelector('#lc'), fade(u, L('problem', 2) + .4));
+  } };
+};
+// ------------------------------------------------------------------ 3 intro
+scenes.intro = () => {
+  const s = $(`<div class="scene">
+    <div class="abs word" id="wm" style="left:0;right:0;top:250px;text-align:center;font-size:200px">A<span class="lime">rr</span>a</div>
+    <div class="abs d" id="tg" style="left:0;right:0;top:500px;text-align:center;font-size:58px"><span class="chrome">Pay the deposit. Keep the balance locked until it ships.</span></div>
+    <div class="abs" id="flow" style="left:250px;top:680px;width:1420px;height:200px">
+      <div class="card abs" style="left:0;top:40px;width:300px;padding:30px;text-align:center;font-size:34px">Buyer</div>
+      <div class="abs card" style="left:500px;top:0;width:420px;padding:28px;text-align:center;border-color:rgba(204,255,61,.6)"><div class="d" style="font-size:38px">Open contract</div><div class="soft" style="font-size:26px;margin-top:6px">on Celo · public · verified</div></div>
+      <div class="card abs" style="left:1120px;top:40px;width:300px;padding:30px;text-align:center;font-size:34px">Supplier</div>
+      <svg class="abs" style="left:0;top:0" width="1420" height="200"><path d="M300 100 H500" stroke="#ccff3d" stroke-width="4"/><path d="M920 100 H1120" stroke="#ccff3d" stroke-width="4" stroke-dasharray="10 10"/></svg>
+    </div>
+    <div class="abs" id="not" style="left:0;right:0;top:930px;text-align:center;font-size:34px"><span style="color:#b9beb3">Not held by Arra. Not held by the supplier.</span></div>
+  </div>`);
+  return { el: s, at(u) {
+    const p = fade(u, .1, .8); const wm = s.querySelector('#wm'); wm.style.opacity = p; wm.style.transform = `scale(${.94 + .06 * eo(p)})`;
+    show(s.querySelector('#tg'), fade(u, 1.6)); show(s.querySelector('#flow'), fade(u, L('intro', 1))); show(s.querySelector('#not'), fade(u, L('intro', 1) + 2.4));
+  } };
+};
+// ------------------------------------------------------------------ helpers for product scenes
+function side(n, title, bullets) {
+  return `<div class="abs" style="left:140px;top:250px;width:760px"><div class="kicker">Step ${n}</div><div class="d h2" style="margin:14px 0 40px">${title}</div>${bullets.map((b, i) => `<div class="step" data-i="${i}"><b>✓</b><span>${b}</span></div>`).join('')}</div>`;
+}
+// ------------------------------------------------------------------ 4 describe
+scenes.describe = () => {
+  const s = $(`<div class="scene">${side(1, 'Describe the order', ['Type it like a message', 'The assistant fills the form', 'Vague words like "good quality" refused', 'Terms fingerprinted onchain'])}${tag(REAL)}</div>`);
+  const ph = phone(1180, 75, ['01-assistant-typed', '02-assistant-ready', '03-order-filled-full']); s.appendChild(ph);
+  const steps = [...s.querySelectorAll('.step')];
+  return { el: s, at(u) {
+    const a = fade(u, 2.6, .6), b = fade(u, L('describe', 1) + .3, .6);
+    screen(ph, [1 - a, a * (1 - b), b], [0, 0, io(clamp((u - L('describe', 1) - 1) / 5))]);
+    [0, 2.6, L('describe', 1) + .2, L('describe', 1) + 3.4].forEach((at, i) => show(steps[i], fade(u, at), 16));
+  } };
+};
+// ------------------------------------------------------------------ 5 link
+scenes.link = () => {
+  const s = $(`<div class="scene">
+    <div class="abs" style="left:140px;top:250px;width:560px"><div class="kicker">Step 2</div><div class="d h2" style="margin:14px 0 30px">Send one link</div>
+      <div class="step"><b>✓</b><span>They read the exact terms, in English or Chinese</span></div>
+      <div class="step"><b>✓</b><span>Connect the wallet they want to be paid in</span></div>
+      <div class="step"><b>✓</b><span>Tap Agree, in one visit</span></div>
+    </div>
+    <div class="callout" id="sh" style="left:140px;top:720px;width:560px"><b>No copied account numbers</b><small>The supplier's own wallet fills the address, so a look-alike can't slip in</small></div>
+    <div class="abs soft" style="left:900px;top:1008px;font-size:24px">Buyer</div><div class="abs soft" style="left:1400px;top:1008px;font-size:24px">Supplier, in Chinese</div>
+    <div class="abs chip" id="tok" style="left:0;top:0">🔗 One link</div>
+    ${tag(REAL)}</div>`);
+  const a = phone(760, 50, ['04-one-link', '07-buyer-agreed'], .9), b = phone(1300, 50, ['05-supplier-terms-zh', '06-supplier-agreed-zh'], .9);
+  s.appendChild(a); s.appendChild(b);
+  const steps = [...s.querySelectorAll('.step')];
+  return { el: s, at(u) {
+    const k = io(clamp((u - 2.2) / 2.2)); const tok = s.querySelector('#tok');
+    tok.style.opacity = fade(u, 2) * (1 - P(u, 4.6, .4)); tok.style.transform = `translate(${900 + k * 560}px, ${230 - Math.sin(k * Math.PI) * 150}px)`;
+    const ag = fade(u, 7.4, .6);
+    screen(a, [1 - ag, ag]); screen(b, [1 - fade(u, 6.4, .6), fade(u, 6.4, .6)]);
+    [2.6, 4.8, 6.6].forEach((at, i) => show(steps[i], fade(u, at), 16));
+    show(s.querySelector('#sh'), fade(u, L('link', 1)));
+  } };
+};
+// ------------------------------------------------------------------ 6 pay
+scenes.pay = () => {
+  const s = $(`<div class="scene">
+    <div class="abs" style="left:140px;top:120px"><div class="kicker">Step 3</div><div class="d h2" style="margin-top:12px">Lock the money</div></div>
+    <div class="callout" id="fx" style="left:140px;top:420px;width:640px"><div class="kicker" style="font-size:20px">Textile FX · one firm rate</div><div class="d" style="font-size:54px;margin:10px 0">₦384,755 → $280</div><small>About ₦1,374 per $1, fee included · only the USDT the buyer was missing</small></div>
+    <div class="callout" id="dep" style="left:140px;top:420px;width:640px"><div class="kicker" style="font-size:20px">Supplier accepts</div><div class="d" style="font-size:54px;margin:10px 0"><span class="lime">$120</span> deposit paid</div><small>$280 balance stays locked until the goods ship</small></div>
+    ${tag(REAL)}</div>`);
+  const a = phone(900, 60, ['08-pay-naira', '09-locked'], .93), b = phone(1360, 60, ['10-supplier-accept-zh', '11-supplier-accepted'], .93);
+  s.appendChild(a); s.appendChild(b);
+  return { el: s, at(u) {
+    const sw = fade(u, L('pay', 1) - .2, .6);
+    screen(a, [1 - sw, sw], [.25, 0]); b.style.opacity = sw; screen(b, [1 - fade(u, L('pay', 1) + 2.6), fade(u, L('pay', 1) + 2.6)]);
+    a.style.transform = `scale(.93) translateX(${(1 - io(clamp((u - L('pay', 1) + .2) / .9))) * 230}px)`;
+    show(s.querySelector('#fx'), fade(u, 2.2) * (1 - sw)); show(s.querySelector('#dep'), fade(u, L('pay', 1) + 2.4));
+  } };
+};
+// ------------------------------------------------------------------ 7 returns
+scenes.returns = () => {
+  const s = $(`<div class="scene">
+    <div class="abs" style="left:240px;top:130px"><div class="kicker">Why one rate matters · a real 2023 case</div><div class="d h2" style="margin-top:12px">A $10,000 order. A $7,000 balance.</div></div>
+    <div class="abs" style="left:240px;top:380px;width:1440px">
+      <div class="row soft" style="border:0;font-size:24px"><span>When</span><span class="n">₦ per $1</span><span class="n">Naira for the balance</span></div>
+      <div class="row" id="r1"><span>Deposit paid, 13 June 2023</span><span class="n">₦471</span><span class="n">₦3,297,000</span></div>
+      <div class="row" id="r2"><span>Balance due, 31 July 2023</span><span class="n">₦756.94</span><span class="n">₦5,298,580</span></div>
+      <div class="row" id="r3" style="font-size:44px"><span class="d">Extra to find</span><span></span><span class="n d alert" id="cnt">+₦2,001,580</span></div>
+    </div>
+    <div class="abs" id="arra" style="left:240px;top:850px;width:1440px;padding:30px 40px;border-radius:24px;background:rgba(204,255,61,.08);border:2px solid rgba(204,255,61,.45);font-size:38px"><span class="d lime">With Arra:</span> converted once, on day one. <b>₦0 extra.</b></div>
+    <div class="abs soft" style="left:240px;top:1000px;font-size:21px">Rates: AllAfrica; Nairametrics (FMDQ data). The naira can also rise; Arra removes the bet either way.</div>
+  </div>`);
+  return { el: s, at(u) {
+    show(s.querySelector('#r1'), fade(u, 1.4), 14); show(s.querySelector('#r2'), fade(u, 3.4), 14); show(s.querySelector('#r3'), fade(u, 6.0), 14);
+    const n = Math.round(2001580 * eo(clamp((u - 6.2) / 1.8)));
+    s.querySelector('#cnt').textContent = `+₦${n.toLocaleString('en-NG')}` + (u > 8.1 ? ' (+61%)' : '');
+    show(s.querySelector('#arra'), fade(u, L('returns', 1) - .1));
+  } };
+};
+// ------------------------------------------------------------------ 8 deliver
+scenes.deliver = () => {
+  const s = $(`<div class="scene">${side(4, 'Check, then pay', ['Pay with one tap, all at once or in parts', 'Something wrong? Report it with a photo', 'Say how much you want back', 'The supplier accepts or makes an offer'])}${tag(REAL)}</div>`);
+  const ph = phone(1180, 75, ['14-buyer-decide', '15-problem-form']); s.appendChild(ph);
+  const steps = [...s.querySelectorAll('.step')];
+  return { el: s, at(u) {
+    const b = fade(u, L('deliver', 1) + .2, .6);
+    screen(ph, [1 - b, b], [0, .35 * io(clamp((u - L('deliver', 1) - 1.5) / 3))]);
+    [1.2, L('deliver', 1) + .2, L('deliver', 1) + 2.2, L('deliver', 1) + 4].forEach((at, i) => show(steps[i], fade(u, at), 16));
+  } };
+};
+// ------------------------------------------------------------------ 9 safety
+scenes.safety = () => {
+  const s = $(`<div class="scene">
+    <div class="abs" style="left:140px;top:130px"><div class="kicker">Safety, built into the contract</div><div class="d h2" style="margin-top:12px">Money can't get stuck, or go astray</div></div>
+    <div class="tile card" id="s1" style="left:140px"><div class="ico">↺</div><h3>Automatic refunds</h3><p>Not accepted or not shipped in time? Arra's agent (ERC-8004 #9996) sends the money back.</p></div>
+    <div class="tile card" id="s2" style="left:700px"><div class="ico">7</div><h3>Silence can't freeze it</h3><p>An ignored offer goes through after 7 days. No agreement in 30 days? It splits 50/50.</p></div>
+    <div class="tile card" id="s3" style="left:1260px"><div class="ico">⇄</div><h3>Only buyer or supplier</h3><p>No admin key can move locked money. Verified source, 55 contract tests.</p></div>
+  </div>`);
+  return { el: s, at(u) {
+    show(s.querySelector('#s1'), fade(u, L('safety', 0) + .2)); show(s.querySelector('#s2'), fade(u, L('safety', 1) + .1)); show(s.querySelector('#s3'), fade(u, L('safety', 2) + .1));
+  } };
+};
+// ------------------------------------------------------------------ 10 proof
+scenes.proof = () => {
+  const rows = [
+    ['Vault v4, source verified (Sourcify)', '0xa3b3…c444'],
+    ['Agent identity, ERC-8004', '#9996'],
+    ['Naira → USDT via Textile FX', 'tx 0xc9e6…673c'],
+    ['Locked in the vault', 'tx 0xe08f…0622'],
+    ['Attribution tag on every transaction', 'celo_00cfddd372fa'],
+  ];
+  const s = $(`<div class="scene">
+    <div class="abs" style="left:240px;top:150px"><div class="kicker">Live on Celo mainnet</div><div class="d h2" style="margin-top:12px">Check it yourself</div></div>
+    <div class="abs" style="left:240px;top:360px;width:1440px">${rows.map((r, i) => `<div class="proofrow" data-i="${i}"><span>${r[0]}</span><span class="h">${r[1]}</span></div>`).join('')}</div>
+  </div>`);
+  const rs = [...s.querySelectorAll('.proofrow')];
+  return { el: s, at(u) { rs.forEach((r, i) => show(r, fade(u, .8 + i * 1.1), 14)); } };
+};
+// ------------------------------------------------------------------ 11 close
+scenes.close = () => {
+  const s = $(`<div class="scene">
+    <div class="abs word" id="wm" style="left:0;right:0;top:300px;text-align:center;font-size:190px">A<span class="lime">rr</span>a</div>
+    <div class="abs d" id="tg" style="left:0;right:0;top:540px;text-align:center;font-size:56px"><span class="chrome">Trade with anyone, without the worry.</span></div>
+    <div class="abs" id="url" style="left:0;right:0;top:680px;text-align:center"><span class="chip" style="font-size:34px">usearra.duckdns.org</span></div>
+    <div class="abs soft" id="by" style="left:0;right:0;top:820px;text-align:center;font-size:26px">Built on Celo · Textile FX · MiniPay · github.com/phoenix-2203/arra</div>
+  </div>`);
+  return { el: s, at(u) {
+    const p = fade(u, .2, .8); const wm = s.querySelector('#wm'); wm.style.opacity = p; wm.style.transform = `scale(${.94 + .06 * eo(p)})`;
+    show(s.querySelector('#tg'), fade(u, 1.2)); show(s.querySelector('#url'), fade(u, 2.6)); show(s.querySelector('#by'), fade(u, 3.4));
+  } };
+};
+
+const built = TL.scenes.map((sc) => { const x = scenes[sc.id](); x.sc = sc; stage.appendChild(x.el); return x; });
+window.seek = (t) => {
+  for (const x of built) {
+    const u = t - x.sc.start;
+    const vis = u >= -0.001 && u <= x.sc.dur;
+    x.el.style.display = vis ? 'block' : 'none';
+    if (!vis) continue;
+    const X = TL.crossfade;
+    x.el.style.opacity = Math.min(clamp(u / X), clamp((x.sc.dur - u) / X), 1);
+    if (x.sc.start === 0) x.el.style.opacity = Math.min(clamp(u / .8), clamp((x.sc.dur - u) / X));
+    if (x.sc.id === 'close') x.el.style.opacity = Math.min(clamp(u / X), clamp((x.sc.dur - u) / 1.2));
+    x.at(u);
+  }
+};
+window.ready = Promise.all([document.fonts.ready, ...[...document.images].map((i) => i.decode().catch(() => {}))]).then(() => { seek(0); return true; });
+</script>
+</body></html>
