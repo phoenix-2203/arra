@@ -51,10 +51,10 @@
   "scene": "problem",
   "si": 1,
   "li": 2,
-  "text": "And letters of credit have all but disappeared, so most of this trade moves by plain bank transfer, with no protection at all.",
+  "text": "And letters of credit have almost vanished, so most of this trade moves by plain bank transfer.",
   "file": "lines/01_02.wav",
-  "dur": 7.477,
-  "heard": "and letters of credit have all but disappeared. So most of this trade moves by plane bank transfer with no protection at all.",
+  "dur": 5.397,
+  "heard": "and letters of credit have almost vanished, so most of this trade moves by plane bank transfer.",
   "missing": [
    "plain"
   ]
@@ -63,11 +63,12 @@
   "scene": "intro",
   "si": 2,
   "li": 0,
-  "text": "Arra fixes that. Pay the deposit. Keep the balance locked until it ships.",
+  "text": "Arra fixes that. Arra is Latin for earnest money: the deposit that secures a deal.",
   "file": "lines/02_00.wav",
-  "dur": 4.812,
-  "heard": "Aura fixes that, pay the deposit. Keep the balance locked until it ships.",
+  "dur": 5.486,
+  "heard": "Aura fixes that. Aura is Latin for earnest money, the deposit that secures a deal.",
   "missing": [
+   "ahra",
    "ahra"
   ]
  },
@@ -75,10 +76,10 @@
   "scene": "intro",
   "si": 2,
   "li": 1,
-  "text": "The money sits in an open contract on Celo: not with Arra, and not with the supplier.",
+  "text": "Pay the deposit, and keep the balance locked until it ships, in an open contract on Celo: not with Arra, not with the supplier.",
   "file": "lines/02_01.wav",
-  "dur": 5.291,
-  "heard": "The money sits in an open contract on sell-o, not with ARA and not with the supplier.",
+  "dur": 7.995,
+  "heard": "Pay the deposit and keep the balance locked until it ships in an open contract on cello. Not with Aura, not with the supplier.",
   "missing": [
    "sello",
    "ahra"
@@ -133,14 +134,12 @@
   "scene": "pay",
   "si": 5,
   "li": 0,
-  "text": "Pay in dollars, or straight from naira. Textile FX converts exactly what you need, at one firm rate, the moment you lock.",
+  "text": "Pay in dollars, or straight from naira, even inside MiniPay.",
   "file": "lines/05_00.wav",
-  "dur": 8.36,
-  "heard": "Pay in dollars or straight from Naira. Textile FX converts exactly what you need at one firm rate the moment you lock.",
+  "dur": 3.943,
+  "heard": "Pay in dollars or straight from Naira, even inside mini pay.",
   "missing": [
-   "nyra",
-   "f",
-   "x"
+   "nyra"
   ]
  },
  {
@@ -149,16 +148,47 @@
   "li": 1,
   "text": "The supplier accepts and gets the deposit instantly. The balance waits until the goods ship.",
   "file": "lines/05_01.wav",
-  "dur": 5.697,
+  "dur": 5.547,
   "heard": "The supplier accepts and gets the deposit instantly. The balance waits until the goods ship.",
   "missing": []
  },
  {
-  "scene": "returns",
+  "scene": "textile",
   "si": 6,
   "li": 0,
-  "text": "That one rate matters. In 2023, an importer with a seven-thousand-dollar balance needed two million naira more, just seven weeks later.",
+  "text": "Every naira payment is a Textile FX fill: a firm quote for exactly the dollars the order needs, settled in one transaction.",
   "file": "lines/06_00.wav",
+  "dur": 8.384,
+  "heard": "Every NIRA payment is a textile FX fill. A firm quote for exactly the dollars the order needs settled in one transaction.",
+  "missing": [
+   "nyra",
+   "f",
+   "x"
+  ]
+ },
+ {
+  "scene": "textile",
+  "si": 6,
+  "li": 1,
+  "text": "Our first one on mainnet turned naira, at about thirteen hundred and seventy-four to the dollar, straight into a locked order.",
+  "file": "lines/06_01.wav",
+  "dur": 7.084,
+  "heard": "Our first one on Main Net turned Naira. At about $1,374 to the dollar, straight into a locked order.",
+  "missing": [
+   "nyra",
+   "thirteen",
+   "hundred",
+   "and",
+   "seventy",
+   "four"
+  ]
+ },
+ {
+  "scene": "returns",
+  "si": 7,
+  "li": 0,
+  "text": "That one rate matters. In 2023, an importer with a seven-thousand-dollar balance needed two million naira more, just seven weeks later.",
+  "file": "lines/07_00.wav",
   "dur": 9.101,
   "heard": "That one rate matters. In 2023, an importer with a $7,000 balance needed 2 million Naira more just seven weeks later.",
   "missing": [
@@ -173,10 +203,10 @@
  },
  {
   "scene": "returns",
-  "si": 6,
+  "si": 7,
   "li": 1,
   "text": "With Arra, that balance was paid for on day one.",
-  "file": "lines/06_01.wav",
+  "file": "lines/07_01.wav",
   "dur": 2.662,
   "heard": "With Aura, that balance was paid for on day one.",
   "missing": [
@@ -185,32 +215,32 @@
  },
  {
   "scene": "deliver",
-  "si": 7,
+  "si": 8,
   "li": 0,
   "text": "When the goods arrive, check them. Everything's right? Pay the balance with one tap, all at once or in parts.",
-  "file": "lines/07_00.wav",
+  "file": "lines/08_00.wav",
   "dur": 6.261,
   "heard": "When the goods arrive, check them. Everything's right. Pay the balance with one tap, all at once or in parts. [BUZZER]",
   "missing": []
  },
  {
   "scene": "deliver",
-  "si": 7,
+  "si": 8,
   "li": 1,
-  "text": "Something wrong? Report it with a photo and say what you want back. The supplier accepts or makes an offer.",
-  "file": "lines/07_01.wav",
-  "dur": 6.261,
-  "heard": "Something wrong, report it with a photo and say what you want back. The supplier accepts or makes an offer.",
+  "text": "Something wrong? Report it with a photo. The supplier accepts, or makes an offer.",
+  "file": "lines/08_01.wav",
+  "dur": 4.659,
+  "heard": "Something wrong, report it with a photo. The supplier accepts or makes an offer.",
   "missing": []
  },
  {
   "scene": "safety",
-  "si": 8,
+  "si": 9,
   "li": 0,
-  "text": "If the supplier never accepts, or never ships, Arra's agent refunds you automatically.",
-  "file": "lines/08_00.wav",
-  "dur": 5.376,
-  "heard": "If the supplier never accepts or never ships, R is agent refuns you automatically.",
+  "text": "Changed your mind before they accept? Cancel and get everything back. If they never accept, or never ship, Arra's agent refunds you automatically.",
+  "file": "lines/09_00.wav",
+  "dur": 9.13,
+  "heard": "changed your mind before they accept, cancel, and get everything back. If they never accept or never ship, R is Agent refuns you automatically.",
   "missing": [
    "ahras",
    "refunds"
@@ -218,46 +248,59 @@
  },
  {
   "scene": "safety",
-  "si": 8,
+  "si": 9,
   "li": 1,
-  "text": "Silence can't freeze the money: an ignored offer goes through after seven days.",
-  "file": "lines/08_01.wav",
-  "dur": 4.885,
-  "heard": "Silence can't freeze the money, an ignored offer goes through after seven days.",
-  "missing": []
- },
- {
-  "scene": "safety",
-  "si": 8,
-  "li": 2,
-  "text": "And nobody, not even Arra, can send it anywhere but to the buyer or the supplier.",
-  "file": "lines/08_02.wav",
-  "dur": 4.849,
-  "heard": "And nobody, not even ARA, can send it anywhere but to the buyer or the supplier.",
+  "text": "Silence can't freeze the money, and nobody, not even Arra, can send it anywhere but to the buyer or the supplier.",
+  "file": "lines/09_01.wav",
+  "dur": 6.869,
+  "heard": "Silence can't freeze the money, and nobody, not even ARA, can send it anywhere but to the buyer or the supplier.",
   "missing": [
    "ahra"
   ]
  },
  {
-  "scene": "proof",
-  "si": 9,
+  "scene": "uses",
+  "si": 10,
   "li": 0,
-  "text": "Arra is live on Celo mainnet today, with a verified contract, a registered agent, and naira orders filled through Textile.",
-  "file": "lines/09_00.wav",
-  "dur": 8.468,
-  "heard": "ARA is live on Cello Main Net today, with a verified contract, a registered agent, and Naira orders filled through textile.",
+  "text": "The same contract works for any deal with a deposit and a balance: a house built back home, furniture made to order, a freelance project.",
+  "file": "lines/10_00.wav",
+  "dur": 8.593,
+  "heard": "The same contract works for any deal with a deposit and a balance. A house built back home, furniture made to order, a freelance project.",
+  "missing": []
+ },
+ {
+  "scene": "proof",
+  "si": 11,
+  "li": 0,
+  "text": "Arra is live on Celo mainnet. A friend's real order ran start to finish: locked, accepted with the deposit, balance paid.",
+  "file": "lines/11_00.wav",
+  "dur": 8.63,
+  "heard": "ARA is live on Cello Mainnet. A friend's real order ran start to finish. Locked, accepted with the deposit, balance paid.",
   "missing": [
    "ahra",
    "sello",
+   "main",
+   "net"
+  ]
+ },
+ {
+  "scene": "proof",
+  "si": 11,
+  "li": 1,
+  "text": "With a verified contract, a registered agent, and naira orders filled through Textile.",
+  "file": "lines/11_01.wav",
+  "dur": 5.354,
+  "heard": "with a verified contract, a registered agent, and Naira orders filled through textile.",
+  "missing": [
    "nyra"
   ]
  },
  {
   "scene": "close",
-  "si": 10,
+  "si": 12,
   "li": 0,
   "text": "Arra. Trade with anyone, without the worry.",
-  "file": "lines/10_00.wav",
+  "file": "lines/12_00.wav",
   "dur": 2.257,
   "heard": "ARA, trade with anyone without the worry.",
   "missing": [

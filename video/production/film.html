@@ -36,11 +36,11 @@ html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; backgro
 .prob .src { position: absolute; left: 40px; bottom: 34px; font-size: 20px; color: var(--soft); }
 .row { display: grid; grid-template-columns: 1fr 240px 480px; gap: 20px; padding: 26px 0; border-top: 2px solid var(--line); font-size: 32px; align-items: baseline; }
 .row .n { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
-.tile { position: absolute; top: 330px; width: 520px; height: 420px; padding: 44px; }
+.tile { position: absolute; top: 300px; width: 520px; height: 520px; padding: 44px; }
 .tile h3 { font-family: "D"; font-size: 44px; margin: 26px 0 16px; letter-spacing: -0.02em; line-height: 1.05; }
 .tile p { font-size: 27px; color: var(--soft); line-height: 1.4; margin: 0; }
 .tile .ico { width: 72px; height: 72px; border-radius: 20px; background: var(--lime); color: var(--ink); display: grid; place-items: center; font-family: "D"; font-size: 38px; }
-.proofrow { display: grid; grid-template-columns: 520px 1fr; padding: 22px 0; border-top: 2px solid var(--line); font-size: 30px; }
+.proofrow { display: grid; grid-template-columns: 700px 1fr; padding: 18px 0; border-top: 2px solid var(--line); font-size: 30px; }
 .proofrow .h { font-family: ui-monospace, Menlo, monospace; color: var(--lime); font-size: 28px; }
 svg { overflow: visible; }
 </style></head>
@@ -115,18 +115,19 @@ scenes.problem = () => {
 scenes.intro = () => {
   const s = $(`<div class="scene">
     <div class="abs word" id="wm" style="left:0;right:0;top:250px;text-align:center;font-size:200px">A<span class="lime">rr</span>a</div>
-    <div class="abs d" id="tg" style="left:0;right:0;top:500px;text-align:center;font-size:58px"><span class="chrome">Pay the deposit. Keep the balance locked until it ships.</span></div>
-    <div class="abs" id="flow" style="left:250px;top:680px;width:1420px;height:200px">
+    <div class="abs" id="mean" style="left:0;right:0;top:470px;text-align:center;font-size:36px;color:#b9beb3"><i>arra</i> (Latin): earnest money, the deposit that secures a deal</div>
+    <div class="abs d" id="tg" style="left:0;right:0;top:560px;text-align:center;font-size:58px"><span class="chrome">Pay the deposit. Keep the balance locked until it ships.</span></div>
+    <div class="abs" id="flow" style="left:250px;top:700px;width:1420px;height:200px">
       <div class="card abs" style="left:0;top:40px;width:300px;padding:30px;text-align:center;font-size:34px">Buyer</div>
       <div class="abs card" style="left:500px;top:0;width:420px;padding:28px;text-align:center;border-color:rgba(204,255,61,.6)"><div class="d" style="font-size:38px">Open contract</div><div class="soft" style="font-size:26px;margin-top:6px">on Celo · public · verified</div></div>
       <div class="card abs" style="left:1120px;top:40px;width:300px;padding:30px;text-align:center;font-size:34px">Supplier</div>
       <svg class="abs" style="left:0;top:0" width="1420" height="200"><path d="M300 100 H500" stroke="#ccff3d" stroke-width="4"/><path d="M920 100 H1120" stroke="#ccff3d" stroke-width="4" stroke-dasharray="10 10"/></svg>
     </div>
-    <div class="abs" id="not" style="left:0;right:0;top:930px;text-align:center;font-size:34px"><span style="color:#b9beb3">Not held by Arra. Not held by the supplier.</span></div>
+    <div class="abs" id="not" style="left:0;right:0;top:950px;text-align:center;font-size:34px"><span style="color:#b9beb3">Not held by Arra. Not held by the supplier.</span></div>
   </div>`);
   return { el: s, at(u) {
     const p = fade(u, .1, .8); const wm = s.querySelector('#wm'); wm.style.opacity = p; wm.style.transform = `scale(${.94 + .06 * eo(p)})`;
-    show(s.querySelector('#tg'), fade(u, 1.6)); show(s.querySelector('#flow'), fade(u, L('intro', 1))); show(s.querySelector('#not'), fade(u, L('intro', 1) + 2.4));
+    show(s.querySelector('#mean'), fade(u, 2.4)); show(s.querySelector('#tg'), fade(u, L('intro', 1))); show(s.querySelector('#flow'), fade(u, L('intro', 1) + 2.2)); show(s.querySelector('#not'), fade(u, L('intro', 1) + 5.2));
   } };
 };
 // ------------------------------------------------------------------ helpers for product scenes
@@ -184,6 +185,32 @@ scenes.pay = () => {
     show(s.querySelector('#fx'), fade(u, 2.2) * (1 - sw)); show(s.querySelector('#dep'), fade(u, L('pay', 1) + 2.4));
   } };
 };
+// ------------------------------------------------------------------ textile
+scenes.textile = () => {
+  const box = (x, w, t, sub, hl) => `<div class="abs card" style="left:${x}px;top:430px;width:${w}px;height:190px;padding:30px;text-align:center;${hl ? 'border-color:rgba(204,255,61,.7);background:rgba(204,255,61,.08)' : ''}"><div class="d" style="font-size:40px">${t}</div><div class="soft" style="font-size:24px;margin-top:10px">${sub}</div></div>`;
+  const s = $(`<div class="scene">
+    <div class="abs" style="left:140px;top:130px"><div class="kicker">Open Corridors · Textile FX</div><div class="d h2" style="margin-top:12px">Every naira payment is a Textile fill</div></div>
+    <div id="fl">${box(140, 360, 'cNGN', 'naira in the buyer\'s wallet')}${box(620, 460, 'Textile FX', 'firm RFQ quote · exact output', true)}${box(1200, 260, 'USDT', 'exactly what the order needs')}${box(1580, 200, 'Vault', 'locked')}
+      <svg class="abs" style="left:0;top:0" width="1920" height="1080"><path id="w1" d="M500 525 H620" stroke="#ccff3d" stroke-width="5"/><path d="M1080 525 H1200" stroke="#ccff3d" stroke-width="5"/><path d="M1460 525 H1580" stroke="#ccff3d" stroke-width="5"/></svg></div>
+    <div class="abs" id="pts" style="left:140px;top:680px;display:flex;gap:16px"><span class="chip w">One transaction</span><span class="chip w">Builder codes: arra · celo_00cfddd372fa</span><span class="chip w">Signable in MiniPay</span></div>
+    <div class="abs card" id="tx" style="left:140px;top:800px;width:1640px;padding:30px 40px;border-color:rgba(204,255,61,.5)"><div class="kicker" style="font-size:20px">First naira-paid order on Celo mainnet</div><div style="font-size:34px;margin-top:10px">≈ ₦1,374 cNGN → <b class="lime">1.00 USDT</b> → locked in the vault <span class="soft" style="font-family:ui-monospace,Menlo,monospace;font-size:26px">&nbsp; tx 0xc9e6…673c · 0xe08f…0622</span></div></div>
+  </div>`);
+  const bx = [...s.querySelectorAll('#fl > .card')];
+  return { el: s, at(u) {
+    bx.forEach((b, i) => show(b, fade(u, .5 + i * .9), 20));
+    show(s.querySelector('#pts'), fade(u, 5.4)); show(s.querySelector('#tx'), fade(u, L('textile', 1) + .2));
+  } };
+};
+// ------------------------------------------------------------------ uses
+scenes.uses = () => {
+  const s = $(`<div class="scene">
+    <div class="abs" style="left:140px;top:130px"><div class="kicker">Not just imports</div><div class="d h2" style="margin-top:12px">Any deal with a deposit and a balance</div></div>
+    <div class="tile card" id="u1" style="left:140px"><div class="ico">⌂</div><h3>A house built back home</h3><p>Diaspora families release money stage by stage as the work is done.</p></div>
+    <div class="tile card" id="u2" style="left:700px"><div class="ico">▤</div><h3>Made to order</h3><p>Furniture, signage, tailoring: money for materials now, the rest when it's finished.</p></div>
+    <div class="tile card" id="u3" style="left:1260px"><div class="ico">⟨⟩</div><h3>Freelance projects</h3><p>Milestones without a platform holding the money.</p></div>
+  </div>`);
+  return { el: s, at(u) { ['#u1', '#u2', '#u3'].forEach((id, i) => show(s.querySelector(id), fade(u, 2.6 + i * 1.6))); } };
+};
 // ------------------------------------------------------------------ 7 returns
 scenes.returns = () => {
   const s = $(`<div class="scene">
@@ -219,29 +246,31 @@ scenes.deliver = () => {
 scenes.safety = () => {
   const s = $(`<div class="scene">
     <div class="abs" style="left:140px;top:130px"><div class="kicker">Safety, built into the contract</div><div class="d h2" style="margin-top:12px">Money can't get stuck, or go astray</div></div>
-    <div class="tile card" id="s1" style="left:140px"><div class="ico">↺</div><h3>Automatic refunds</h3><p>Not accepted or not shipped in time? Arra's agent (ERC-8004 #9996) sends the money back.</p></div>
+    <div class="tile card" id="s1" style="left:140px"><div class="ico">↺</div><h3>Refund rules</h3><p style="color:#eef2ea;line-height:1.6;font-size:25px">Cancel before acceptance → <b class="lime">100% back</b><br>Not accepted in time → <b class="lime">100% back</b><br>Not shipped in time → <b class="lime">balance back</b><br>Stuck dispute → <b class="lime">50/50 at 30 days</b></p><p style="font-size:21px;margin-top:12px">Sent automatically by Arra's agent (#9996)</p></div>
     <div class="tile card" id="s2" style="left:700px"><div class="ico">7</div><h3>Silence can't freeze it</h3><p>An ignored offer goes through after 7 days. No agreement in 30 days? It splits 50/50.</p></div>
     <div class="tile card" id="s3" style="left:1260px"><div class="ico">⇄</div><h3>Only buyer or supplier</h3><p>No admin key can move locked money. Verified source, 55 contract tests.</p></div>
   </div>`);
   return { el: s, at(u) {
-    show(s.querySelector('#s1'), fade(u, L('safety', 0) + .2)); show(s.querySelector('#s2'), fade(u, L('safety', 1) + .1)); show(s.querySelector('#s3'), fade(u, L('safety', 2) + .1));
+    show(s.querySelector('#s1'), fade(u, L('safety', 0) + .2)); show(s.querySelector('#s2'), fade(u, L('safety', 1) + .1)); show(s.querySelector('#s3'), fade(u, L('safety', 1) + 2.6));
   } };
 };
 // ------------------------------------------------------------------ 10 proof
 scenes.proof = () => {
   const rows = [
+    ['A friend\'s real order #3: $0.90 locked', 'tx 0xfbf8…84f1'],
+    ['Supplier accepted, $0.27 deposit paid', 'tx 0xb8ee…3b7b'],
+    ['$0.63 balance paid', 'tx 0xdcf0…2a38'],
     ['Vault v4, source verified (Sourcify)', '0xa3b3…c444'],
     ['Agent identity, ERC-8004', '#9996'],
     ['Naira → USDT via Textile FX', 'tx 0xc9e6…673c'],
-    ['Locked in the vault', 'tx 0xe08f…0622'],
     ['Attribution tag on every transaction', 'celo_00cfddd372fa'],
   ];
   const s = $(`<div class="scene">
     <div class="abs" style="left:240px;top:150px"><div class="kicker">Live on Celo mainnet</div><div class="d h2" style="margin-top:12px">Check it yourself</div></div>
-    <div class="abs" style="left:240px;top:360px;width:1440px">${rows.map((r, i) => `<div class="proofrow" data-i="${i}"><span>${r[0]}</span><span class="h">${r[1]}</span></div>`).join('')}</div>
+    <div class="abs" style="left:240px;top:330px;width:1440px">${rows.map((r, i) => `<div class="proofrow" data-i="${i}"><span>${r[0]}</span><span class="h">${r[1]}</span></div>`).join('')}</div>
   </div>`);
   const rs = [...s.querySelectorAll('.proofrow')];
-  return { el: s, at(u) { rs.forEach((r, i) => show(r, fade(u, .8 + i * 1.1), 14)); } };
+  return { el: s, at(u) { rs.forEach((r, i) => show(r, fade(u, i < 3 ? 2.6 + i * 1.6 : L('proof', 1) + (i - 3) * .9), 14)); } };
 };
 // ------------------------------------------------------------------ 11 close
 scenes.close = () => {

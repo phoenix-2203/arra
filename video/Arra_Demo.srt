@@ -1,155 +1,179 @@
 1
-00:00:01,200 --> 00:00:03,728
+00:00:01,000 --> 00:00:03,528
 In Lagos, a phone importer sends a
 
 2
-00:00:03,728 --> 00:00:06,617
+00:00:03,528 --> 00:00:06,417
 thirty percent deposit to a supplier in Shenzhen.
 
 3
-00:00:07,317 --> 00:00:09,417
+00:00:07,017 --> 00:00:09,117
 The other seventy percent is still to
 
 4
-00:00:09,417 --> 00:00:11,818
+00:00:09,117 --> 00:00:11,518
 come. That balance is where it goes wrong.
 
 5
-00:00:13,218 --> 00:00:16,054
+00:00:12,518 --> 00:00:15,354
 Goods that never arrive. Payments redirected by
 
 6
-00:00:16,054 --> 00:00:19,295
+00:00:15,354 --> 00:00:18,595
 a fake "our bank details have changed" message.
 
 7
-00:00:19,895 --> 00:00:22,157
+00:00:19,095 --> 00:00:21,356
 A naira that can lose a third of
 
 8
-00:00:22,157 --> 00:00:24,418
+00:00:21,356 --> 00:00:23,618
 its value between the deposit and the balance.
 
 9
-00:00:25,118 --> 00:00:28,694
-And letters of credit have all but disappeared, so most of
+00:00:24,218 --> 00:00:26,758
+And letters of credit have almost vanished, so
 
 10
-00:00:28,694 --> 00:00:32,595
-this trade moves by plain bank transfer, with no protection at all.
+00:00:26,758 --> 00:00:29,615
+most of this trade moves by plain bank transfer.
 
 11
-00:00:33,995 --> 00:00:38,807
-Arra fixes that. Pay the deposit. Keep the balance locked until it ships.
+00:00:30,615 --> 00:00:33,175
+Arra fixes that. Arra is Latin for
 
 12
-00:00:39,507 --> 00:00:41,997
-The money sits in an open contract on
+00:00:33,175 --> 00:00:36,101
+earnest money: the deposit that secures a deal.
 
 13
-00:00:41,997 --> 00:00:44,798
-Celo: not with Arra, and not with the supplier.
+00:00:36,701 --> 00:00:40,699
+Pay the deposit, and keep the balance locked until it ships, in
 
 14
-00:00:46,198 --> 00:00:48,776
-Start by describing the order, like a
+00:00:40,699 --> 00:00:44,696
+an open contract on Celo: not with Arra, not with the supplier.
 
 15
-00:00:48,776 --> 00:00:51,723
-message. Arra's assistant turns it into clear terms.
+00:00:45,696 --> 00:00:48,274
+Start by describing the order, like a
 
 16
-00:00:52,523 --> 00:00:55,858
-Words nobody can check, like "good quality", are refused,
+00:00:48,274 --> 00:00:51,221
+message. Arra's assistant turns it into clear terms.
 
 17
-00:00:55,858 --> 00:00:59,563
-and the terms are fingerprinted so they can't change later.
+00:00:51,821 --> 00:00:55,156
+Words nobody can check, like "good quality", are refused,
 
 18
-00:01:00,863 --> 00:01:05,332
-Then send your supplier one link. They read the exact terms, in English
+00:00:55,156 --> 00:00:58,861
+and the terms are fingerprinted so they can't change later.
 
 19
-00:01:05,332 --> 00:01:09,802
-or Chinese, connect the wallet they want to be paid in, and agree.
+00:00:59,761 --> 00:01:04,231
+Then send your supplier one link. They read the exact terms, in English
 
 20
-00:01:10,602 --> 00:01:12,912
-No account numbers copied from a chat,
+00:01:04,231 --> 00:01:08,700
+or Chinese, connect the wallet they want to be paid in, and agree.
 
 21
-00:01:12,912 --> 00:01:15,551
-so a scammer's look-alike address can't slip in.
+00:01:09,300 --> 00:01:11,610
+No account numbers copied from a chat,
 
 22
-00:01:16,851 --> 00:01:21,031
-Pay in dollars, or straight from naira. Textile FX converts exactly
+00:01:11,610 --> 00:01:14,249
+so a scammer's look-alike address can't slip in.
 
 23
-00:01:21,031 --> 00:01:25,211
-what you need, at one firm rate, the moment you lock.
+00:01:15,149 --> 00:01:19,092
+Pay in dollars, or straight from naira, even inside MiniPay.
 
 24
-00:01:26,211 --> 00:01:28,870
+00:01:19,792 --> 00:01:22,381
 The supplier accepts and gets the deposit
 
 25
-00:01:28,870 --> 00:01:31,908
+00:01:22,381 --> 00:01:25,339
 instantly. The balance waits until the goods ship.
 
 26
-00:01:33,308 --> 00:01:37,642
-That one rate matters. In 2023, an importer with a
+00:01:26,239 --> 00:01:30,431
+Every naira payment is a Textile FX fill: a firm quote
 
 27
-00:01:37,642 --> 00:01:42,409
-seven-thousand-dollar balance needed two million naira more, just seven weeks later.
+00:01:30,431 --> 00:01:34,623
+for exactly the dollars the order needs, settled in one transaction.
 
 28
-00:01:43,309 --> 00:01:45,971
-With Arra, that balance was paid for on day one.
+00:01:35,223 --> 00:01:38,596
+Our first one on mainnet turned naira, at about thirteen
 
 29
-00:01:47,771 --> 00:01:50,901
-When the goods arrive, check them. Everything's right? Pay the
+00:01:38,596 --> 00:01:42,307
+hundred and seventy-four to the dollar, straight into a locked order.
 
 30
-00:01:50,901 --> 00:01:54,032
-balance with one tap, all at once or in parts.
+00:01:43,407 --> 00:01:47,741
+That one rate matters. In 2023, an importer with a
 
 31
-00:01:54,932 --> 00:01:58,062
-Something wrong? Report it with a photo and say what
+00:01:47,741 --> 00:01:52,508
+seven-thousand-dollar balance needed two million naira more, just seven weeks later.
 
 32
-00:01:58,062 --> 00:02:01,193
-you want back. The supplier accepts or makes an offer.
+00:01:53,208 --> 00:01:55,870
+With Arra, that balance was paid for on day one.
 
 33
-00:02:02,493 --> 00:02:07,869
-If the supplier never accepts, or never ships, Arra's agent refunds you automatically.
+00:01:57,170 --> 00:02:00,300
+When the goods arrive, check them. Everything's right? Pay the
 
 34
-00:02:08,469 --> 00:02:13,354
-Silence can't freeze the money: an ignored offer goes through after seven days.
+00:02:00,300 --> 00:02:03,431
+balance with one tap, all at once or in parts.
 
 35
-00:02:13,954 --> 00:02:16,379
-And nobody, not even Arra, can send it
+00:02:04,031 --> 00:02:08,690
+Something wrong? Report it with a photo. The supplier accepts, or makes an offer.
 
 36
-00:02:16,379 --> 00:02:18,803
-anywhere but to the buyer or the supplier.
+00:02:09,590 --> 00:02:13,957
+Changed your mind before they accept? Cancel and get everything back.
 
 37
-00:02:20,203 --> 00:02:24,437
-Arra is live on Celo mainnet today, with a verified
+00:02:13,957 --> 00:02:18,720
+If they never accept, or never ship, Arra's agent refunds you automatically.
 
 38
-00:02:24,437 --> 00:02:28,671
-contract, a registered agent, and naira orders filled through Textile.
+00:02:19,320 --> 00:02:22,591
+Silence can't freeze the money, and nobody, not even Arra,
 
 39
-00:02:30,771 --> 00:02:33,028
+00:02:22,591 --> 00:02:26,189
+can send it anywhere but to the buyer or the supplier.
+
+40
+00:02:27,089 --> 00:02:31,214
+The same contract works for any deal with a deposit and a
+
+41
+00:02:31,214 --> 00:02:35,682
+balance: a house built back home, furniture made to order, a freelance project.
+
+42
+00:02:36,682 --> 00:02:40,792
+Arra is live on Celo mainnet. A friend's real order
+
+43
+00:02:40,792 --> 00:02:45,312
+ran start to finish: locked, accepted with the deposit, balance paid.
+
+44
+00:02:45,812 --> 00:02:51,166
+With a verified contract, a registered agent, and naira orders filled through Textile.
+
+45
+00:02:52,466 --> 00:02:54,723
 Arra. Trade with anyone, without the worry.

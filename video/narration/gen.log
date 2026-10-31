@@ -1,0 +1,126 @@
+/project/sherpa-onnx/csrc/offline-stream.cc:AcceptWaveformImpl:151 Creating a resampler:
+   in_sample_rate: 24000
+   output_sample_rate: 16000
+
+hook       5.42s miss=['thirty', 'percent'] | In Lagos, a phone importer sends a 30% deposit to a supplier in Shenzhen.
+/project/sherpa-onnx/csrc/offline-stream.cc:AcceptWaveformImpl:151 Creating a resampler:
+   in_sample_rate: 24000
+   output_sample_rate: 16000
+
+hook       4.50s miss=['seventy', 'percent'] | The other 70% is still to come. That balance is where it goes wrong. [BUZZER]
+/project/sherpa-onnx/csrc/offline-stream.cc:AcceptWaveformImpl:151 Creating a resampler:
+   in_sample_rate: 24000
+   output_sample_rate: 16000
+
+problem    6.08s miss=[] | Goods that never arrive, payments redirected by a fake message, our bank details have changed.
+/project/sherpa-onnx/csrc/offline-stream.cc:AcceptWaveformImpl:151 Creating a resampler:
+   in_sample_rate: 24000
+   output_sample_rate: 16000
+
+problem    4.52s miss=['nyra'] | a naira that can lose a third of its value between the deposit and the balance.
+/project/sherpa-onnx/csrc/offline-stream.cc:AcceptWaveformImpl:151 Creating a resampler:
+   in_sample_rate: 24000
+   output_sample_rate: 16000
+
+problem    5.40s miss=['plain'] | and letters of credit have almost vanished, so most of this trade moves by plane bank transfer.
+/project/sherpa-onnx/csrc/offline-stream.cc:AcceptWaveformImpl:151 Creating a resampler:
+   in_sample_rate: 24000
+   output_sample_rate: 16000
+
+intro      5.49s miss=['ahra', 'ahra'] | Aura fixes that. Aura is Latin for earnest money, the deposit that secures a deal.
+/project/sherpa-onnx/csrc/offline-stream.cc:AcceptWaveformImpl:151 Creating a resampler:
+   in_sample_rate: 24000
+   output_sample_rate: 16000
+
+intro      8.00s miss=['sello', 'ahra'] | Pay the deposit and keep the balance locked until it ships in an open contract on cello. Not with Aura, not with the supplier.
+/project/sherpa-onnx/csrc/offline-stream.cc:AcceptWaveformImpl:151 Creating a resampler:
+   in_sample_rate: 24000
+   output_sample_rate: 16000
+
+describe   5.53s miss=['ahras'] | Start by describing the order, like a message. ARA's assistant turns it into clear terms.
+/project/sherpa-onnx/csrc/offline-stream.cc:AcceptWaveformImpl:151 Creating a resampler:
+   in_sample_rate: 24000
+   output_sample_rate: 16000
+
+describe   7.04s miss=[] | Words nobody can check, like good quality, are refused. And the terms are fingerprinted, so they can't change later. [BUZZER]
+/project/sherpa-onnx/csrc/offline-stream.cc:AcceptWaveformImpl:151 Creating a resampler:
+   in_sample_rate: 24000
+   output_sample_rate: 16000
+
+link       8.94s miss=[] | Then, send your supplier one link. They read the exact terms, in English or Chinese, connect the wallet they want to be paid in and agree.
+/project/sherpa-onnx/csrc/offline-stream.cc:AcceptWaveformImpl:151 Creating a resampler:
+   in_sample_rate: 24000
+   output_sample_rate: 16000
+
+link       4.95s miss=['look', 'alike'] | No account numbers copied from a chat, so a scammer's lookalike address can't slip in.
+/project/sherpa-onnx/csrc/offline-stream.cc:AcceptWaveformImpl:151 Creating a resampler:
+   in_sample_rate: 24000
+   output_sample_rate: 16000
+
+pay        3.94s miss=['nyra'] | Pay in dollars or straight from Naira, even inside mini pay.
+/project/sherpa-onnx/csrc/offline-stream.cc:AcceptWaveformImpl:151 Creating a resampler:
+   in_sample_rate: 24000
+   output_sample_rate: 16000
+
+pay        5.55s miss=[] | The supplier accepts and gets the deposit instantly. The balance waits until the goods ship.
+/project/sherpa-onnx/csrc/offline-stream.cc:AcceptWaveformImpl:151 Creating a resampler:
+   in_sample_rate: 24000
+   output_sample_rate: 16000
+
+textile    8.38s miss=['nyra', 'f', 'x'] | Every NIRA payment is a textile FX fill. A firm quote for exactly the dollars the order needs settled in one transaction.
+/project/sherpa-onnx/csrc/offline-stream.cc:AcceptWaveformImpl:151 Creating a resampler:
+   in_sample_rate: 24000
+   output_sample_rate: 16000
+
+textile    7.08s miss=['nyra', 'thirteen', 'hundred', 'and', 'seventy', 'four'] | Our first one on Main Net turned Naira. At about $1,374 to the dollar, straight into a locked order.
+/project/sherpa-onnx/csrc/offline-stream.cc:AcceptWaveformImpl:151 Creating a resampler:
+   in_sample_rate: 24000
+   output_sample_rate: 16000
+
+returns    9.10s miss=['twenty', 'twenty', 'three', 'thousand', 'dollar', 'two', 'nyra'] | That one rate matters. In 2023, an importer with a $7,000 balance needed 2 million Naira more just seven weeks later.
+/project/sherpa-onnx/csrc/offline-stream.cc:AcceptWaveformImpl:151 Creating a resampler:
+   in_sample_rate: 24000
+   output_sample_rate: 16000
+
+returns    2.66s miss=['ahra'] | With Aura, that balance was paid for on day one.
+/project/sherpa-onnx/csrc/offline-stream.cc:AcceptWaveformImpl:151 Creating a resampler:
+   in_sample_rate: 24000
+   output_sample_rate: 16000
+
+deliver    6.26s miss=[] | When the goods arrive, check them. Everything's right. Pay the balance with one tap, all at once or in parts. [BUZZER]
+/project/sherpa-onnx/csrc/offline-stream.cc:AcceptWaveformImpl:151 Creating a resampler:
+   in_sample_rate: 24000
+   output_sample_rate: 16000
+
+deliver    4.66s miss=[] | Something wrong, report it with a photo. The supplier accepts or makes an offer.
+/project/sherpa-onnx/csrc/offline-stream.cc:AcceptWaveformImpl:151 Creating a resampler:
+   in_sample_rate: 24000
+   output_sample_rate: 16000
+
+safety     5.38s miss=['ahras', 'refunds'] | If the supplier never accepts or never ships, R is agent refuns you automatically.
+/project/sherpa-onnx/csrc/offline-stream.cc:AcceptWaveformImpl:151 Creating a resampler:
+   in_sample_rate: 24000
+   output_sample_rate: 16000
+
+safety     6.87s miss=['ahra'] | Silence can't freeze the money, and nobody, not even ARA, can send it anywhere but to the buyer or the supplier.
+/project/sherpa-onnx/csrc/offline-stream.cc:AcceptWaveformImpl:151 Creating a resampler:
+   in_sample_rate: 24000
+   output_sample_rate: 16000
+
+uses       8.59s miss=[] | The same contract works for any deal with a deposit and a balance. A house built back home, furniture made to order, a freelance project.
+/project/sherpa-onnx/csrc/offline-stream.cc:AcceptWaveformImpl:151 Creating a resampler:
+   in_sample_rate: 24000
+   output_sample_rate: 16000
+
+proof      8.63s miss=['ahra', 'sello', 'main', 'net'] | ARA is live on Cello Mainnet. A friend's real order ran start to finish. Locked, accepted with the deposit, balance paid.
+/project/sherpa-onnx/csrc/offline-stream.cc:AcceptWaveformImpl:151 Creating a resampler:
+   in_sample_rate: 24000
+   output_sample_rate: 16000
+
+proof      5.35s miss=['nyra'] | with a verified contract, a registered agent, and Naira orders filled through textile.
+/project/sherpa-onnx/csrc/offline-stream.cc:AcceptWaveformImpl:151 Creating a resampler:
+   in_sample_rate: 24000
+   output_sample_rate: 16000
+
+close      2.26s miss=['ahra'] | ARA, trade with anyone without the worry.
+lines 25 words 425 speech s 150.6

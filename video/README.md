@@ -1,6 +1,6 @@
 # Arra demo film
 
-`Arra_Demo.mp4`: about 2 minutes 39 seconds, 1920×1080, 30 fps, H.264 + AAC, loudness −16 LUFS. Captions: `Arra_Demo.srt`.
+`Arra_Demo.mp4`: 2 minutes 59 seconds, 1920×1080, 30 fps, H.264 + AAC, loudness −16 LUFS. Captions: `Arra_Demo.srt`.
 
 Everything is generated from this folder: no stock footage or stock music.
 

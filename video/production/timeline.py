@@ -2,20 +2,22 @@
 import json, os
 here = os.path.dirname(os.path.abspath(__file__))
 L = json.load(open(f'{here}/../narration/lines.json'))
-order = ['hook', 'problem', 'intro', 'describe', 'link', 'pay', 'returns', 'deliver', 'safety', 'proof', 'close']
+order = ['hook', 'problem', 'intro', 'describe', 'link', 'pay', 'textile', 'returns', 'deliver', 'safety', 'uses', 'proof', 'close']
 # lead before the first line, gaps between lines, tail after the last line (seconds)
 P = {
-    'hook':     (1.2, [0.7], 1.4),
-    'problem':  (0.6, [0.6, 0.7], 1.3),
-    'intro':    (0.7, [0.7], 1.4),
-    'describe': (0.6, [0.8], 1.3),
-    'link':     (0.6, [0.8], 1.3),
-    'pay':      (0.6, [1.0], 1.4),
-    'returns':  (0.6, [0.9], 1.8),
-    'deliver':  (0.6, [0.9], 1.3),
-    'safety':   (0.6, [0.6, 0.6], 1.3),
-    'proof':    (0.7, [], 1.8),
-    'close':    (0.9, [], 5.5),
+    'hook':     (1.0, [0.6], 1.1),
+    'problem':  (0.5, [0.5, 0.6], 1.0),
+    'intro':    (0.6, [0.6], 1.1),
+    'describe': (0.5, [0.6], 1.0),
+    'link':     (0.5, [0.6], 1.0),
+    'pay':      (0.5, [0.7], 1.0),
+    'textile':  (0.5, [0.6], 1.2),
+    'returns':  (0.5, [0.7], 1.4),
+    'deliver':  (0.5, [0.6], 1.0),
+    'safety':   (0.5, [0.6], 1.0),
+    'uses':     (0.5, [], 1.1),
+    'proof':    (0.5, [0.5], 1.2),
+    'close':    (0.7, [], 4.0),
 }
 X = 0.6
 T, t = {'scenes': [], 'lines': []}, 0.0

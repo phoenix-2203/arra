@@ -24,8 +24,8 @@
     "say": "A Nyra that can lose a third of its value, between the deposit and the balance."
    },
    {
-    "text": "And letters of credit have all but disappeared, so most of this trade moves by plain bank transfer, with no protection at all.",
-    "say": "And letters of credit have all but disappeared. So most of this trade moves by plain bank transfer, with no protection at all."
+    "text": "And letters of credit have almost vanished, so most of this trade moves by plain bank transfer.",
+    "say": "And letters of credit have almost vanished, so most of this trade moves by plain bank transfer."
    }
   ]
  },
@@ -33,12 +33,12 @@
   "scene": "intro",
   "lines": [
    {
-    "text": "Arra fixes that. Pay the deposit. Keep the balance locked until it ships.",
-    "say": "Ahra fixes that. Pay the deposit. Keep the balance locked, until it ships."
+    "text": "Arra fixes that. Arra is Latin for earnest money: the deposit that secures a deal.",
+    "say": "Ahra fixes that. Ahra is Latin for earnest money: the deposit that secures a deal."
    },
    {
-    "text": "The money sits in an open contract on Celo: not with Arra, and not with the supplier.",
-    "say": "The money sits in an open contract on Sello. Not with Ahra, and not with the supplier."
+    "text": "Pay the deposit, and keep the balance locked until it ships, in an open contract on Celo: not with Arra, not with the supplier.",
+    "say": "Pay the deposit, and keep the balance locked until it ships, in an open contract on Sello: not with Ahra, not with the supplier."
    }
   ]
  },
@@ -72,12 +72,25 @@
   "scene": "pay",
   "lines": [
    {
-    "text": "Pay in dollars, or straight from naira. Textile FX converts exactly what you need, at one firm rate, the moment you lock.",
-    "say": "Pay in dollars, or straight from Nyra. Textile F X converts exactly what you need, at one firm rate, the moment you lock."
+    "text": "Pay in dollars, or straight from naira, even inside MiniPay.",
+    "say": "Pay in dollars, or straight from Nyra. Even inside Mini Pay."
    },
    {
     "text": "The supplier accepts and gets the deposit instantly. The balance waits until the goods ship.",
-    "say": "The supplier accepts, and gets the deposit instantly. The balance waits, until the goods ship."
+    "say": "The supplier accepts and gets the deposit instantly. The balance waits until the goods ship."
+   }
+  ]
+ },
+ {
+  "scene": "textile",
+  "lines": [
+   {
+    "text": "Every naira payment is a Textile FX fill: a firm quote for exactly the dollars the order needs, settled in one transaction.",
+    "say": "Every Nyra payment is a Textile F X fill: a firm quote for exactly the dollars the order needs, settled in one transaction."
+   },
+   {
+    "text": "Our first one on mainnet turned naira, at about thirteen hundred and seventy-four to the dollar, straight into a locked order.",
+    "say": "Our first one on main net turned Nyra, at about thirteen hundred and seventy four to the dollar, straight into a locked order."
    }
   ]
  },
@@ -102,8 +115,8 @@
     "say": "When the goods arrive, check them. Everything's right? Pay the balance with one tap. All at once, or in parts."
    },
    {
-    "text": "Something wrong? Report it with a photo and say what you want back. The supplier accepts or makes an offer.",
-    "say": "Something wrong? Report it with a photo, and say what you want back. The supplier accepts, or makes an offer."
+    "text": "Something wrong? Report it with a photo. The supplier accepts, or makes an offer.",
+    "say": "Something wrong? Report it with a photo. The supplier accepts, or makes an offer."
    }
   ]
  },
@@ -111,16 +124,21 @@
   "scene": "safety",
   "lines": [
    {
-    "text": "If the supplier never accepts, or never ships, Arra's agent refunds you automatically.",
-    "say": "If the supplier never accepts, or never ships, Ahra's agent refunds you automatically."
+    "text": "Changed your mind before they accept? Cancel and get everything back. If they never accept, or never ship, Arra's agent refunds you automatically.",
+    "say": "Changed your mind before they accept? Cancel, and get everything back. If they never accept, or never ship, Ahra's agent refunds you automatically."
    },
    {
-    "text": "Silence can't freeze the money: an ignored offer goes through after seven days.",
-    "say": "Silence can't freeze the money. An ignored offer goes through after seven days."
-   },
+    "text": "Silence can't freeze the money, and nobody, not even Arra, can send it anywhere but to the buyer or the supplier.",
+    "say": "Silence can't freeze the money, and nobody, not even Ahra, can send it anywhere but to the buyer or the supplier."
+   }
+  ]
+ },
+ {
+  "scene": "uses",
+  "lines": [
    {
-    "text": "And nobody, not even Arra, can send it anywhere but to the buyer or the supplier.",
-    "say": "And nobody, not even Ahra, can send it anywhere but to the buyer, or the supplier."
+    "text": "The same contract works for any deal with a deposit and a balance: a house built back home, furniture made to order, a freelance project.",
+    "say": "The same contract works for any deal with a deposit and a balance: a house built back home, furniture made to order, a freelance project."
    }
   ]
  },
@@ -128,8 +146,12 @@
   "scene": "proof",
   "lines": [
    {
-    "text": "Arra is live on Celo mainnet today, with a verified contract, a registered agent, and naira orders filled through Textile.",
-    "say": "Ahra is live on Sello main net today. With a verified contract, a registered agent, and Nyra orders filled through Textile."
+    "text": "Arra is live on Celo mainnet. A friend's real order ran start to finish: locked, accepted with the deposit, balance paid.",
+    "say": "Ahra is live on Sello main net. A friend's real order ran start to finish: locked, accepted with the deposit, balance paid."
+   },
+   {
+    "text": "With a verified contract, a registered agent, and naira orders filled through Textile.",
+    "say": "With a verified contract, a registered agent, and Nyra orders filled through Textile."
    }
   ]
  },
