@@ -102,10 +102,10 @@ const CASES = [
     href: "https://businessday.ng/business-economy/article/trouble-looms-as-foreign-suppliers-reject-letters-of-credit/",
   },
   {
-    big: "$2.8bn",
-    text: "lost in 2024 to email fraud, much of it \"our bank details have changed\" messages to buyers.",
-    src: "FBI IC3, via Nacha",
-    href: "https://www.nacha.org/news/fbis-ic3-finds-almost-85-billion-lost-business-email-compromise-last-three-years",
+    big: "$3.05bn",
+    text: "lost in 2025 to email fraud, much of it \"our bank details have changed\" messages to buyers.",
+    src: "FBI IC3 2025 report",
+    href: "https://www.mcdonaldhopkins.com/insights/news/the-sobering-truth-of-the-fbis-2025-internet-crime-complaint-center-report",
   },
   {
     big: "₦471 → ₦755",
