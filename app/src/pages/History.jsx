@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import { formatUnits } from "viem";
 import { api } from "../api.js";
+import SignIn from "../SignIn.jsx";
 import { hasWallet, EXPLORER } from "../chain.js";
 import { navigate, short } from "../App.jsx";
 import Icon from "../Icon.jsx";
@@ -36,13 +37,15 @@ export default function History({ wallet }) {
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("all");
   const [attempt, setAttempt] = useState(0);
+  const [needSign, setNeedSign] = useState(false);
 
   useEffect(() => {
     if (!account) return;
     let current = true; // a wallet switch mustn't show the previous wallet's history
     setError("");
     setData(null);
-    api.activity(account).then((d) => current && setData(d)).catch((e) => current && setError(e.status >= 500 || !e.status ? "Your history couldn't be loaded just now. Please try again in a moment." : e.message));
+    setNeedSign(false);
+    api.activity(account).then((d) => current && setData(d)).catch((e) => current && (e.status === 401 ? setNeedSign(true) : setError(e.status >= 500 || !e.status ? "Your history couldn't be loaded just now. Please try again in a moment." : e.message)));
     return () => { current = false; };
   }, [account, attempt]);
 
@@ -82,6 +85,7 @@ export default function History({ wallet }) {
         </div>
         {data?.rows?.length ? <button className="secondary auto" onClick={download}>Download CSV</button> : null}
       </div>
+      {needSign ? <SignIn what="your payment history" onDone={() => setAttempt((a) => a + 1)} /> : null}
 
       {data ? (
         <section className="balances two" aria-label="Totals">
@@ -108,7 +112,7 @@ export default function History({ wallet }) {
           <button className="secondary auto small-btn" onClick={() => setAttempt((n) => n + 1)}>Try again</button>
         </div>
       ) : null}
-      {!data && !error ? <p className="muted">Loading your history…</p> : null}
+      {!data && !error && !needSign ? <p className="muted">Loading your history…</p> : null}
       {data && rows.length === 0 ? (
         <div className="empty">
           <Icon name="clock" size={30} />

@@ -144,6 +144,7 @@ export default function NewOrder({ wallet }) {
   const [hasAI, setHasAI] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [pasteOpen, setPasteOpen] = useState(false);
+  const [timingOpen, setTimingOpen] = useState(false);
   const [MAX_ORDER, setMaxOrder] = useState(50_000_000n); // the vault's safety cap while Arra is new
   useEffect(() => {
     currentVault().then(() => {
@@ -178,7 +179,7 @@ export default function NewOrder({ wallet }) {
   // Wait for the supplier to open the invite and connect their wallet.
   const agreedNow = invite?.agreedRef && invite.agreedRef === invite.draftRef;
   useEffect(() => {
-    if (!invite?.code || (invite.address && (step !== 3 || agreedNow))) return;
+    if (!invite?.code || agreedNow) return;
     const t = setInterval(() => {
       api.invite(invite.code).then((v) => {
         setInvite(v);
@@ -188,7 +189,7 @@ export default function NewOrder({ wallet }) {
     return () => clearInterval(t);
   }, [invite?.code, invite?.address, step, agreedNow]);
   useEffect(() => {
-    if (step !== 2 || f.product) return;
+    if (step !== 1 || f.product) return;
     const t = setInterval(() => setExIdx((i) => i + 1), 3200);
     return () => clearInterval(t);
   }, [step, f.product]);
@@ -210,8 +211,7 @@ export default function NewOrder({ wallet }) {
     if (d.transitDays) setTransitDays(d.transitDays);
   }
   function aiReady() {
-    if (supplierOk) setStep(2);
-    else document.querySelector(".invite-anchor")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    document.querySelector(".kind-switch")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
   const setDetail = (i, value) => setF({ ...f, details: f.details.map((d, j) => (j === i ? { ...d, value } : d)) });
   const addDetail = (label) => setF({ ...f, details: [...f.details, { label, value: "" }] });
@@ -245,7 +245,6 @@ export default function NewOrder({ wallet }) {
   // F7: live review of the sheet.
   const sheet = useMemo(() => toSheet(f), [f]);
   useEffect(() => {
-    if (step !== 2 && step !== 3) return;
     const t = setTimeout(() => api.reviewSheet(sheet).then(setReview).catch((e) => setError(e.message)), 350);
     return () => clearTimeout(t);
   }, [sheet, step]);
@@ -318,7 +317,7 @@ export default function NewOrder({ wallet }) {
     setBusy("Saving the order sheet…");
     try {
       if (payee?.status === "changed") await api.confirmPayee(account, f.supplier, supplierAddr);
-      const { ref } = await api.saveSheet(sheet);
+      const { ref, owner } = await api.saveSheet(sheet);
       if (naira && needUsdt > 0n) {
         // Check the naira balance again right before converting (it may have changed).
         const have = await cngnBalance(account);
@@ -367,7 +366,15 @@ export default function NewOrder({ wallet }) {
           done: `Sent ${gas === "usdt" ? "$0.10 USDT" : `${gas} CELO`} to your supplier for fees`,
         }).catch(() => {});
       }
-      navigate(`/o/${id}?new=1`);
+      // Open the order by its private link. The server gives it only to whoever saved the
+      // order's sheet; a node a block behind may not see the order for a second or two.
+      setBusy("Opening your order…");
+      let link = null;
+      for (let i = 0; i < 12 && !link; i++) {
+        link = await api.orderLink(id, owner).then((r) => r.link).catch(() => null);
+        if (!link) await new Promise((r) => setTimeout(r, 1500));
+      }
+      navigate(link ? `/o/${link}?new=1` : "/app");
     } catch (e) {
       const msg = e.shortMessage ?? e.message ?? "";
       if (/not hold enough|insufficient/i.test(msg) && naira) {
@@ -381,13 +388,35 @@ export default function NewOrder({ wallet }) {
   }
 
   const unusedDetails = K.details.filter((d) => !f.details.some((x) => x.label === d));
+  const inviteUrl = invite?.code ? `${location.origin}/invite/${invite.code}` : "";
+  // The supplier is ready when their wallet came from the invite and they agreed to these
+  // exact terms, or when the buyer pasted an address they already had.
+  const viaInvite = !!invite?.address && supplierAddr.toLowerCase() === invite.address.toLowerCase();
+  const supplierReady = supplierOk && (!viaInvite || agreedNow || lockAnyway);
+  const shipLabel = { 60: "sea", 14: "air", 10: "courier", 3: "local delivery" }[transitDays] ?? `${transitDays} days in transit`;
+
+  async function makeInvite() {
+    setInviteErr("");
+    try {
+      const { code } = await api.createInvite(account, f.supplier);
+      // Terms first: the supplier reads this exact order when they open the link.
+      setInvite(await api.inviteDraft(code, sheet));
+    } catch (e) {
+      setInviteErr(e.message);
+    }
+  }
+  function toStep2() {
+    // Edited the order after sending the link? The supplier is asked to agree to the new version.
+    if (invite?.code) api.inviteDraft(invite.code, sheet).then(setInvite).catch(() => {});
+    setStep(2);
+  }
 
   return (
     <div className="stack-lg narrow">
       <div className="stack">
         <h1>New order</h1>
         <ol className="stepper" aria-label="Steps">
-          {["Who you pay", "What you're buying", "Lock money"].map((t, i) => (
+          {["What you're buying", "Your " + K.payee.toLowerCase(), "Lock the money"].map((t, i) => (
             <li key={t} className={step === i + 1 ? "on" : step > i + 1 ? "done" : ""} aria-current={step === i + 1 ? "step" : undefined}>{i + 1} {t}</li>
           ))}
         </ol>
@@ -396,12 +425,10 @@ export default function NewOrder({ wallet }) {
       {step === 1 && (
         <section className="stack">
           {hasAI ? <Assistant onDraft={applyDraft} onReady={aiReady} /> : null}
-          <div className="kind-cards" role="radiogroup" aria-label="What kind of deal?">
+          <div className="kind-switch" role="radiogroup" aria-label="What kind of deal?">
             {Object.entries(KINDS).map(([k, v]) => (
-              <button key={k} type="button" role="radio" aria-checked={f.kind === k} className={f.kind === k ? "kind-card on" : "kind-card"} onClick={() => setKind(k)}>
-                <Icon name={v.icon} size={22} />
-                <strong>{v.short}</strong>
-                <small>{v.hint}</small>
+              <button key={k} type="button" role="radio" aria-checked={f.kind === k} className={f.kind === k ? "chip on" : "chip"} onClick={() => setKind(k)}>
+                <Icon name={v.icon} size={16} /> {v.short}
               </button>
             ))}
           </div>
@@ -409,66 +436,6 @@ export default function NewOrder({ wallet }) {
             <span>{K.payeeName}</span>
             <input value={f.supplier} onChange={set("supplier")} placeholder={K.namePh} autoComplete="organization" />
           </label>
-          <div className="block stack invite-anchor">
-            <p className="small"><strong>Get your {K.payee.toLowerCase()}'s wallet with a link.</strong> They open it, read your order and connect the wallet they want to be paid in. The address fills in here by itself, so nobody can slip in a look-alike.</p>
-            {!invite ? (
-              <button type="button" className="secondary" disabled={!f.supplier.trim()} onClick={() => { setInviteErr(""); api.createInvite(account, f.supplier).then(({ code }) => setInvite({ code, address: null })).catch((e) => setInviteErr(e.message)); }}>
-                {f.supplier.trim() ? `Create an invite link for ${f.supplier.trim()}` : `Add the ${K.payee.toLowerCase()}'s name first`}
-              </button>
-            ) : invite.address ? (
-              <p className="note ok">Received from your {K.payee.toLowerCase()}: <span className="num">{invite.address.slice(0, 6)}…<strong>{invite.address.slice(-4)}</strong></span>. Call them and check it ends in <strong className="num">{invite.address.slice(-4)}</strong>.</p>
-            ) : (
-              <div className="stack">
-                <input readOnly value={`${location.origin}/invite/${invite.code}`} onFocus={(e) => e.target.select()} className="num small" />
-                <div className="row-gap">
-                  <button type="button" className="secondary auto" onClick={() => navigator.clipboard?.writeText(`${location.origin}/invite/${invite.code}`).then(() => setInviteCopied(true))}>{inviteCopied ? "Copied" : "Copy link"}</button>
-                  <a className="button secondary auto" href={`https://wa.me/?text=${encodeURIComponent(`Please open this link and connect the wallet you want to be paid in for my order: ${location.origin}/invite/${invite.code}`)}`} target="_blank" rel="noreferrer">Send on WhatsApp</a>
-                </div>
-                <p className="small muted">Waiting for them to connect their wallet…</p>
-              </div>
-            )}
-            {inviteErr ? <p className="note bad">{inviteErr}</p> : null}
-          </div>
-          {!invite?.address ? (
-            <details className="more" open={pasteOpen} onToggle={(e) => setPasteOpen(e.currentTarget.open)}>
-              <summary>I already have their wallet address</summary>
-              <div className="stack">
-              <label className="field">
-                <span>{K.payee}'s wallet address on Celo</span>
-                <div className="with-btn">
-                  <input value={supplierAddr} onChange={(e) => setSupplierAddr(e.target.value.trim())} placeholder="0x…" spellCheck="false" autoCapitalize="off" className="num" />
-                  {navigator.clipboard?.readText ? (
-                    <button type="button" className="secondary small-btn" onClick={() => navigator.clipboard.readText().then((t) => setSupplierAddr(t.trim())).catch(() => {})}>Paste</button>
-                  ) : null}
-                </div>
-                <small>Or paste it if they sent it to you. They'll accept the order from this same wallet, which proves it's really theirs.</small>
-              </label>
-              {supplierAddr && isAddress(supplierAddr) && !invite?.address ? (
-                <p className="note">Typed or pasted addresses can be swapped by scammers for one that looks almost the same. Before you lock money, read the last 6 characters, <strong className="num">{supplierAddr.slice(-6)}</strong>, to your {K.payee.toLowerCase()} on a call.</p>
-              ) : null}
-              {supplierAddr && !isAddress(supplierAddr) ? <p className="note bad">That isn't a complete wallet address. It starts with 0x and has 42 characters.</p> : null}
-              {isAddress(supplierAddr) && supplierAddr.toLowerCase() === account.toLowerCase() ? <p className="note bad">That's your own wallet. Use the {K.payee.toLowerCase()}'s.</p> : null}
-              </div>
-            </details>
-          ) : null}
-          {isAddress(supplierAddr) && supplierAddr.toLowerCase() !== account.toLowerCase() ? <TrackRecord address={supplierAddr.toLowerCase()} as="supplier" /> : null}
-          {payee?.status === "new" ? <p className="note">{payee.message}</p> : null}
-          {payee?.status === "known" ? <p className="note ok">{payee.message}</p> : null}
-          {payee?.status === "changed" ? (
-            <div className="note bad stack">
-              <p><strong>New address for a known {K.payee.toLowerCase()}.</strong> {payee.message}</p>
-              <label style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                <input type="checkbox" checked={phoneConfirmed} onChange={(e) => setPhoneConfirmed(e.target.checked)} style={{ width: 20, marginTop: 3 }} />
-                <span>I called them on a number I already had, and they confirmed this new address.</span>
-              </label>
-            </div>
-          ) : null}
-          <button disabled={!supplierOk} onClick={() => setStep(2)}>Next</button>
-        </section>
-      )}
-
-      {step === 2 && (
-        <section className="stack">
           <label className="field"><span>{K.product}</span><input value={f.product} onChange={set("product")} placeholder={ex.product} /></label>
           <div className="qty-row">
             <label className="field"><span>How many</span><input inputMode="numeric" value={f.quantity} onChange={(e) => setF({ ...f, quantity: e.target.value.replace(/[^\d]/g, "") })} placeholder={ex.qty} /></label>
@@ -503,23 +470,22 @@ export default function NewOrder({ wallet }) {
             <input type="date" value={f.shipBy} onChange={set("shipBy")} aria-label={`${K.dateLabel}, exact date`} />
           </div>
 
-          {f.kind === "goods" ? (
-            <div className="field">
-              <span className="field-label">Who pays for shipping?</span>
-              <div className="term-list" role="radiogroup" aria-label="Shipping terms">
-                {TERMS.map(([code, words]) => (
-                  <label key={code} className={f.term === code ? "term on" : "term"}>
-                    <input type="radio" name="term" checked={f.term === code} onChange={() => setF({ ...f, term: code })} />
-                    <span>{words}</span><em>{code}</em>
-                  </label>
-                ))}
-              </div>
-            </div>
-          ) : null}
-
           <details className="more" open={moreOpen} onToggle={(e) => setMoreOpen(e.currentTarget.open)}>
             <summary>More details (optional)</summary>
             <div className="stack">
+              {f.kind === "goods" ? (
+                <div className="field">
+                  <span className="field-label">Who pays for shipping?</span>
+                  <div className="term-list" role="radiogroup" aria-label="Shipping terms">
+                    {TERMS.map(([code, words]) => (
+                      <label key={code} className={f.term === code ? "term on" : "term"}>
+                        <input type="radio" name="term" checked={f.term === code} onChange={() => setF({ ...f, term: code })} />
+                        <span>{words}</span><em>{code}</em>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
               {f.kind === "goods" ? <label className="field"><span>Port or city</span><input value={f.port} onChange={set("port")} placeholder="Guangzhou" /></label> : null}
               {f.kind === "custom" ? <label className="field"><span>Collection or delivery</span><input value={f.handover} onChange={set("handover")} placeholder="Delivered to Lekki Phase 1" /></label> : null}
               {f.kind !== "service" ? <label className="field"><span>Packaging</span><input value={f.packaging} onChange={set("packaging")} placeholder={ex.d["Per carton"] ?? "10 per carton, each in its own box"} /></label> : null}
@@ -540,45 +506,88 @@ export default function NewOrder({ wallet }) {
               </ul>
             </div>
           ) : null}
-          {review?.ready ? <p className="note ok">Clear and specific. This sheet will be fingerprinted with the order, so neither side can change it later.</p> : null}
+          <button disabled={!review?.ready || !f.supplier.trim()} onClick={toStep2}>Next</button>
+        </section>
+      )}
+
+      {step === 2 && review?.ready && (
+        <section className="stack">
+          <div className="block stack invite-anchor">
+            {!invite?.code ? (
+              <>
+                <p><strong>Send {f.supplier} one link.</strong></p>
+                <p className="small muted">They open it, read this exact order, connect the wallet they want to be paid in and tap Agree. Their address comes straight to you, so nobody can slip in a look-alike.</p>
+                <button type="button" className="money" onClick={makeInvite}>Create the link</button>
+              </>
+            ) : !invite.address || !agreedNow ? (
+              <>
+                <p><strong>Send this link to {f.supplier}</strong></p>
+                <input readOnly value={inviteUrl} onFocus={(e) => e.target.select()} className="num small" />
+                <div className="row-gap">
+                  <a className="button money auto" href={`https://wa.me/?text=${encodeURIComponent(`I've written up our order on Arra. Please open this link, check the terms, connect the wallet you want to be paid in and tap Agree: ${inviteUrl}`)}`} target="_blank" rel="noreferrer">Send on WhatsApp</a>
+                  <button type="button" className="secondary auto" onClick={() => navigator.clipboard?.writeText(inviteUrl).then(() => setInviteCopied(true))}>{inviteCopied ? "Copied" : "Copy link"}</button>
+                </div>
+                {invite.changeRequest ? (
+                  <div className="note bad stack">
+                    <p><strong>{f.supplier} asked for a change:</strong> "{invite.changeRequest.text}"</p>
+                    <button type="button" className="secondary auto small-btn" onClick={() => setStep(1)}>Edit the order</button>
+                  </div>
+                ) : invite.address ? (
+                  <p className="note">{f.supplier} connected their wallet. Waiting for them to tap Agree… <button type="button" className="linkish" onClick={() => setLockAnyway(true)}>Continue without waiting</button></p>
+                ) : (
+                  <p className="small muted"><span className="pulse" aria-hidden="true" /> Waiting for {f.supplier} to open it. This page updates by itself.</p>
+                )}
+              </>
+            ) : (
+              <p className="note ok">✓ {f.supplier} agreed to these exact terms and will be paid at <span className="num">{invite.address.slice(0, 6)}…<strong>{invite.address.slice(-4)}</strong></span>. If you can, call them and check it ends in <strong className="num">{invite.address.slice(-4)}</strong>.</p>
+            )}
+            {inviteErr ? <p className="note bad">{inviteErr}</p> : null}
+          </div>
+
+          {!viaInvite ? (
+            <details className="more" open={pasteOpen} onToggle={(e) => setPasteOpen(e.currentTarget.open)}>
+              <summary>I already have their wallet address</summary>
+              <div className="stack">
+                <label className="field">
+                  <span>{K.payee}'s wallet address on Celo</span>
+                  <div className="with-btn">
+                    <input value={supplierAddr} onChange={(e) => setSupplierAddr(e.target.value.trim())} placeholder="0x…" spellCheck="false" autoCapitalize="off" className="num" />
+                    {navigator.clipboard?.readText ? (
+                      <button type="button" className="secondary small-btn" onClick={() => navigator.clipboard.readText().then((t) => setSupplierAddr(t.trim())).catch(() => {})}>Paste</button>
+                    ) : null}
+                  </div>
+                  <small>They'll accept the order from this same wallet, which proves it's really theirs.</small>
+                </label>
+                {supplierAddr && isAddress(supplierAddr) ? (
+                  <p className="note">Pasted addresses can be swapped by scammers for one that looks almost the same. Read the last 6 characters, <strong className="num">{supplierAddr.slice(-6)}</strong>, to your {K.payee.toLowerCase()} on a call.</p>
+                ) : null}
+                {supplierAddr && !isAddress(supplierAddr) ? <p className="note bad">That isn't a complete wallet address. It starts with 0x and has 42 characters.</p> : null}
+              </div>
+            </details>
+          ) : null}
+          {isAddress(supplierAddr) && supplierAddr.toLowerCase() === account.toLowerCase() ? <p className="note bad">That's your own wallet. Use the {K.payee.toLowerCase()}'s.</p> : null}
+          {isAddress(supplierAddr) && supplierAddr.toLowerCase() !== account.toLowerCase() ? <TrackRecord address={supplierAddr.toLowerCase()} as="supplier" /> : null}
+          {payee?.status === "known" ? <p className="note ok">{payee.message}</p> : null}
+          {payee?.status === "changed" ? (
+            <div className="note bad stack">
+              <p><strong>New address for a known {K.payee.toLowerCase()}.</strong> {payee.message}</p>
+              <label style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                <input type="checkbox" checked={phoneConfirmed} onChange={(e) => setPhoneConfirmed(e.target.checked)} style={{ width: 20, marginTop: 3 }} />
+                <span>I called them on a number I already had, and they confirmed this new address.</span>
+              </label>
+            </div>
+          ) : null}
           <div className="row">
             <button className="secondary" onClick={() => setStep(1)}>Back</button>
-            <button disabled={!review?.ready} onClick={() => {
-              // Terms first: send the draft to the supplier's invite page to agree to.
-              if (invite?.code) api.inviteDraft(invite.code, sheet).then(setInvite).catch(() => {});
-              setStep(3);
-            }}>{invite?.code ? "Next: send these terms to agree" : "Next"}</button>
+            <button disabled={!supplierReady} onClick={() => setStep(3)}>Next</button>
           </div>
         </section>
       )}
 
       {step === 3 && review?.ready && (
         <section className="stack">
-          {invite?.code ? (
-            agreedNow ? (
-              <p className="note ok">✓ {f.supplier} agreed to these exact terms. Lock the money and they can accept straight away.</p>
-            ) : (
-              <div className={`block stack ${invite.changeRequest ? "urgent" : ""}`}>
-                {invite.changeRequest ? (
-                  <>
-                    <p className="small"><strong>{f.supplier} suggested a change:</strong></p>
-                    <p className="note">"{invite.changeRequest.text}"</p>
-                    <p className="small muted">Go back and edit the order; they'll be asked to agree to the new version.</p>
-                  </>
-                ) : (
-                  <>
-                    <p className="small"><strong>Waiting for {f.supplier} to agree to these terms.</strong> Like Escrow.com and Alibaba, Arra lets both sides agree what's being bought before any money moves. They'll see the order on the link you sent and tap Agree or suggest a change.</p>
-                    <div className="row-gap">
-                      <a className="button secondary auto small-btn" href={`https://wa.me/?text=${encodeURIComponent(`I've written up the order on Arra. Please check the terms and tap Agree: ${location.origin}/invite/${invite.code}`)}`} target="_blank" rel="noreferrer">Remind them on WhatsApp</a>
-                      <button type="button" className="linkish" onClick={() => setLockAnyway(true)}>Lock without waiting</button>
-                    </div>
-                  </>
-                )}
-              </div>
-            )
-          ) : null}
           <div className="block stack summary">
-            <p className="muted small">{qtyText(f.quantity, f.unit)} of {f.product}, from {f.supplier}</p>
+            <p className="muted small">{qtyText(f.quantity, f.unit)} of {f.product}, from {f.supplier}{viaInvite && agreedNow ? " · terms agreed ✓" : ""}</p>
             <div className="row">
               <div><p className="muted small">Deposit when they accept</p><p className="num big-num">${usd(deposit)}</p></div>
               <div><p className="muted small">Kept locked until {f.kind === "goods" ? "shipping" : "delivery"}</p><p className="num big-num hl">${usd(total - deposit)}</p></div>
@@ -625,22 +634,30 @@ export default function NewOrder({ wallet }) {
           ) : null}
 
           <div className="block stack">
-            <div className="field">
-              <span className="field-label">{K.payee} must accept within</span>
-              <Chips label="Accept within" value={acceptDays} onChange={setAcceptDays} options={[...(demo ? [[FIVE_MIN, "5 min (demo)"]] : []), [1, "1 day"], [3, "3 days"], [7, "7 days"]]} />
-            </div>
-            {v4 && f.kind === "goods" ? (
-              <div className="field">
-                <span className="field-label">How is it shipped?</span>
-                <Chips label="Shipping" value={transitDays} onChange={setTransitDays} options={[[60, "Sea"], [14, "Air"], [10, "Courier"], [3, "Local delivery"]]} />
-                <small>Up to {transitDays} days in transit. Your check period starts when you tap "Goods arrived", or after {transitDays} days at the latest, so the supplier can't be paid before the goods could reach you.</small>
-              </div>
-            ) : null}
-            <div className="field">
-              <span className="field-label">Your time to check it after {f.kind === "goods" ? (v4 ? "it arrives" : "shipping") : "delivery"}</span>
-              <Chips label="Check period" value={checkDays} onChange={setCheckDays} options={f.kind === "goods" && !v4 ? [[7, "7 days"], [14, "14 days"], [30, "30 days"]] : [[3, "3 days"], [7, "7 days"], [14, "14 days"]]} />
-              {f.kind === "goods" && !v4 ? <small>It starts when the supplier marks the goods shipped, not when they reach you. Sea freight from China takes about 4 to 8 weeks plus clearing, so 30 days is safest. If the goods haven't arrived as the time runs out, tap "Not arrived yet" on the order to hold the balance.</small> : null}
-            </div>
+            {timingOpen || !datesOk ? (
+              <>
+                <div className="field">
+                  <span className="field-label">{K.payee} must accept within</span>
+                  <Chips label="Accept within" value={acceptDays} onChange={setAcceptDays} options={[...(demo ? [[FIVE_MIN, "5 min (demo)"]] : []), [1, "1 day"], [3, "3 days"], [7, "7 days"]]} />
+                </div>
+                {v4 && f.kind === "goods" ? (
+                  <div className="field">
+                    <span className="field-label">How is it shipped?</span>
+                    <Chips label="Shipping" value={transitDays} onChange={setTransitDays} options={[[60, "Sea"], [14, "Air"], [10, "Courier"], [3, "Local delivery"]]} />
+                    <small>Up to {transitDays} days in transit. Your check period starts when you tap "Goods arrived", or after {transitDays} days at the latest, so the supplier can't be paid before the goods could reach you.</small>
+                  </div>
+                ) : null}
+                <div className="field">
+                  <span className="field-label">Your time to check it after {f.kind === "goods" ? (v4 ? "it arrives" : "shipping") : "delivery"}</span>
+                  <Chips label="Check period" value={checkDays} onChange={setCheckDays} options={f.kind === "goods" && !v4 ? [[7, "7 days"], [14, "14 days"], [30, "30 days"]] : [[3, "3 days"], [7, "7 days"], [14, "14 days"]]} />
+                </div>
+              </>
+            ) : (
+              <p className="small timing-line">
+                <span>{K.payee} accepts within <strong>{acceptText}</strong>{v4 && f.kind === "goods" ? <> · shipped by <strong>{shipLabel}</strong></> : null} · <strong>{checkDays} days</strong> to check it</span>
+                <button type="button" className="linkish" onClick={() => setTimingOpen(true)}>Change</button>
+              </p>
+            )}
             <ul className="small muted stack" style={{ paddingLeft: 18, margin: 0 }}>
               <li>Not accepted in {acceptText}: all ${usd(total)} comes back to you.</li>
               <li>{K.notDone} {new Date(`${f.shipBy}T12:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}: the ${usd(total - deposit)} balance comes back to you.</li>
@@ -664,7 +681,6 @@ export default function NewOrder({ wallet }) {
             </p>
           ) : null}
           {!datesOk && shipBy > acceptBy ? <p className="note bad">The {K.dateLabel.toLowerCase()} date must be within 180 days.</p> : null}
-          {!datesOk && !shipBy ? <p className="note bad">Go back and pick a {K.dateLabel.toLowerCase()} date.</p> : null}
           {tooBig ? <p className="note bad">While Arra is new, orders are capped at ${usd(MAX_ORDER)}. Lower the quantity or split it into several orders.</p> : null}
           {short && !tooBig && !naira ? <p className="note bad">Your wallet has ${usd(balance)} USDT; this order needs ${usd(total)}. Choose naira above to convert the rest.</p> : null}
           {!short && !tooBig && !naira && gasUsdt > 0n && balance !== null && total + gasUsdt > balance ? <p className="note bad">The order plus $0.10 gas is more than your ${usd(balance)} USDT. Pick a CELO option or "Don't send".</p> : null}
@@ -673,7 +689,7 @@ export default function NewOrder({ wallet }) {
           {busy ? <p className="note">{busy}</p> : null}
           <div className="row">
             <button className="secondary" disabled={!!busy} onClick={() => setStep(2)}>Back</button>
-            <button className="money" disabled={!!busy || (invite?.code && !agreedNow && !lockAnyway) || !datesOk || tooBig || short || (!naira && balance !== null && total + gasUsdt > balance)} onClick={lock}>{naira && needUsdt > 0n && fxCngn ? `Convert ${ngn(fxCngn)} and lock $${usd(total)}` : `Lock $${usd(total)}`}{gas !== "none" ? " + send gas" : ""}</button>
+            <button className="money" disabled={!!busy || !supplierReady || !datesOk || tooBig || short || (!naira && balance !== null && total + gasUsdt > balance)} onClick={lock}>{naira && needUsdt > 0n && fxCngn ? `Convert ${ngn(fxCngn)} and lock $${usd(total)}` : `Lock $${usd(total)}`}{gas !== "none" ? " + send gas" : ""}</button>
           </div>
         </section>
       )}

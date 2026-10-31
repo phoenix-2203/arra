@@ -4,7 +4,7 @@ import { createServer as httpServer } from "node:http";
 import { gzipSync } from "node:zlib";
 import { readFileSync, writeFileSync, existsSync, mkdirSync, statSync } from "node:fs";
 import { join, extname, normalize } from "node:path";
-import { isAddress, keccak256, toBytes, parseEventLogs } from "viem";
+import { isAddress, keccak256, toBytes, parseEventLogs, verifyMessage } from "viem";
 import { reviewSheet, sheetRef, sheetTotal, canonicalSheet } from "./orderSheet.js";
 import { PayeeBook } from "./payeeBook.js";
 import { checkContainerNumber } from "./container.js";
@@ -78,7 +78,17 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
   const payees = new PayeeBook(join(dataDir, "payees.json"));
   links ??= new OrderLinks(join(dataDir, "link-secret"));
   // An order can be addressed by its private link code or (old links) its number.
-  const toId = async (x) => (/^\d{1,9}$/.test(x) ? Number(x) : links.resolve(x, await vaults.count()));
+  // Orders open by their private code. Plain numbers still work only for the first
+  // orders, whose links were shared before codes existed.
+  const LEGACY_NUMBERS = Number(process.env.ARRA_NUMERIC_LINKS_MAX ?? 5);
+  const toId = async (x) => (/^\d{1,9}$/.test(x) ? (Number(x) <= LEGACY_NUMBERS ? Number(x) : null) : links.resolve(x, await vaults.count()));
+  // "Your orders" and History list everything a wallet did, so they need proof the
+  // visitor owns that wallet: one free signature, remembered for 30 days.
+  const signInText = (address, at) => `Sign in to Arra to see your orders.\n\nWallet: ${address.toLowerCase()}\nTime: ${at}\n\nThis is free and moves no money.`;
+  const signedIn = (req, who) => {
+    const w = links.sessionWallet(req?.headers?.["x-arra-session"]);
+    return !!w && w === String(who).toLowerCase();
+  };
   // Container numbers: the vault stores only their fingerprint. Anyone may tell the
   // server the number, and it's kept only if it matches that fingerprint, so the
   // buyer can see and track it.
@@ -140,7 +150,26 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
       if (issues.length) return [400, { error: "Sheet has issues", issues }];
       const ref = sheetRef(body.sheet);
       writeFileSync(sheetPath(ref), JSON.stringify({ sheet: body.sheet, canonical: canonicalSheet(body.sheet) }, null, 2));
-      return [200, { ref }];
+      return [200, { ref, owner: links.owner(ref) }];
+    },
+
+    // Sign in with a wallet signature (free). Returns a token the app keeps for 30 days.
+    "POST /api/session": async (body) => {
+      const address = String(body.address ?? "");
+      const at = Number(body.at);
+      if (!isAddress(address, { strict: false }) || !Number.isFinite(at) || Math.abs(Date.now() - at) > 10 * 60 * 1000) return [400, { error: "Please try signing in again" }];
+      const message = signInText(address, at);
+      let ok = await verifyMessage({ address, message, signature: body.signature }).catch(() => false);
+      // Smart-contract wallets sign differently; let the network check those.
+      if (!ok && client.verifyMessage) ok = await client.verifyMessage({ address, message, signature: body.signature }).catch(() => false);
+      if (!ok) return [401, { error: "That signature doesn't match this wallet" }];
+      return [200, { token: links.session(address) }];
+    },
+    "GET /api/session/text": async (_b, url) => {
+      const a = url.searchParams.get("address") ?? "";
+      const at = Number(url.searchParams.get("at"));
+      if (!isAddress(a, { strict: false }) || !Number.isFinite(at)) return [400, { error: "address and at required" }];
+      return [200, { text: signInText(a, at) }];
     },
 
     // Supplier invites (no copied addresses).
@@ -186,9 +215,10 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
       }),
 
     // Transaction history: every payment in or out of one wallet, newest first.
-    "GET /api/activity": async (_b, url) => {
+    "GET /api/activity": async (_b, url, req) => {
       const who = url.searchParams.get("address");
       if (!who || !isAddress(who, { strict: false })) return [400, { error: "address required" }];
+      if (!signedIn(req, who)) return [401, { error: "Sign in with your wallet to see your history", signIn: true }];
       let raw;
       try {
         raw = await vaults.activity(who);
@@ -201,9 +231,10 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
       return [200, { rows, totals: { in: sum("in"), out: sum("out") } }];
     },
 
-    "GET /api/orders": async (_b, url) => {
+    "GET /api/orders": async (_b, url, req) => {
       const who = url.searchParams.get("address");
       if (!who || !isAddress(who, { strict: false })) return [400, { error: "address required" }];
+      if (!signedIn(req, who)) return [401, { error: "Sign in with your wallet to see your orders", signIn: true }];
       const n = await vaults.count();
       const mine = [];
       for (let id = n; id >= 1 && mine.length < 50; id--) {
@@ -371,6 +402,15 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
           writeFileSync(trackingPath(id), JSON.stringify({ number: check.number, at: shipped.at, tx: shipped.tx }));
           return send(res, 200, { ok: true, number: check.number });
         }
+        // Right after locking: the buyer proves they wrote the order's sheet and gets its private link.
+        const ol = url.pathname.match(/^\/api\/orders\/(\d{1,9})\/link$/);
+        if (ol && req.method === "POST") {
+          const body = await readJson(req);
+          const o = await vaults.read(Number(ol[1])).catch(() => null);
+          if (!o) return send(res, 404, { error: "No such order yet" });
+          if (String(body.owner ?? "") !== links.owner(o.ref)) return send(res, 403, { error: "Not your order" });
+          return send(res, 200, { link: links.code(Number(ol[1])) });
+        }
         const tl = url.pathname.match(/^\/api\/orders\/([A-Za-z0-9]{1,10})\/timeline$/);
         if (tl && req.method === "GET") {
           const id = await toId(tl[1]);
@@ -399,7 +439,7 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
         const route = routes[`${req.method} ${url.pathname}`];
         if (!route) return send(res, 404, { error: "Not found" });
         const body = req.method === "POST" ? await readJson(req) : {};
-        const [status, payload] = await route(body, url);
+        const [status, payload] = await route(body, url, req);
         return send(res, status, payload);
       }
       // App pages: give link previews the right title, text and an absolute image URL.

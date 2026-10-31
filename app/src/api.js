@@ -1,7 +1,29 @@
-async function call(method, path, body) {
+// A wallet's sign-in (one free signature, kept 30 days) for "Your orders" and History.
+const SESSION_KEY = "arra.session";
+export function sessionFor(address) {
+  try {
+    const t = localStorage.getItem(SESSION_KEY) ?? "";
+    const [a, exp] = t.split(".");
+    return address && a === address.toLowerCase() && Number(exp) > Date.now() / 1000 ? t : null;
+  } catch {
+    return null;
+  }
+}
+export function saveSession(token) {
+  try {
+    localStorage.setItem(SESSION_KEY, token);
+  } catch {
+    /* storage can be unavailable; the user just signs again next time */
+  }
+}
+
+async function call(method, path, body, session) {
+  const headers = {};
+  if (body) headers["content-type"] = "application/json";
+  if (session) headers["x-arra-session"] = session;
   const res = await fetch(path, {
     method,
-    headers: body ? { "content-type": "application/json" } : undefined,
+    headers,
     body: body ? JSON.stringify(body) : undefined,
   });
   const data = await res.json().catch(() => ({}));
@@ -16,7 +38,7 @@ export const api = {
   confirmPayee: (buyer, supplierName, address) => call("POST", "/api/payee/confirm", { buyer, supplierName, address }),
   checkContainer: (number) => call("POST", "/api/container/check", { number }),
   order: (id, as) => call("GET", `/api/orders/${id}${as ? `?as=${as}` : ""}`),
-  myOrders: (address) => call("GET", `/api/orders?address=${address}`),
+  myOrders: (address) => call("GET", `/api/orders?address=${address}`, null, sessionFor(address)),
 };
 
 api.fxPreview = (usd) => call("POST", "/api/fx/preview", { usd });
@@ -34,6 +56,9 @@ api.record = (address) => call("GET", `/api/record/${address}`);
 api.notes = (id) => call("GET", `/api/orders/${id}/notes`);
 api.addNote = (id, body) => call("POST", `/api/orders/${id}/notes`, body);
 api.uploadPhoto = (id, jpegBase64) => call("POST", `/api/orders/${id}/photos`, { jpegBase64 });
-api.activity = (address) => call("GET", `/api/activity?address=${address}`);
+api.activity = (address) => call("GET", `/api/activity?address=${address}`, null, sessionFor(address));
 api.timeline = (id) => call("GET", `/api/orders/${id}/timeline`);
 api.assistant = (messages, today) => call("POST", "/api/assistant", { messages, today });
+api.sessionText = (address, at) => call("GET", `/api/session/text?address=${address}&at=${at}`);
+api.signIn = (address, at, signature) => call("POST", "/api/session", { address, at, signature });
+api.orderLink = (id, owner) => call("POST", `/api/orders/${id}/link`, { owner });

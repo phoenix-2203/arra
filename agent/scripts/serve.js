@@ -37,9 +37,22 @@ console.log(`Arra on http://127.0.0.1:${PORT}  new orders -> ${vaults.current}  
 if (process.env.KEEPER === "1") {
   const wallet = taggedWallet(agentAccount());
   // The keeper watches every vault: old orders still get their refunds and payouts.
+  const erc20 = [{ type: "function", name: "balanceOf", stateMutability: "view", inputs: [{ type: "address" }], outputs: [{ type: "uint256" }] }];
+  // Fees in USDT when the agent has a little (its $0.01 keeper fees refill it), otherwise in
+  // CELO, so the agent keeps working without a top-up.
+  const feeOpts = async () => {
+    const usdt = await client.readContract({ address: USDT, abi: erc20, functionName: "balanceOf", args: [wallet.account.address] }).catch(() => 0n);
+    if (usdt >= 20_000n) return { feeCurrency: USDT_FEE_ADAPTER };
+    const celo = await client.getBalance({ address: wallet.account.address }).catch(() => 0n);
+    if (celo >= 5_000_000_000_000_000n) return {};
+    console.error("keeper: the agent wallet has no USDT or CELO left for network fees; refunds and payouts wait until it's topped up");
+    return null;
+  };
   const tick = async () => {
+    const txOpts = await feeOpts();
+    if (!txOpts) return;
     for (const vault of vaults.addresses) {
-      await runKeeper({ client, wallet, vault, txOpts: { feeCurrency: USDT_FEE_ADAPTER }, feeToken: USDT }).catch((e) =>
+      await runKeeper({ client, wallet, vault, txOpts, feeToken: txOpts.feeCurrency ? USDT : null }).catch((e) =>
         console.error(`keeper error (${vault}):`, e.shortMessage ?? e.message),
       );
     }

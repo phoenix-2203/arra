@@ -5,12 +5,15 @@ import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createApp, listen } from "../src/server.js";
+import { OrderLinks } from "../src/links.js";
+import { privateKeyToAccount, generatePrivateKey } from "viem/accounts";
 import { sheetRef } from "../src/orderSheet.js";
 import { TextileError } from "../src/textile.js";
 import { keccak256, toBytes } from "viem";
 
 const BUYER = "0x1111111111111111111111111111111111111111";
 const SUPPLIER = "0x2222222222222222222222222222222222222222";
+const LINKS = new OrderLinks(null, "test-secret");
 const sheet = {
   supplier: "Guangzhou Textiles",
   product: "Cotton T-shirts, crew neck",
@@ -60,13 +63,13 @@ before(async () => {
   const staticDir = join(dir, "dist");
   mkdirSync(staticDir);
   writeFileSync(join(staticDir, "index.html"), '<!doctype html><head><title>Arra</title><meta name="description" content="x" /><meta property="og:title" content="Arra" /><meta property="og:image" content="/og.png" /></head>');
-  server = await listen(createApp({ client: fakeClient, vault: "0xvault", dataDir: join(dir, "data"), staticDir, now: () => T, textile: fakeTextile }), 0);
+  server = await listen(createApp({ client: fakeClient, vault: "0xvault", dataDir: join(dir, "data"), staticDir, now: () => T, textile: fakeTextile, links: LINKS }), 0);
   base = `http://127.0.0.1:${server.address().port}`;
 });
 after(() => server?.close());
 
 const post = (path, body) => fetch(base + path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }).then(async (r) => [r.status, await r.json()]);
-const get = (path) => fetch(base + path).then(async (r) => [r.status, r.headers.get("content-type")?.includes("json") ? await r.json() : await r.text()]);
+const get = (path, headers) => fetch(base + path, { headers }).then(async (r) => [r.status, r.headers.get("content-type")?.includes("json") ? await r.json() : await r.text()]);
 
 test("sheet review flags vague terms and fingerprints clean sheets", async () => {
   const [, bad] = await post("/api/sheet/review", { sheet: { ...sheet, specs: ["good quality"] } });
@@ -147,7 +150,9 @@ test("shared order links get a preview with the amount and what it's for", async
 });
 
 test("my orders, container check, errors and the app shell", async () => {
-  const [, list] = await get(`/api/orders?address=${SUPPLIER}`);
+  assert.equal((await get(`/api/orders?address=${SUPPLIER}`))[0], 401, "listing a wallet's orders needs its signature");
+  assert.equal((await get(`/api/orders?address=${SUPPLIER}`, { "x-arra-session": LINKS.session(BUYER) }))[0], 401, "another wallet's session doesn't count");
+  const [, list] = await get(`/api/orders?address=${SUPPLIER}`, { "x-arra-session": LINKS.session(SUPPLIER) });
   assert.equal(list.orders.length, 1);
   assert.equal((await post("/api/container/check", { number: "CSQU3054383" }))[1].ok, true);
   assert.equal((await get("/api/orders?address=nope"))[0], 400);
@@ -273,4 +278,27 @@ test("terms first: the supplier agrees to exactly this draft; any edit resets it
   assert.equal(sug.changeRequest.text, "12 is fine but ship by 20 Dec");
   assert.equal((await post(`/api/invites/${code}/agree`, { address: "0x3333333333333333333333333333333333333333", ref: d2.draftRef }))[0], 409, "a different wallet can't agree for them");
   assert.equal((await get(`/api/invites/${code}`))[1].draft.quantity, 12);
+});
+
+test("sign-in: a real wallet signature gets a 30-day session; forged or old ones don't", async () => {
+  const acct = privateKeyToAccount(generatePrivateKey());
+  const at = Date.now();
+  const [, { text }] = await get(`/api/session/text?address=${acct.address}&at=${at}`);
+  const signature = await acct.signMessage({ message: text });
+  const [ok, { token }] = await post("/api/session", { address: acct.address, at, signature });
+  assert.equal(ok, 200);
+  assert.equal(LINKS.sessionWallet(token), acct.address.toLowerCase());
+  assert.equal((await post("/api/session", { address: SUPPLIER, at, signature }))[0], 401, "signature from another wallet");
+  assert.equal((await post("/api/session", { address: acct.address, at: at - 3600_000, signature }))[0], 400, "stale sign-in");
+  assert.equal(LINKS.sessionWallet(token.replace(/.$/, (c) => (c === "a" ? "b" : "a"))), null, "tampered token");
+  assert.equal(LINKS.sessionWallet(LINKS.session(SUPPLIER, Date.now() - 31 * 86400_000)), null, "expired token");
+});
+
+test("after locking, only the sheet's author gets the order's private link", async () => {
+  const [, o] = await get("/api/orders/1");
+  const ref = o.order.ref;
+  assert.equal((await post("/api/orders/1/link", { owner: "nope" }))[0], 403);
+  const [s, r] = await post("/api/orders/1/link", { owner: LINKS.owner(ref) });
+  assert.equal(s, 200);
+  assert.equal(r.link, LINKS.code(1));
 });

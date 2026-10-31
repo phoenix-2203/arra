@@ -613,3 +613,11 @@ label.button { cursor: pointer; }
 @media (min-width: 760px) { .how3 { grid-template-columns: repeat(3, 1fr); } }
 .dash-head h1 { font-size: clamp(28px, 7vw, 40px); }
 @media (max-width: 520px) { .dash-head { align-items: center; } .dash-head .muted { font-size: 13px; } }
+
+/* New order: compact deal-type switch, timing summary, waiting pulse */
+.kind-switch { display: flex; flex-wrap: wrap; gap: 8px; }
+.kind-switch .chip { display: inline-flex; align-items: center; gap: 6px; }
+.timing-line { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin: 0; }
+.pulse { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--mark); margin-right: 6px; vertical-align: middle; animation: pulse 1.4s infinite ease-in-out; }
+@keyframes pulse { 0%, 100% { opacity: .3; transform: scale(.85); } 50% { opacity: 1; transform: scale(1.15); } }
+@media (prefers-reduced-motion: reduce) { .pulse { animation: none; } }

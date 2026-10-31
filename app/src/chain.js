@@ -295,3 +295,15 @@ export function shrinkPhoto(file, max = 1280) {
     img.src = URL.createObjectURL(file);
   });
 }
+
+// ---- Sign in: one free signature proves this wallet is yours (kept 30 days) ----
+export async function signIn(api, saveSession) {
+  const w = await ensureWallet();
+  const address = w.account.address;
+  const at = Date.now();
+  const { text } = await api.sessionText(address, at);
+  const signature = await w.signMessage({ account: w.account, message: text });
+  const { token } = await api.signIn(address, at, signature);
+  saveSession(token);
+  return token;
+}

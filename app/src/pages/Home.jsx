@@ -7,6 +7,7 @@ import { usdtBalance, cngnBalance, hasWallet } from "../chain.js";
 import { navigate, short } from "../App.jsx";
 import { STRINGS } from "../i18n.js";
 import Icon from "../Icon.jsx";
+import SignIn from "../SignIn.jsx";
 import { nextDeadline } from "../calendar.js";
 
 const t = STRINGS.en;
@@ -37,21 +38,24 @@ export default function Home({ wallet }) {
   const [cngn, setCngn] = useState(null);
   const [tab, setTab] = useState("buyer");
   const [error, setError] = useState("");
+  const [needSign, setNeedSign] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     if (!account) return;
     let current = true; // a wallet switch mustn't show the previous wallet's orders
     setError("");
+    setNeedSign(false);
     setOrders(null);
     api.myOrders(account).then((r) => {
       if (!current) return;
       setOrders(r.orders);
       if (!r.orders.some((o) => o.role === "buyer") && r.orders.some((o) => o.role === "supplier")) setTab("supplier");
-    }).catch((e) => setError(e.message));
+    }).catch((e) => current && (e.status === 401 ? setNeedSign(true) : setError(e.message)));
     usdtBalance(account).then(setUsdt).catch(() => {});
     cngnBalance(account).then(setCngn).catch(() => {});
     return () => { current = false; };
-  }, [account]);
+  }, [account, attempt]);
 
   if (!account) {
     return (
@@ -108,8 +112,9 @@ export default function Home({ wallet }) {
         ) : null}
       </section>
 
+      {needSign ? <SignIn onDone={() => setAttempt((a) => a + 1)} /> : null}
       {error ? <p className="note bad">{error}</p> : null}
-      {orders === null && !error ? <p className="muted">Loading your orders…</p> : null}
+      {orders === null && !error && !needSign ? <p className="muted">Loading your orders…</p> : null}
 
       {none ? (
         <div className="stack">
