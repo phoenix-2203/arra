@@ -4,6 +4,7 @@
 
 Arra is escrow for anyone who pays a deposit now and a balance later: an importer in Lagos buying phones from Shenzhen, a family abroad paying a builder at home, a business ordering furniture or a website. The buyer locks the whole order in an open contract on Celo, paying in USDT or straight from naira at one firm rate. The supplier sees the money is really there, gets the deposit the moment they accept, and gets the balance when the goods ship or arrive. If they never accept or never ship, the money goes back to the buyer automatically. Nobody in the middle, Arra included, can take it.
 
+- **Demo video (2:59):** https://youtu.be/w7XmByE34aU
 - **Try it:** https://usearra.duckdns.org (Celo mainnet, real USDT; works in MiniPay and any Celo wallet)
 - **Vault (v4):** [`0xa3b3…c444`](https://celoscan.io/address/0xa3b339624d21a055c6da036f8e6d219ff2c3c444) · [source verified on Sourcify](https://repo.sourcify.dev/42220/0xa3b339624d21a055c6da036f8e6d219ff2c3c444)
 - **Agent:** ERC-8004 identity [#9996](https://celoscan.io/tx/0xc99e653aac82055dcefe99c1c5e7b4be6cefab39d4203a1bf73f4574a8935a90) · [agent card](agent.json) · every transaction tagged `celo_00cfddd372fa` (ERC-8021)
