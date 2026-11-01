@@ -14,7 +14,8 @@
     "swap": "node --env-file=.env scripts/swap.js",
     "order": "node --env-file=.env scripts/order.js",
     "set-max": "node --env-file=.env scripts/set-max-order.js",
-    "supplier-check": "node --env-file=.env scripts/supplier-check.js"
+    "supplier-check": "node --env-file=.env scripts/supplier-check.js",
+    "judge-test": "node --env-file=.env scripts/judge-test.js"
   },
   "keywords": [],
   "author": "",

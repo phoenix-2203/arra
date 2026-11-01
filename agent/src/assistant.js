@@ -172,11 +172,20 @@ export function assistant({ key = process.env.ANTHROPIC_API_KEY, geminiKey = pro
       let text = "";
       if (key) {
         const res = await fetchFn(ANTHROPIC_API, { method: "POST", headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" }, body: JSON.stringify({ model: process.env.ASSISTANT_MODEL ?? "claude-haiku-5-5", max_tokens: 200, system, messages: [{ role: "user", content: user }] }) });
-        if (!res.ok) return null;
+        if (!res.ok) {
+          console.error("complaints judge:", res.status);
+          return null;
+        }
         text = (await res.json()).content?.find((c) => c.type === "text")?.text ?? "";
       } else {
-        const res = await fetchFn(GEMINI_API, { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${geminiKey}` }, body: JSON.stringify({ model: process.env.ASSISTANT_MODEL ?? "gemini-flash-lite-latest", messages: [{ role: "system", content: system }, { role: "user", content: user }], max_tokens: 200, reasoning_effort: "none", response_format: { type: "json_object" } }) });
-        if (!res.ok) return null;
+        // Same fallback as the chat: some models refuse "thinking off", so ask plainly on a 400.
+        const ask = (fast) => fetchFn(GEMINI_API, { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${geminiKey}` }, body: JSON.stringify({ model: process.env.ASSISTANT_MODEL ?? "gemini-flash-lite-latest", messages: [{ role: "system", content: system }, { role: "user", content: user }], max_tokens: 400, ...(fast ? { reasoning_effort: "none" } : {}) }) });
+        let res = await ask(true);
+        if (res.status === 400) res = await ask(false);
+        if (!res.ok) {
+          console.error("complaints judge:", res.status, (await res.text().catch(() => "")).slice(0, 200));
+          return null;
+        }
         text = (await res.json()).choices?.[0]?.message?.content ?? "";
       }
       const m = text.match(/\{[\s\S]*\}/);

@@ -153,9 +153,12 @@ export function complaintCandidates(posts, handle, name, nowSec = Math.floor(Dat
     if (p.author && p.author.toLowerCase() === handle.toLowerCase()) return false;
     if (p.at && nowSec - p.at > 2 * 365 * 86400) return false;
     if ((p.text.match(/@\w+/g) ?? []).length >= 4) return false;
-    return names.some((n) => t.includes(n)) && COMPLAINT_RE.test(p.text);
+    // "zero scam signals", "not a scam", "legit, no fraud": praise, not a complaint.
+    const plain = p.text.replace(NEGATED_RE, " ");
+    return names.some((n) => t.includes(n)) && COMPLAINT_RE.test(plain);
   });
 }
+const NEGATED_RE = /\b(no|zero|not|never|isn'?t|wasn'?t|ain'?t|without)\s+(a\s+|an\s+|any\s+)?(scam\w*|fraud\w*|fake\w*|refund\w*)/gi;
 
 // The stablecoins the gateway takes on Celo (6 decimals each). The agent pays with whichever it holds.
 const TOKENS = { USDT: "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e", USAT: "0xD2ab3C9A02DBBAB236BfEC45D1d755DF4267F771", USDC: "0xcebA9300f2b948710d2653dD7B07f33A8B32118C" };

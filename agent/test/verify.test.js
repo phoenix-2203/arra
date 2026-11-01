@@ -118,3 +118,27 @@ test("matches the AI hasn't confirmed are a warning to read, never high risk", (
   assert.equal(verdict({ profile: page(), complaints: { searched: ["x"], complaints: two, judged: false } }).level, "careful");
   assert.equal(verdict({ profile: page(), complaints: { searched: ["x"], complaints: two, judged: true } }).level, "risk");
 });
+
+test("negations are praise, not complaints", () => {
+  const posts = [
+    { source: "x", author: "aixbt_agent", text: "working with celo foundation, zero scam signals in the data", at: null },
+    { source: "x", author: "a", text: "Celo Foundation is not a scam, legit team", at: null },
+    { source: "x", author: "b", text: "Celo Foundation took my money, no refund, total scam", at: null },
+  ];
+  assert.deepEqual(complaintCandidates(posts, "celoorg", "Celo Foundation").map((p) => p.author), ["b"]);
+});
+
+test("the AI judge falls back when Gemini refuses 'thinking off', and reads plain JSON", async () => {
+  const { assistant } = await import("../src/assistant.js");
+  const bodies = [];
+  const fetchFn = async (_u, init) => {
+    const b = JSON.parse(init.body);
+    bodies.push(b);
+    if (b.reasoning_effort) return new Response("bad", { status: 400 });
+    return new Response(JSON.stringify({ choices: [{ message: { content: "```json\n{\"keep\": [1, 9]}\n```" } }] }), { status: 200 });
+  };
+  const ai = assistant({ key: "", geminiKey: "g", fetchFn });
+  const keep = await ai.judgeComplaints({ handle: "shop", name: "", posts: [{ source: "x", author: "a", text: "x" }, { source: "x", author: "b", text: "y" }] });
+  assert.deepEqual(keep, [1], "out-of-range indexes dropped");
+  assert.equal(bodies.length, 2);
+});
