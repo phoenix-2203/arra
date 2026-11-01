@@ -149,7 +149,7 @@ Money can only ever leave the vault to the buyer, the supplier, or that one-cent
 
 **Paying**
 - **Pay from naira at one locked rate.** Textile FX converts cNGN into exactly the USDT the order needs, at one firm quote, in one transaction. A weaker naira next month can't touch it.
-- **No CELO needed.** Network fees are paid in USDT through Celo's fee abstraction.
+- **Any wallet on Celo.** MiniPay, MetaMask, Rabby or any wallet's in-app browser. In MiniPay and Valora the network fee comes out of USDT through Celo's fee abstraction, so no CELO is needed; other wallets need a few cents of CELO.
 - **Gas for the supplier.** If the supplier's wallet is empty, the buyer can send 0.02–0.05 CELO (or $0.10 USDT for MiniPay) in the same flow, so the supplier can accept.
 
 **Staying safe**
@@ -207,7 +207,7 @@ Money can only ever leave the vault to the buyer, the supplier, or that one-cent
 |---|---|
 | **Textile FX** | Keyless RFQ: the buyer signs a free ownership proof (MiniPay can too), gets a firm quote for *exactly* the USDT the order needs, and settles in one transaction. Arra converts at least $1 at a time (Textile's minimum) and keeps any change as USDT. Quotes carry builder codes. |
 | **cNGN** | A regulated naira stablecoin on Celo, so "pay in naira" is a real token, not a promise. |
-| **Fee abstraction** | Every fee is paid in USDT; users never need CELO. |
+| **Fee abstraction** | In MiniPay and Valora, network fees are paid in USDT, so users need no CELO; other wallets use a few cents of CELO. |
 | **MiniPay** | The app connects automatically inside MiniPay, where Nigerian users already hold stablecoins. |
 | **ERC-8004** | Arra's agent has an onchain identity (#9996) and a public agent card. |
 | **x402 via buy** | The agent pays for the data it needs: a supplier's public profile plus an X and a Reddit search per check, about $0.005 each in USDT, settled on Celo by the buy gateway (which covers the gas), with `@celo/buy-core`. The agent only signs the payment; the gateway sends that transaction, so it doesn't carry Arra's ERC-8021 tag. |
