@@ -1,179 +1,179 @@
 1
-00:00:01,000 --> 00:00:03,528
-In Lagos, a phone importer sends a
+00:00:00,700 --> 00:00:05,585
+In Lagos, an importer sends a thirty percent deposit to a supplier in Shenzhen.
 
 2
-00:00:03,528 --> 00:00:06,417
-thirty percent deposit to a supplier in Shenzhen.
+00:00:05,785 --> 00:00:08,440
+The seventy percent balance is where it goes wrong.
 
 3
-00:00:07,017 --> 00:00:09,117
-The other seventy percent is still to
+00:00:08,540 --> 00:00:12,860
+Goods that never arrive: this week, a man in Bauchi was
 
 4
-00:00:09,117 --> 00:00:11,518
-come. That balance is where it goes wrong.
+00:00:12,860 --> 00:00:17,180
+charged over ₦5.7 million paid for a tractor that never came.
 
 5
-00:00:12,518 --> 00:00:15,354
-Goods that never arrive. Payments redirected by
+00:00:17,380 --> 00:00:21,572
+Over three billion dollars lost in 2025 to fake "bank
 
 6
-00:00:15,354 --> 00:00:18,595
-a fake "our bank details have changed" message.
+00:00:21,572 --> 00:00:25,764
+details changed" messages. And the naira still moves in weeks.
 
 7
-00:00:19,095 --> 00:00:21,356
-A naira that can lose a third of
+00:00:25,864 --> 00:00:29,731
+Arra, Latin for earnest money, works for any deal with a
 
 8
-00:00:21,356 --> 00:00:23,618
-its value between the deposit and the balance.
+00:00:29,731 --> 00:00:33,949
+deposit and a balance: imports, a house back home, a freelance project.
 
 9
-00:00:24,218 --> 00:00:26,758
-And letters of credit have almost vanished, so
+00:00:34,149 --> 00:00:38,458
+Pay the deposit, and keep the balance locked in an open contract on Celo.
 
 10
-00:00:26,758 --> 00:00:29,615
-most of this trade moves by plain bank transfer.
+00:00:38,558 --> 00:00:41,809
+Before any order, paste the page you found them on.
 
 11
-00:00:30,615 --> 00:00:33,175
-Arra fixes that. Arra is Latin for
+00:00:41,809 --> 00:00:45,385
+Arra's agent reads it, and searches X and Reddit for complaints.
 
 12
-00:00:33,175 --> 00:00:36,101
-earnest money: the deposit that secures a deal.
+00:00:46,551 --> 00:00:50,185
+This example shop has two customer complaints: high risk.
 
 13
-00:00:36,701 --> 00:00:40,699
-Pay the deposit, and keep the balance locked until it ships, in
+00:00:51,593 --> 00:00:56,293
+A real seller comes back green. The agent pays for this data itself:
 
 14
-00:00:40,699 --> 00:00:44,696
-an open contract on Celo: not with Arra, not with the supplier.
+00:00:56,293 --> 00:01:00,992
+half a cent a lookup, over x402, through the buy marketplace on Celo.
 
 15
-00:00:45,696 --> 00:00:48,274
-Start by describing the order, like a
+00:01:01,192 --> 00:01:05,373
+And suppliers can confirm their own page, so impersonators get flagged.
 
 16
-00:00:48,274 --> 00:00:51,221
-message. Arra's assistant turns it into clear terms.
+00:01:05,473 --> 00:01:09,420
+Describe the order like a message, and the assistant fills in the terms.
 
 17
-00:00:51,821 --> 00:00:55,156
-Words nobody can check, like "good quality", are refused,
+00:01:11,737 --> 00:01:14,488
+Vague words like "good quality" are refused, and
 
 18
-00:00:55,156 --> 00:00:58,861
-and the terms are fingerprinted so they can't change later.
+00:01:14,488 --> 00:01:17,582
+the terms are fingerprinted, so they can't change later.
 
 19
-00:00:59,761 --> 00:01:04,231
-Then send your supplier one link. They read the exact terms, in English
+00:01:17,682 --> 00:01:20,552
+Send your supplier one link. They read the terms
 
 20
-00:01:04,231 --> 00:01:08,700
-or Chinese, connect the wallet they want to be paid in, and agree.
+00:01:20,552 --> 00:01:23,741
+in English or Chinese, and agree from their own wallet.
 
 21
-00:01:09,300 --> 00:01:11,610
-No account numbers copied from a chat,
+00:01:25,802 --> 00:01:27,978
+You see their record and reviews, and
 
 22
-00:01:11,610 --> 00:01:14,249
-so a scammer's look-alike address can't slip in.
+00:01:27,978 --> 00:01:30,465
+a changed payout address sets off an alarm.
 
 23
-00:01:15,149 --> 00:01:19,092
-Pay in dollars, or straight from naira, even inside MiniPay.
+00:01:30,565 --> 00:01:34,372
+Pay from the wallet you already use: MiniPay, MetaMask, Rabby,
 
 24
-00:01:19,792 --> 00:01:22,381
-The supplier accepts and gets the deposit
+00:01:34,372 --> 00:01:38,560
+or any wallet on Celo. In dollars, or straight from naira.
 
 25
-00:01:22,381 --> 00:01:25,339
-instantly. The balance waits until the goods ship.
+00:01:38,660 --> 00:01:41,374
+Lock the order. The supplier accepts, and
 
 26
-00:01:26,239 --> 00:01:30,431
-Every naira payment is a Textile FX fill: a firm quote
+00:01:41,374 --> 00:01:44,476
+the deposit reaches them instantly. The balance waits.
 
 27
-00:01:30,431 --> 00:01:34,623
-for exactly the dollars the order needs, settled in one transaction.
+00:01:46,622 --> 00:01:50,547
+Every naira payment is a Textile FX fill: one firm
 
 28
-00:01:35,223 --> 00:01:38,596
-Our first one on mainnet turned naira, at about thirteen
+00:01:50,547 --> 00:01:54,473
+quote for exactly the dollars needed, settled in one transaction.
 
 29
-00:01:38,596 --> 00:01:42,307
-hundred and seventy-four to the dollar, straight into a locked order.
+00:01:54,573 --> 00:01:58,385
+That one rate matters. This October, a seven-thousand-dollar balance cost
 
 30
-00:01:43,407 --> 00:01:47,741
-That one rate matters. In 2023, an importer with a
+00:01:58,385 --> 00:02:02,578
+a quarter of a million naira more, in just twenty days.
 
 31
-00:01:47,741 --> 00:01:52,508
-seven-thousand-dollar balance needed two million naira more, just seven weeks later.
+00:02:02,778 --> 00:02:04,816
+With Arra, it's paid for on day one.
 
 32
-00:01:53,208 --> 00:01:55,870
-With Arra, that balance was paid for on day one.
+00:02:04,916 --> 00:02:07,268
+When they ship, the container number is checked,
 
 33
-00:01:57,170 --> 00:02:00,300
-When the goods arrive, check them. Everything's right? Pay the
+00:02:07,268 --> 00:02:09,915
+and your check period starts when the goods arrive.
 
 34
-00:02:00,300 --> 00:02:03,431
-balance with one tap, all at once or in parts.
+00:02:11,792 --> 00:02:14,761
+All good? Pay the balance in one tap, or in parts.
 
 35
-00:02:04,031 --> 00:02:08,690
-Something wrong? Report it with a photo. The supplier accepts, or makes an offer.
+00:02:14,961 --> 00:02:18,435
+Something wrong? Report it with signed photos, and make an offer.
 
 36
-00:02:09,590 --> 00:02:13,957
-Changed your mind before they accept? Cancel and get everything back.
+00:02:18,587 --> 00:02:21,492
+Cancel before they accept. No accept, or
 
 37
-00:02:13,957 --> 00:02:18,720
-If they never accept, or never ship, Arra's agent refunds you automatically.
+00:02:21,492 --> 00:02:24,813
+no shipment, and Arra's agent refunds you automatically.
 
 38
-00:02:19,320 --> 00:02:22,591
-Silence can't freeze the money, and nobody, not even Arra,
+00:02:25,013 --> 00:02:28,875
+A quiet buyer can't hold the money: ignored offers go through
 
 39
-00:02:22,591 --> 00:02:26,189
-can send it anywhere but to the buyer or the supplier.
+00:02:28,875 --> 00:02:32,736
+in seven days. And nobody, not even Arra, can redirect it.
 
 40
-00:02:27,089 --> 00:02:31,214
-The same contract works for any deal with a deposit and a
+00:02:32,836 --> 00:02:36,216
+Afterwards, both sides review each other, hidden until both
 
 41
-00:02:31,214 --> 00:02:35,682
-balance: a house built back home, furniture made to order, a freelance project.
+00:02:36,216 --> 00:02:39,596
+have written. Receipts and history stay with every order.
 
 42
-00:02:36,682 --> 00:02:40,792
-Arra is live on Celo mainnet. A friend's real order
+00:02:40,004 --> 00:02:44,132
+Live on Celo mainnet: a friend's real order ran start to finish.
 
 43
-00:02:40,792 --> 00:02:45,312
-ran start to finish: locked, accepted with the deposit, balance paid.
+00:02:44,332 --> 00:02:47,746
+Verified contract, a registered agent, naira filled
 
 44
-00:02:45,812 --> 00:02:51,166
-With a verified contract, a registered agent, and naira orders filled through Textile.
+00:02:47,746 --> 00:02:51,648
+through Textile, and supplier checks paid over x402.
 
 45
-00:02:52,466 --> 00:02:54,723
+00:02:52,148 --> 00:02:54,340
 Arra. Trade with anyone, without the worry.

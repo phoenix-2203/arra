@@ -16,12 +16,12 @@
   "scene": "problem",
   "lines": [
    {
-    "text": "Goods that never arrive. Over three billion dollars lost in 2025 to \"our bank details have changed\" scams.",
-    "say": "Goods that never arrive. Over three billion dollars lost in twenty twenty-five to \"our bank details have changed\" scams."
+    "text": "Goods that never arrive: this week, a man in Bauchi was charged over ₦5.7 million paid for a tractor that never came.",
+    "say": "Goods that never arrive: this week, a man in Bauchi was charged over five point seven million Nyra, paid for a tractor that never came."
    },
    {
-    "text": "A naira that lost a third of its value in a single day. And letters of credit have almost vanished.",
-    "say": "A Nyra that lost a third of its value in a single day. And letters of credit have almost vanished."
+    "text": "Over three billion dollars lost in 2025 to fake \"bank details changed\" messages. And the naira still moves in weeks.",
+    "say": "Over three billion dollars lost in twenty twenty-five to fake \"bank details changed\" messages. And the Nyra still moves in weeks."
    }
   ]
  },
@@ -29,8 +29,8 @@
   "scene": "intro",
   "lines": [
    {
-    "text": "Arra is Latin for earnest money: the deposit that secures a deal.",
-    "say": "Ahra is Latin for earnest money: the deposit that secures a deal."
+    "text": "Arra, Latin for earnest money, works for any deal with a deposit and a balance: imports, a house back home, a freelance project.",
+    "say": "Ahra, Latin for earnest money, works for any deal with a deposit and a balance: imports, a house back home, a freelance project."
    },
    {
     "text": "Pay the deposit, and keep the balance locked in an open contract on Celo.",
@@ -42,16 +42,20 @@
   "scene": "check",
   "lines": [
    {
-    "text": "Before any order, paste the page you found your supplier on. Arra's agent pays half a cent per lookup to read it, and searches X and Reddit for complaints.",
-    "say": "Before any order, paste the page you found your supplier on. Ahra's agent pays half a cent per look-up to read it, and searches X and Reddit for complaints."
+    "text": "Before any order, paste the page you found them on. Arra's agent reads it, and searches X and Reddit for complaints.",
+    "say": "Before any order, paste the page you found them on. Ahra's agent reads it, and searches X and Reddit for complaints."
    },
    {
     "text": "This example shop has two customer complaints: high risk.",
     "say": "This example shop has two customer complaints: high risk."
    },
    {
-    "text": "A real seller comes back green. And suppliers can confirm their own page, so impersonators get flagged.",
-    "say": "A real seller comes back green. And suppliers can confirm their own page, so impersonators get flagged."
+    "text": "A real seller comes back green. The agent pays for this data itself: half a cent a lookup, over x402, through the buy marketplace on Celo.",
+    "say": "A real seller comes back green. The agent pays for this data itself: half a cent a look-up, over x four oh two, through the buy marketplace, on Sello."
+   },
+   {
+    "text": "And suppliers can confirm their own page, so impersonators get flagged.",
+    "say": "And suppliers can confirm their own page, so impersonators get flagged."
    }
   ]
  },
@@ -112,8 +116,8 @@
   "scene": "returns",
   "lines": [
    {
-    "text": "That one rate matters. In 2023, a seven-thousand-dollar balance cost two million naira more, just seven weeks later.",
-    "say": "That one rate matters. In twenty twenty-three, a seven-thousand-dollar balance cost two million Nyra more, just seven weeks later."
+    "text": "That one rate matters. This October, a seven-thousand-dollar balance cost a quarter of a million naira more, in just twenty days.",
+    "say": "That one rate matters. This October, a seven-thousand-dollar balance cost a quarter of a million Nyra more, in just twenty days."
    },
    {
     "text": "With Arra, it's paid for on day one.",
@@ -146,8 +150,8 @@
     "say": "Cancel before they accept. No accept, or no shipment, and Ahra's agent refunds you automatically."
    },
    {
-    "text": "A quiet buyer can't hold the money: ignored offers go through in seven days. And nobody, not even Arra, can send it anywhere else.",
-    "say": "A quiet buyer can't hold the money: ignored offers go through in seven days. And nobody, not even Ahra, can send it anywhere else."
+    "text": "A quiet buyer can't hold the money: ignored offers go through in seven days. And nobody, not even Arra, can redirect it.",
+    "say": "A quiet buyer can't hold the money: ignored offers go through in seven days. And nobody, not even Ahra, can redirect it."
    }
   ]
  },
@@ -161,20 +165,11 @@
   ]
  },
  {
-  "scene": "uses",
-  "lines": [
-   {
-    "text": "It works for any deposit-and-balance deal: a house built back home, furniture made to order, a freelance project.",
-    "say": "It works for any deposit-and-balance deal: a house built back home, furniture made to order, a freelance project."
-   }
-  ]
- },
- {
   "scene": "proof",
   "lines": [
    {
-    "text": "Arra is live on Celo mainnet. A friend's real order ran start to finish.",
-    "say": "Ahra is live on Sello main net. A friend's real order ran start to finish."
+    "text": "Live on Celo mainnet: a friend's real order ran start to finish.",
+    "say": "Live on Sello main net: a friend's real order ran start to finish."
    },
    {
     "text": "Verified contract, a registered agent, naira filled through Textile, and supplier checks paid over x402.",

@@ -15,10 +15,15 @@ for sc in T['scenes']:
     for i, s in enumerate(sc['segs']):
         ins += ['-ss', str(s['from']), '-t', str(round(s['to'] - s['from'], 3)), '-i', f"{CLIPS}/{s['clip']}.mp4"]
         label = WHO[s['clip']]
-        parts.append(f"[{i}:v]setpts=(PTS-STARTPTS)/{sc['speed']},fps=30,format=yuv420p,"
+        parts.append(f"[{i}:v]setpts=(PTS-STARTPTS)/{s.get('speed', sc['speed'])},fps=30,format=yuv420p,"
                      f"drawtext=fontfile={FONT}:text='{label}':fontsize=30:fontcolor=0x0b0d05:box=1:boxcolor=0xccff3d:boxborderw=16:x=w-tw-52:y=h-th-48[v{i}]")
     n = len(sc['segs'])
     fc = ';'.join(parts) + ';' + ''.join(f'[v{i}]' for i in range(n)) + f"concat=n={n}:v=1:a=0,tpad=stop_mode=clone:stop_duration=6,trim=duration={sc['dur']},setpts=PTS-STARTPTS[out]"
+    if sc['id'] == 'check':
+        # The x402 panel: how the agent pays for the data, beside the app while the buyer checks.
+        end = sc['segs'][-1]['at'] - 0.3
+        ins += ['-loop', '1', '-t', str(sc['dur']), '-i', f'{here}/overlays/x402.png']
+        fc = fc.replace('[out]', '[base]') + f";[{n}:v]format=rgba,fade=t=in:st=0.9:d=0.5:alpha=1,fade=t=out:st={end - 0.5}:d=0.5:alpha=1[ov];[base][ov]overlay=1462:250:enable='between(t,0.8,{end})'[out]"
     run(['ffmpeg', '-v', 'error', '-y', *ins, '-filter_complex', fc, '-map', '[out]', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '16', '-r', '30', f"{here}/clips/{sc['id']}.mp4"])
     print('demo', sc['id'], sc['dur'])
 # join everything with crossfades

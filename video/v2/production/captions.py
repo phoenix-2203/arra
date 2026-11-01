@@ -8,5 +8,5 @@ for l in T['lines']:
     n = sum(len(p) for p in parts); a = l['at']
     for p in parts:
         d = l['dur'] * len(p) / n; cues.append((a, a + d, ' '.join(p))); a += d
-open(f'{here}/../Arra_Demo.srt', 'w').write('\n'.join(f"{i+1}\n{ts(a)} --> {ts(b)}\n{t}\n" for i, (a, b, t) in enumerate(cues)))
+open(f'{here}/../../Arra_Demo.srt', 'w').write('\n'.join(f"{i+1}\n{ts(a)} --> {ts(b)}\n{t}\n" for i, (a, b, t) in enumerate(cues)))
 print(len(cues), 'cues')

@@ -101,14 +101,14 @@ scenes.problem = () => {
   const s = $(`<div class="scene">
     <div class="abs kicker" style="left:140px;top:150px">What goes wrong today</div>
     <div class="abs d h2" style="left:140px;top:190px">Three ways a balance is lost</div>
-    <div class="prob card" id="p1" style="left:140px"><div class="kicker">Goods never arrive</div><div class="big">₦60m</div><p>lost by two importers who paid a naira-to-yuan middleman</p><div class="src">New Telegraph, May 2025</div></div>
-    <div class="prob card" id="p2" style="left:700px"><div class="kicker">Payment redirected</div><div class="big">$3.05bn</div><p>lost to "our bank details have changed" fraud in 2025</p><div class="src">FBI IC3 2025 report</div></div>
-    <div class="prob card" id="p3" style="left:1260px"><div class="kicker">Naira falls</div><div class="big alert" style="font-size:66px">₦471 → ₦755</div><p>per dollar in a single day, 14 June 2023</p><div class="src">AllAfrica</div></div>
-    <div class="abs" id="lc" style="left:140px;top:790px;width:1640px;padding:30px 40px;border-radius:24px;background:rgba(255,122,107,.08);border:2px solid rgba(255,122,107,.35);font-size:32px">Letters of credit: <b>$506m</b> in nine months of 2024, <span class="alert">down 52.5%</span> · Chinese goods into Nigeria: <b>$24.9bn</b> in 2025 <span class="soft" style="font-size:22px"> · THISDAY (CBN data), BusinessDay</span></div>
+    <div class="prob card" id="p1" style="left:140px"><div class="kicker">Goods never arrive</div><div class="big">₦5.7m</div><p>paid in two instalments for a tractor that never came. Charged in court, 29 Oct 2026</p><div class="src">Peoples Gazette, Oct 2026</div></div>
+    <div class="prob card" id="p2" style="left:700px"><div class="kicker">Payment redirected</div><div class="big">$3.05bn</div><p>lost to "our bank details have changed" fraud in 2025</p><div class="src">FBI IC3 2025 report (Apr 2026)</div></div>
+    <div class="prob card" id="p3" style="left:1260px"><div class="kicker">The naira still moves</div><div class="big alert" style="font-size:54px;white-space:nowrap">₦1,331 → ₦1,368</div><p>per dollar in 20 days, 6 to 26 October 2026</p><div class="src">Nairametrics · CBN NFEM data</div></div>
+    <div class="abs" id="lc" style="left:140px;top:790px;width:1640px;padding:30px 40px;border-radius:24px;background:rgba(204,255,61,.06);border:2px solid rgba(204,255,61,.3);font-size:32px">China supplied <b>39%</b> of Nigeria's imports in the first half of 2026: <b>₦11.01 trillion</b> <span class="soft" style="font-size:22px"> · PUNCH analysis of NBS data, Sep 2026</span></div>
   </div>`);
   return { el: s, at(u) {
-    show(s.querySelector('#p1'), fade(u, L('problem', 0) + .2)); show(s.querySelector('#p2'), fade(u, L('problem', 0) + 2.6));
-    show(s.querySelector('#p3'), fade(u, L('problem', 1) + .2)); show(s.querySelector('#lc'), fade(u, L('problem', 1) + 3.2));
+    show(s.querySelector('#p1'), fade(u, L('problem', 0) + .3)); show(s.querySelector('#lc'), fade(u, L('problem', 0) + 6.2));
+    show(s.querySelector('#p2'), fade(u, L('problem', 1) + .2)); show(s.querySelector('#p3'), fade(u, L('problem', 1) + 5.8));
   } };
 };
 // ------------------------------------------------------------------ 3 intro
@@ -123,11 +123,12 @@ scenes.intro = () => {
       <div class="card abs" style="left:1120px;top:40px;width:300px;padding:30px;text-align:center;font-size:34px">Supplier</div>
       <svg class="abs" style="left:0;top:0" width="1420" height="200"><path d="M300 100 H500" stroke="#ccff3d" stroke-width="4"/><path d="M920 100 H1120" stroke="#ccff3d" stroke-width="4" stroke-dasharray="10 10"/></svg>
     </div>
+    <div class="abs" id="uses" style="left:0;right:0;top:620px;display:flex;justify-content:center;gap:18px"><span class="chip w">Imports from China</span><span class="chip w">A house back home</span><span class="chip w">Made to order</span><span class="chip w">Freelance projects</span></div>
     <div class="abs" id="not" style="left:0;right:0;top:950px;text-align:center;font-size:34px"><span style="color:#b9beb3">Not held by Arra. Not held by the supplier.</span></div>
   </div>`);
   return { el: s, at(u) {
     const p = fade(u, .1, .8); const wm = s.querySelector('#wm'); wm.style.opacity = p; wm.style.transform = `scale(${.94 + .06 * eo(p)})`;
-    show(s.querySelector('#mean'), fade(u, 2.4)); show(s.querySelector('#tg'), fade(u, L('intro', 1))); show(s.querySelector('#flow'), fade(u, L('intro', 1) + 2.2)); show(s.querySelector('#not'), fade(u, L('intro', 1) + 5.2));
+    show(s.querySelector('#mean'), fade(u, 1.2)); const us = s.querySelector('#uses'); show(us, fade(u, 3.4)); us.style.opacity = fade(u, 3.4) * (1 - P(u, L('intro', 1) - .4, .4)); show(s.querySelector('#tg'), fade(u, L('intro', 1))); show(s.querySelector('#flow'), fade(u, L('intro', 1) + 2.2)); show(s.querySelector('#not'), fade(u, L('intro', 1) + 5.2));
   } };
 };
 // ------------------------------------------------------------------ helpers for product scenes
@@ -227,20 +228,20 @@ scenes.uses = () => {
 // ------------------------------------------------------------------ 7 returns
 scenes.returns = () => {
   const s = $(`<div class="scene">
-    <div class="abs" style="left:240px;top:130px"><div class="kicker">Why one rate matters · a real 2023 case</div><div class="d h2" style="margin-top:12px">A $10,000 order. A $7,000 balance.</div></div>
+    <div class="abs" style="left:240px;top:130px"><div class="kicker">Why one rate matters · this October</div><div class="d h2" style="margin-top:12px">A $10,000 order. A $7,000 balance.</div></div>
     <div class="abs" style="left:240px;top:380px;width:1440px">
       <div class="row soft" style="border:0;font-size:24px"><span>When</span><span class="n">₦ per $1</span><span class="n">Naira for the balance</span></div>
-      <div class="row" id="r1"><span>Deposit paid, 13 June 2023</span><span class="n">₦471</span><span class="n">₦3,297,000</span></div>
-      <div class="row" id="r2"><span>Balance due, 31 July 2023</span><span class="n">₦756.94</span><span class="n">₦5,298,580</span></div>
-      <div class="row" id="r3" style="font-size:44px"><span class="d">Extra to find</span><span></span><span class="n d alert" id="cnt">+₦2,001,580</span></div>
+      <div class="row" id="r1"><span>Deposit paid, 6 October 2026</span><span class="n">₦1,331.50</span><span class="n">₦9,320,500</span></div>
+      <div class="row" id="r2"><span>Balance due, 26 October 2026</span><span class="n">₦1,367.61</span><span class="n">₦9,573,270</span></div>
+      <div class="row" id="r3" style="font-size:44px"><span class="d">Extra to find</span><span></span><span class="n d alert" id="cnt">+₦252,770</span></div>
     </div>
     <div class="abs" id="arra" style="left:240px;top:850px;width:1440px;padding:30px 40px;border-radius:24px;background:rgba(204,255,61,.08);border:2px solid rgba(204,255,61,.45);font-size:38px"><span class="d lime">With Arra:</span> converted once, on day one. <b>₦0 extra.</b></div>
-    <div class="abs soft" style="left:240px;top:1000px;font-size:21px">Rates: AllAfrica; Nairametrics (FMDQ data). The naira can also rise; Arra removes the bet either way.</div>
+    <div class="abs soft" style="left:240px;top:1000px;font-size:21px">Official NFEM rates: Nairametrics; CBN data via WithinNigeria. The naira can also rise; Arra removes the bet either way.</div>
   </div>`);
   return { el: s, at(u) {
-    show(s.querySelector('#r1'), fade(u, 1.4), 14); show(s.querySelector('#r2'), fade(u, 3.4), 14); show(s.querySelector('#r3'), fade(u, 6.0), 14);
-    const n = Math.round(2001580 * eo(clamp((u - 6.2) / 1.8)));
-    s.querySelector('#cnt').textContent = `+₦${n.toLocaleString('en-NG')}` + (u > 8.1 ? ' (+61%)' : '');
+    show(s.querySelector('#r1'), fade(u, 1.6), 14); show(s.querySelector('#r2'), fade(u, 3.6), 14); show(s.querySelector('#r3'), fade(u, 5.8), 14);
+    const n = Math.round(252770 * eo(clamp((u - 6.0) / 1.6)));
+    s.querySelector('#cnt').textContent = `+₦${n.toLocaleString('en-NG')}` + (u > 7.7 ? ' in 20 days' : '');
     show(s.querySelector('#arra'), fade(u, L('returns', 1) - .1));
   } };
 };
@@ -292,7 +293,7 @@ scenes.close = () => {
     <div class="abs word" id="wm" style="left:0;right:0;top:300px;text-align:center;font-size:190px">A<span class="lime">rr</span>a</div>
     <div class="abs d" id="tg" style="left:0;right:0;top:540px;text-align:center;font-size:56px"><span class="chrome">Trade with anyone, without the worry.</span></div>
     <div class="abs" id="url" style="left:0;right:0;top:680px;text-align:center"><span class="chip" style="font-size:34px">usearra.duckdns.org</span></div>
-    <div class="abs soft" id="by" style="left:0;right:0;top:820px;text-align:center;font-size:26px">Built on Celo · Textile FX · MiniPay · github.com/phoenix-2203/arra</div>
+    <div class="abs soft" id="by" style="left:0;right:0;top:820px;text-align:center;font-size:26px">Built on Celo · Textile FX · x402 via buy · github.com/phoenix-2203/arra</div>
   </div>`);
   return { el: s, at(u) {
     const p = fade(u, .2, .8); const wm = s.querySelector('#wm'); wm.style.opacity = p; wm.style.transform = `scale(${.94 + .06 * eo(p)})`;
