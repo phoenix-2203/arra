@@ -244,6 +244,7 @@ Everything below can be checked on Celoscan. Orders so far are **small test orde
 | First naira-paid order: Textile FX fill, about ₦1,374 cNGN → 1 USDT (tagged) | [`0xc9e673…673c`](https://celoscan.io/tx/0xc9e673ac56ea2fde09f3f5c356b53ee906784491701be78955420b5c17d0673c) |
 | …then locked in vault v4: $1.00 order, $0.30 deposit (tagged) | [`0xe08ff4…0622`](https://celoscan.io/tx/0xe08ff4ee88fa2d2c19eb95236c0657747cb8cecf3cec03e51f1dfa84943a0622) · [order page](https://usearra.duckdns.org/o/ek7MhbWNhw) |
 | First supplier check paid by the agent over x402 (buy): Instagram profile, $0.005 USDT from the agent wallet | [`0xae1e55…c6dc`](https://celoscan.io/tx/0xae1e55e1716f68c3d7cf376c5f72ce316fa9aca623931755c9d9a1897701c6dc) |
+| Full supplier check paid by the agent over x402 (buy): Instagram profile, X search and Reddit search, $0.005 each | [`0x960db3…c67f`](https://celoscan.io/tx/0x960db3607b29ca9cd4f1183bba6252d156765672f6c07c368905e6c524a4c67f) · [`0x583e51…69d`](https://celoscan.io/tx/0x583e51174e92411122208f08f06f011ebf72a4176f3084c671c14ad1f95a469d) · [`0xae0c96…e6b9`](https://celoscan.io/tx/0xae0c96909560e2f6e839587a3aae6fe526a33d8e0f6d9cf07008a0c4fafee6b9) |
 | Order cap raised to $500 on vault v4 (tagged) | [`0x77a930…a8b9`](https://celoscan.io/tx/0x77a930de1c28f41726146dbbd370057f4937a26847c4caa57eed396841eba8b9) |
 | Agent wallet (team) | [`0xF4Fa…7053`](https://celoscan.io/address/0xF4Fa62d294E5BcB514D27612998D7459c5D97053) |
 
@@ -270,12 +271,12 @@ The app treats every version as one Arra: order numbers never overlap, old links
 | Check | Where | Result |
 |---|---|---|
 | 55 contract tests: every path, deadlines, splits, keeper fee, v4 rules, plus fuzzing and invariant runs checking that the vault always holds exactly the open balances and money only leaves to the buyer, the supplier or the one-cent fee | `contracts/test/ArraVault.t.sol` (Foundry) | all pass |
-| 60 agent tests: API, order sheets (vague terms, impossible dates, tiny totals), wallet sign-in, private links, invites, signed notes, tracking, track record, link previews, Textile client, keeper, order assistant, supplier check (handles, profile reading, complaint filtering, verdict rules, page proofs, caps), double-blind reviews | `agent/test/` | all pass |
+| 65 agent tests: API, order sheets (vague terms, impossible dates, tiny totals), wallet sign-in, private links, invites, signed notes, tracking, track record, link previews, Textile client, keeper, order assistant, supplier check (handles, profile reading, complaint filtering, verdict rules, page proofs, caps), double-blind reviews | `agent/test/` | all pass |
 | Mixed v3 + v4 vaults served as one Arra on a local chain | `agent/test/` with Anvil | pass |
 | The real app in a browser against a local chain with the v4 vault: full order, part payments, buyer cancel, supplier decline and refund, extended deadline, problem report with split and counter-offer, terms-first invite, reviews from both sides, supplier check (good, risky, impersonated page) against a stand-in gateway; every balance checked to the cent | Playwright + Anvil | all match |
 | Source on mainnet matches this repo exactly | Sourcify | exact match, v2, v3, v4 |
 | Naira → USDT → locked order on mainnet through Textile FX | [`0xc9e673…`](https://celoscan.io/tx/0xc9e673ac56ea2fde09f3f5c356b53ee906784491701be78955420b5c17d0673c), [`0xe08ff4…`](https://celoscan.io/tx/0xe08ff4ee88fa2d2c19eb95236c0657747cb8cecf3cec03e51f1dfa84943a0622) | works |
-| Paid supplier check on mainnet over x402: the real gateway answer read correctly (name, followers, posts, last post) | [`0xae1e55…`](https://celoscan.io/tx/0xae1e55e1716f68c3d7cf376c5f72ce316fa9aca623931755c9d9a1897701c6dc) | works |
+| Paid supplier check on mainnet over x402: real gateway answers read correctly (profile, X and Reddit posts); complaint filtering tuned on those answers, and the AI keeps only real customer complaints (`npm run judge-test`) | [`0xae1e55…`](https://celoscan.io/tx/0xae1e55e1716f68c3d7cf376c5f72ce316fa9aca623931755c9d9a1897701c6dc) | works |
 | Attribution tag on every agent and app transaction | `npm run verify-tag` and the decoded tag on each tx | `celo_00cfddd372fa` |
 | 29 real-world failure scenarios between buyers and suppliers, each traced to a fix (most shipped in v4) | our "What can go wrong" review | fixes A–J live |
 
