@@ -71,8 +71,8 @@ export function VerifyResult({ r, compactFacts = false }) {
           </p>
           {!compactFacts ? (
             <dl className="sup-facts num">
-              <div><dt>Followers</dt><dd>{n(s.followers)}</dd></div>
-              <div><dt>Posts</dt><dd>{n(s.posts)}</dd></div>
+              {s.followers !== null ? <div><dt>Followers</dt><dd>{n(s.followers)}</dd></div> : null}
+              {s.posts !== null ? <div><dt>Posts</dt><dd>{n(s.posts)}</dd></div> : null}
               {s.lastPostAt ? <div><dt>Last post</dt><dd>{ago(s.lastPostAt)}</dd></div> : null}
               {s.createdAt ? <div><dt>Joined</dt><dd>{new Date(s.createdAt * 1000).toLocaleDateString("en-GB", { month: "short", year: "numeric" })}</dd></div> : null}
             </dl>

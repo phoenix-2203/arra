@@ -142,3 +142,19 @@ test("the AI judge falls back when Gemini refuses 'thinking off', and reads plai
   assert.deepEqual(keep, [1], "out-of-range indexes dropped");
   assert.equal(bodies.length, 2);
 });
+
+test("X profiles: follower and bio fields under X's own names", async () => {
+  const { summarize } = await import("../src/supplierCheck.js");
+  const s = summarize({ output: { profile: "shiproafrica", name: "shipro", desc: "Shipping from China to Nigeria", sub_count: 1840, friends: 210, statuses_count: 423, blue_verified: false, protected: false, created_at: "Tue Apr 15 10:00:00 +0000 2025" } });
+  assert.equal(s.followers, 1840);
+  assert.equal(s.following, 210);
+  assert.equal(s.posts, 423);
+  assert.equal(s.bio, "Shipping from China to Nigeria");
+  assert.equal(s.verified, false);
+});
+
+test("a page without a follower count is described without question marks", () => {
+  const v = verdict({ profile: page({ label: "X", summary: { followers: null, posts: 423, createdAt: 1744711200 } }), complaints: none });
+  assert.ok(!v.reasons.some((r) => r.text.includes("?")));
+  assert.equal(v.level, "good");
+});

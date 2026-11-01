@@ -59,13 +59,13 @@ function epoch(v) {
 }
 
 export function summarize(data) {
-  const followers = num(first(data, ["follower_count", "followers_count", "followerCount", "followersCount", "followers"], isNum)) ?? num(first(data, ["edge_followed_by"], (v) => isNum(v?.count))?.count);
-  const following = num(first(data, ["following_count", "followingCount", "friends_count", "follows_count", "following"], isNum));
+  const followers = num(first(data, ["follower_count", "followers_count", "followerCount", "followersCount", "followers", "sub_count", "subscriber_count", "fans", "fansCount", "follower"], isNum)) ?? num(first(data, ["edge_followed_by"], (v) => isNum(v?.count))?.count);
+  const following = num(first(data, ["following_count", "followingCount", "friends_count", "follows_count", "following", "friends"], isNum));
   const posts = num(first(data, ["media_count", "mediaCount", "posts_count", "postsCount", "statuses_count", "videoCount", "video_count", "aweme_count", "postCount"], isNum)) ?? num(first(data, ["edge_owner_to_timeline_media"], (v) => isNum(v?.count))?.count);
-  const verified = first(data, ["is_verified", "verified", "isVerified", "is_blue_verified"], (v) => typeof v === "boolean");
-  const priv = first(data, ["is_private", "private", "privateAccount", "protected"], (v) => typeof v === "boolean");
+  const verified = first(data, ["is_verified", "verified", "isVerified", "is_blue_verified", "blue_verified"], (v) => typeof v === "boolean");
+  const priv = first(data, ["is_private", "private", "privateAccount", "protected", "is_protected"], (v) => typeof v === "boolean");
   const name = first(data, ["full_name", "fullName", "nickname", "displayName", "name"], isStr);
-  const bio = first(data, ["biography", "bio", "description", "signature"], isStr);
+  const bio = first(data, ["biography", "bio", "description", "signature", "desc"], isStr);
   const createdAt = epoch(first(data, ["created_at", "createdAt", "create_time", "account_created_at"], (v) => epoch(v) !== undefined));
   let lastPostAt;
   walk(data, (k, v) => {

@@ -34,7 +34,11 @@ export function verdict({ profile = null, complaints = null, proof = null, payTo
     else {
       for (const f of profile.flags) warn.push(f);
       if (!profile.flags.length && s.followers >= 1000 && s.posts >= 30) good.push(`Established ${label} page: ${s.followers.toLocaleString("en-US")} followers, ${s.posts.toLocaleString("en-US")} posts.`);
-      else if (!profile.flags.length) info.push(`${label} page: ${s.followers ?? "?"} followers, ${s.posts ?? "?"} posts.`);
+      else if (!profile.flags.length) {
+        const facts = [s.followers !== null ? `${s.followers.toLocaleString("en-US")} followers` : null, s.posts !== null ? `${s.posts.toLocaleString("en-US")} posts` : null, s.createdAt ? `on ${label} since ${new Date(s.createdAt * 1000).toLocaleDateString("en-GB", { month: "short", year: "numeric" })}` : null].filter(Boolean);
+        if (s.followers === null && s.posts >= 100 && s.createdAt && Date.now() / 1000 - s.createdAt > 365 * 86400) good.push(`Active ${label} page: ${facts.join(", ")}.`);
+        else if (facts.length) info.push(`${label} page: ${facts.join(", ")}.`);
+      }
     }
   }
 
