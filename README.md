@@ -4,7 +4,9 @@
 
 Arra is escrow for anyone who pays a deposit now and a balance later: an importer in Lagos buying phones from Shenzhen, a family abroad paying a builder at home, a business ordering furniture or a website. The buyer locks the whole order in an open contract on Celo, paying in USDT or straight from naira at one firm rate. The supplier sees the money is really there, gets the deposit the moment they accept, and gets the balance when the goods ship or arrive. If they never accept or never ship, the money goes back to the buyer automatically. Nobody in the middle, Arra included, can take it.
 
-- **Demo video (2:59):** https://youtu.be/w7XmByE34aU
+**Not just China.** Arra works for any buyer and any supplier with a wallet on Celo, anywhere: a factory in Shenzhen, a carpenter in Ibadan, a builder back home, a freelance designer. It starts with Nigerian importers because China is Nigeria's biggest supplier, and that's where deposits are lost most often.
+
+- **Demo video (3:32):** https://youtu.be/w7XmByE34aU
 - **Try it:** https://usearra.duckdns.org (Celo mainnet, real USDT; works in MiniPay and any Celo wallet)
 - **Vault (v4):** [`0xa3b3…c444`](https://celoscan.io/address/0xa3b339624d21a055c6da036f8e6d219ff2c3c444) · [source verified on Sourcify](https://repo.sourcify.dev/42220/0xa3b339624d21a055c6da036f8e6d219ff2c3c444)
 - **Agent:** ERC-8004 identity [#9996](https://celoscan.io/tx/0xc99e653aac82055dcefe99c1c5e7b4be6cefab39d4203a1bf73f4574a8935a90) · [agent card](agent.json) · every transaction tagged `celo_00cfddd372fa` (ERC-8021)
@@ -24,16 +26,16 @@ Built for [Agents on Open Rails](https://www.loops.house/agents-on-open-rails) (
 
 ## The problem
 
-Nigeria buys more from China than ever: **$24.9 billion of goods in 2025, up 32% in a year**, mostly electronics, textiles, building materials and machinery ([BusinessDay, Mar 2026](https://businessday.ng/companies/article/china-nigeria-exports-reach-record-24-9bn-as-trade-gap-widens/)). Most of it is bought by small traders the same way: **30% deposit before production, 70% balance before shipping, sent by bank transfer.** Once the balance is sent, the buyer has nothing left to hold.
+Nigeria buys more from China than ever: **$24.9 billion of goods in 2025, up 32% in a year** ([BusinessDay, Mar 2026](https://businessday.ng/companies/article/china-nigeria-exports-reach-record-24-9bn-as-trade-gap-widens/)), and **₦11.01 trillion in the first half of 2026, 39% of all Nigeria's imports** ([PUNCH analysis of NBS data, Sep 2026](https://parrotnigeria.com/2026/09/11/china-supplies-39-of-nigerias-n28tn-imports/)). Most of it is bought by small traders the same way: **30% deposit before production, 70% balance before shipping, sent by bank transfer.** Once the balance is sent, the buyer has nothing left to hold.
 
 That is where it goes wrong:
 
 | What happens | Real example | Source |
 |---|---|---|
-| **The goods never come.** | Two importers lost **₦60m** paying a naira-to-yuan middleman; the goods never arrived and the funds were frozen. | [New Telegraph, May 2025](https://newtelegraphng.com/nigerians-importing-from-china-falling-victims-to-fraud-tietie/) |
+| **The goods never come.** | This week (29 Oct 2026) a man in Bauchi was charged over **₦5.7m paid in two instalments** for a tractor that never came and was never refunded ([Peoples Gazette, Oct 2026](https://gazettengr.com/man-remanded-over-alleged-n6-16-million-tractor-fraud-in-bauchi)). Two importers lost **₦60m** paying a naira-to-yuan middleman; the goods never arrived and the funds were frozen. | [New Telegraph, May 2025](https://newtelegraphng.com/nigerians-importing-from-china-falling-victims-to-fraud-tietie/) |
 | **The goods come wrong.** | More than 50 Alaba traders pooled **₦3.3bn** for solar panels that arrived damaged; Interpol was called in. A trader who paid **₦6m** received empty cartons. | [Blueprint, Jul 2025](https://blueprint.ng/interpol-probes-n3-3bn-fake-solar-panel-scam-from-china/), [Legit.ng, Jun 2025](https://www.legit.ng/people/1659136-tears-lady-paid-friend-n6-million-order-goods-china-receives-empty-cartons/) |
 | **The payment is redirected.** | **$3.05bn** was lost to business email compromise in 2025, up from $2.8bn in 2024; much of it is "our bank details have changed" messages to buyers. | [FBI IC3 2025 report, via McDonald Hopkins (Apr 2026)](https://www.mcdonaldhopkins.com/insights/news/the-sobering-truth-of-the-fbis-2025-internet-crime-complaint-center-report) |
-| **The naira moves between deposit and balance.** | The naira went from **₦471 to ₦755 per dollar in one day** (14 June 2023) and passed ₦1,348 by January 2024. An importer who had paid the deposit suddenly needed far more naira for the balance. | [AllAfrica](https://allafrica.com/stories/202506100251.html) |
+| **The naira moves between deposit and balance.** | Even in a calmer 2026, the official rate went from **₦1,331.50 to ₦1,367.61 per dollar in 20 days** (6 to 26 October 2026). After a deposit, the balance can cost noticeably more naira by the time it's due. | [Nairametrics, Oct 2026](https://nairametrics.com/2026/10/07/naira-strengthens-to-n1331-as-fx-turnover-swings-above-600-million/), [WithinNigeria (CBN data), Oct 2026](https://www.withinnigeria.com/2026/10/27/dollar-to-naira-today-october-27-2026-naira-trades-near-%E2%82%A61368-at-nfem-as-black-market-sells-at-%E2%82%A61385-%E2%82%A61390/?amp=1) |
 | **Disputes drag on.** | A ~$4,000 Alibaba Trade Assurance claim with fake tracking took about **a year** and still settled short. | [UK Business Forums](https://www.ukbusinessforums.co.uk/threads/alibaba-dispute-not-received.419720/post-3160396) |
 
 And the supplier has a problem too. They ask for a deposit because they can't see whether the buyer's money exists, and they use it to buy materials. **An escrow that only protects the buyer will be refused by the supplier.** Any fix has to work for both sides.
@@ -42,7 +44,7 @@ And the supplier has a problem too. They ask for a deposit because they can't se
 
 | Tool | Why small traders can't rely on it |
 |---|---|
-| **Bank letter of credit** | The traditional answer, and it has collapsed for Nigeria. In 2023 foreign suppliers stopped accepting Nigerian banks' LCs and asked for cash in escrow ([BusinessDay](https://businessday.ng/business-economy/article/trouble-looms-as-foreign-suppliers-reject-letters-of-credit/)). LC payments for all of Nigeria's foreign trade fell to **$506m in the first nine months of 2024, down 52.5%** ([THISDAY, CBN data](https://thisdaylive.com/index.php/2025/01/13/nigerias-foreign-trade-by-lc-payments-down-52-5-yoy-to-506-1m)), and were **$605m in the first eight months of 2025** ([AllAfrica, CBN data](https://allafrica.com/stories/202510140614.html)): a sliver next to $24.9bn of Chinese goods. |
+| **Bank letter of credit** | The traditional answer, and it barely reaches small traders. In 2023 foreign suppliers stopped accepting Nigerian banks' LCs and asked for cash in escrow ([BusinessDay](https://businessday.ng/business-economy/article/trouble-looms-as-foreign-suppliers-reject-letters-of-credit/)). LC payments for all of Nigeria's foreign trade fell to **$506m in the first nine months of 2024, down 52.5%** ([THISDAY, CBN data](https://thisdaylive.com/index.php/2025/01/13/nigerias-foreign-trade-by-lc-payments-down-52-5-yoy-to-506-1m)), and were **$605m in the first eight months of 2025** ([AllAfrica, CBN data](https://allafrica.com/stories/202510140614.html)): a sliver next to $24.9bn of Chinese goods. |
 | **Alibaba Trade Assurance** | Covers orders paid through Alibaba.com and judged on Alibaba's own chat; disputes must start within 15 days of delivery and refunds take 7–10 business days after a decision ([Alibaba seller blog](https://seller.alibaba.com/blogs/2026/southeast-asia/b2b-trade/trade-assurance-complete-guide-alibaba-secure-payment)). Deals agreed on WhatsApp or WeChat, which is most of them, are outside it. |
 | **Escrow.com** | Holds everything until delivery, so the supplier gets no deposit. **Minimum fee $50** plus a $25 international wire ([Escrow.com fee calculator](https://www.escrow.com/fee-calculator)): $75 on a $500 order is 15%. |
 | **Bank transfer (T/T)** | What almost everyone uses. No protection once sent, and the account number can be swapped by a scammer. |
@@ -51,16 +53,16 @@ And the supplier has a problem too. They ask for a deposit because they can't se
 
 Most of an import order is paid weeks after the deposit. If the naira falls in between, the same dollar balance costs far more naira, and that comes straight out of the importer's margin. Arra converts the whole order at **one firm Textile FX rate on day one**, so the balance can't get more expensive.
 
-A real case, with official rates:
+A real case from this October, with official rates:
 
 | A $10,000 order, 30% deposit | Naira per $1 | Naira for the $7,000 balance |
 |---|---|---|
-| Order placed, 13 June 2023 | ₦471 ([AllAfrica](https://allafrica.com/stories/202506100251.html)) | ₦3,297,000 |
-| Balance due, 31 July 2023 | ₦756.94 ([Nairametrics, FMDQ data](https://nairametrics.com/2023/08/01/end-of-july-exchange-rate-parallel-market-depreciates-by-11-5-gains-1-6-on-ie-window/)) | ₦5,298,580 |
-| **Extra the importer had to find** | | **₦2,001,580 (+61%)** |
-| **With Arra** (converted once, on day one) | ₦471 | **₦3,297,000, no extra** |
+| Deposit paid, 6 October 2026 | ₦1,331.50 ([Nairametrics](https://nairametrics.com/2026/10/07/naira-strengthens-to-n1331-as-fx-turnover-swings-above-600-million/)) | ₦9,320,500 |
+| Balance due, 26 October 2026 | ₦1,367.61 ([WithinNigeria, CBN data](https://www.withinnigeria.com/2026/10/27/dollar-to-naira-today-october-27-2026-naira-trades-near-%E2%82%A61368-at-nfem-as-black-market-sells-at-%E2%82%A61385-%E2%82%A61390/?amp=1)) | ₦9,573,270 |
+| **Extra the importer had to find** | | **₦252,770 (+2.7%) in 20 days** |
+| **With Arra** (converted once, on day one) | ₦1,331.50 | **₦9,320,500, no extra** |
 
-It isn't a one-off: the naira lost **40.9%** against the dollar over 2024 ([Nairametrics](https://nairametrics.com/2024/12/31/exchange-rate-ends-2024-at-n1535-1-marking-a-40-9-depreciation)). Rates can also move the other way, and in 2026 the naira has been firmer (about ₦1,374 per $1 in our own Textile fill). Arra doesn't bet on either direction. It removes the bet, the way a bank forward contract would, which small importers rarely get.
+That's in a calm year: the naira opened 2026 at ₦1,445.99 ([AllAfrica, CBN data](https://allafrica.com/stories/202601020184.html)), has been firmer since, and still moved 2.7% in three weeks, money that comes straight out of the importer's margin. Rates can also move the other way. Arra doesn't bet on either direction; it removes the bet, the way a bank forward contract would, which small importers rarely get.
 
 The cost of that certainty: Textile FX's **0.01%** fee, already in the quoted rate, plus a network fee of a fraction of a cent. Arra charges nothing today.
 
@@ -89,7 +91,7 @@ flowchart LR
 | # | Tunde (buyer) | Phoenix Store (supplier) | The money |
 |---|---|---|---|
 | 1 | Opens **New order** and types: *"30 phones from Phoenix Store: 10 Samsung S10 at $10 and 20 iPhone 15 Pro at $15."* The **order assistant** fills the form and asks for what's missing: date and details. Arra refuses terms nobody could check ("good quality", "standard") and fingerprints the sheet. | | Not moved |
-| 2 | Sends Phoenix Store **one link** on WhatsApp. | In one visit: reads the exact terms (in English or Chinese), connects the wallet they want to be paid in and taps **Agree**, or suggests a change. | Not moved |
+| 2 | Sends Phoenix Store **one link** on WhatsApp. | In one visit: reads the exact terms (in English, or Chinese if they prefer), connects the wallet they want to be paid in and taps **Agree**, or suggests a change. | Not moved |
 | 3 | Sees "✓ Phoenix Store agreed", with the wallet's last characters to confirm on a call. Deposit 30%, shipping by sea and a 7-day check are pre-set; one tap changes them. | | Not moved |
 | 4 | Pays **from naira**: Textile FX quotes one firm rate, converts cNGN into exactly the USDT needed, and Arra locks it. | Gets a link showing the full amount locked, the terms, and the deadlines. | **$400 locked** in the vault |
 | 5 | | Taps **Accept** from the agreed wallet. | **$120 deposit** → supplier, instantly |
@@ -172,15 +174,15 @@ Money can only ever leave the vault to the buyer, the supplier, or that one-cent
 **Keeping records**
 - Onchain **timeline**, **history** of every payment in and out (CSV download), printable **receipts**, calendar reminders, and private order links whose previews show the order in WhatsApp and Telegram.
 - **Private by default.** Orders open only by their private link code, like an invoice link. "Your orders" and History need one free wallet signature, remembered on the device for 30 days, so nobody can list another wallet's orders.
-- **English and Chinese** throughout the supplier's side.
+- **English throughout,** with a Chinese option on the supplier's side for suppliers who prefer it.
 
 ## Use cases
 
 | Who | The deal | Why Arra fits |
 |---|---|---|
-| **Importers** (Computer Village, Alaba, Kano, Onitsha) | Phones, solar panels, spare parts, cosmetics from China | Deposit for the factory, balance safe until shipping, naira rate locked on day one |
+| **Importers** (Computer Village, Alaba, Kano, Onitsha) | Phones, solar panels, spare parts, cosmetics from China, Turkey, Dubai or anywhere | Deposit for the factory, balance safe until shipping, naira rate locked on day one |
 | **Diaspora families** | A house, a shop or a farm built at home | Release money stage by stage as photos and visits confirm the work |
-| **Made-to-order buyers** | Furniture, signage, steel doors, tailoring | Maker gets money for materials; balance waits for the finished piece |
+| **Local suppliers and makers** | A carpenter in Ibadan, a tailor in Aba, signage, steel doors | Maker gets money for materials; balance waits for the finished piece |
 | **Businesses hiring freelancers** | Logo, website, app, marketing | Milestones without a platform holding the money |
 | **Event hosts** | Caterers, decorators, DJs, venues | Deposit to book, balance after the event |
 | **Online sellers and buyers** | Instagram and WhatsApp shops | A safer option than pay-on-delivery or pay-first |
@@ -218,7 +220,7 @@ Money can only ever leave the vault to the buyer, the supplier, or that one-cent
 
 ## Potential
 
-- **Market.** $24.9bn of Chinese goods reached Nigeria in 2025 ([BusinessDay](https://businessday.ng/companies/article/china-nigeria-exports-reach-record-24-9bn-as-trade-gap-widens/)), while letters of credit covered about $0.5bn of all foreign trade in nine months of 2024 ([THISDAY](https://thisdaylive.com/index.php/2025/01/13/nigerias-foreign-trade-by-lc-payments-down-52-5-yoy-to-506-1m)). Almost everything else moves by unprotected transfer.
+- **Market.** China alone supplied ₦11.01 trillion of Nigeria's imports in the first half of 2026, 39% of the total ([PUNCH/NBS](https://parrotnigeria.com/2026/09/11/china-supplies-39-of-nigerias-n28tn-imports/)); $24.9bn of Chinese goods reached Nigeria in 2025 ([BusinessDay](https://businessday.ng/companies/article/china-nigeria-exports-reach-record-24-9bn-as-trade-gap-widens/)), while letters of credit covered about $0.5bn of all foreign trade in nine months of 2024 ([THISDAY](https://thisdaylive.com/index.php/2025/01/13/nigerias-foreign-trade-by-lc-payments-down-52-5-yoy-to-506-1m)). Almost everything else moves by unprotected transfer.
 - **Users already hold stablecoins.** Nigeria received over **$92bn** in crypto value from July 2024 to June 2025, first in Sub-Saharan Africa ([Chainalysis via tech.africa](https://tech.africa/sub-saharan-africa-crypto-205bn/)).
 - **Beyond Nigeria.** The same deposit-and-balance problem exists on every corridor where small traders buy from China: Ghana, Kenya, Côte d'Ivoire. Each new local stablecoin on Textile is a new corridor with no change to the vault.
 - **Business model (planned, not live):** a small fee on released balances for larger orders; paid add-ons such as independent inspection before release and a named arbitrator; FX volume through Textile under Arra's builder code. Arra charges nothing today.
