@@ -1,0 +1,22 @@
+// Local Celo stand-in: anvil (chain 42220), MockUSDT code at the real USDT address, a fresh v4 vault.
+import { readFileSync } from "node:fs";
+import { createPublicClient, createWalletClient, http, parseUnits, defineChain } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
+const A = "/root/arra";
+const RPC = "http://127.0.0.1:8545";
+const chain = defineChain({ id: 42220, name: "local", nativeCurrency: { name: "CELO", symbol: "CELO", decimals: 18 }, rpcUrls: { default: { http: [RPC] } } });
+const c = createPublicClient({ chain, transport: http(RPC) });
+const owner = privateKeyToAccount("0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80");
+const w = createWalletClient({ account: owner, chain, transport: http(RPC) });
+const mock = JSON.parse(readFileSync(`${A}/contracts/out/ArraVault.t.sol/MockUSDT.json`));
+const vault = JSON.parse(readFileSync(`${A}/agent/abi/ArraVault.json`));
+const USDT = "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e";
+await c.request({ method: "anvil_setCode", params: [USDT, mock.deployedBytecode.object] });
+const r = await c.waitForTransactionReceipt({ hash: await w.deployContract({ abi: vault.abi, bytecode: vault.bytecode.object ?? vault.bytecode, args: [USDT, parseUnits("500", 6), owner.address, 1n, 10_000n] }) });
+const buyer = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
+const supplier = "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC";
+const CNGN = "0xF6829D7393dAe24509eb1E52eE8e572e2E271a4f";
+await c.request({ method: "anvil_setCode", params: [CNGN, mock.deployedBytecode.object] });
+await c.waitForTransactionReceipt({ hash: await w.writeContract({ address: CNGN, abi: mock.abi, functionName: "mint", args: [buyer, parseUnits(process.env.BUYER_CNGN ?? "0", 6)] }) });
+for (const to of [buyer]) await c.waitForTransactionReceipt({ hash: await w.writeContract({ address: USDT, abi: mock.abi, functionName: "mint", args: [to, parseUnits(process.env.BUYER_USDT ?? "1000", 6)] }) });
+console.log(JSON.stringify({ vault: r.contractAddress, block: Number(r.blockNumber) }));

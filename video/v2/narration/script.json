@@ -1,0 +1,194 @@
+[
+ {
+  "scene": "hook",
+  "lines": [
+   {
+    "text": "In Lagos, an importer sends a thirty percent deposit to a supplier in Shenzhen.",
+    "say": "In Lagos, an importer sends a thirty percent deposit to a supplier in Shenzhen."
+   },
+   {
+    "text": "The seventy percent balance is where it goes wrong.",
+    "say": "The seventy percent balance is where it goes wrong."
+   }
+  ]
+ },
+ {
+  "scene": "problem",
+  "lines": [
+   {
+    "text": "Goods that never arrive. Over three billion dollars lost in 2025 to \"our bank details have changed\" scams.",
+    "say": "Goods that never arrive. Over three billion dollars lost in twenty twenty-five to \"our bank details have changed\" scams."
+   },
+   {
+    "text": "A naira that lost a third of its value in a single day. And letters of credit have almost vanished.",
+    "say": "A Nyra that lost a third of its value in a single day. And letters of credit have almost vanished."
+   }
+  ]
+ },
+ {
+  "scene": "intro",
+  "lines": [
+   {
+    "text": "Arra is Latin for earnest money: the deposit that secures a deal.",
+    "say": "Ahra is Latin for earnest money: the deposit that secures a deal."
+   },
+   {
+    "text": "Pay the deposit, and keep the balance locked in an open contract on Celo.",
+    "say": "Pay the deposit, and keep the balance locked in an open contract on Sello."
+   }
+  ]
+ },
+ {
+  "scene": "check",
+  "lines": [
+   {
+    "text": "Before any order, paste the page you found your supplier on. Arra's agent pays half a cent per lookup to read it, and searches X and Reddit for complaints.",
+    "say": "Before any order, paste the page you found your supplier on. Ahra's agent pays half a cent per look-up to read it, and searches X and Reddit for complaints."
+   },
+   {
+    "text": "This example shop has two customer complaints: high risk.",
+    "say": "This example shop has two customer complaints: high risk."
+   },
+   {
+    "text": "A real seller comes back green. And suppliers can confirm their own page, so impersonators get flagged.",
+    "say": "A real seller comes back green. And suppliers can confirm their own page, so impersonators get flagged."
+   }
+  ]
+ },
+ {
+  "scene": "describe",
+  "lines": [
+   {
+    "text": "Describe the order like a message, and the assistant fills in the terms.",
+    "say": "Describe the order like a message, and the assistant fills in the terms."
+   },
+   {
+    "text": "Vague words like \"good quality\" are refused, and the terms are fingerprinted, so they can't change later.",
+    "say": "Vague words like \"good quality\" are refused, and the terms are fingerprinted, so they can't change later."
+   }
+  ]
+ },
+ {
+  "scene": "link",
+  "lines": [
+   {
+    "text": "Send your supplier one link. They read the terms in English or Chinese, and agree from their own wallet.",
+    "say": "Send your supplier one link. They read the terms in English or Chinese, and agree from their own wallet."
+   },
+   {
+    "text": "You see their record and reviews, and a changed payout address sets off an alarm.",
+    "say": "You see their record and reviews, and a changed payout address sets off an alarm."
+   }
+  ]
+ },
+ {
+  "scene": "wallets",
+  "lines": [
+   {
+    "text": "Pay from the wallet you already use: MiniPay, MetaMask, Rabby, or any wallet on Celo. In dollars, or straight from naira.",
+    "say": "Pay from the wallet you already use: Mini Pay, Meta Mask, Rabby, or any wallet on Sello. In dollars, or straight from Nyra."
+   }
+  ]
+ },
+ {
+  "scene": "lock",
+  "lines": [
+   {
+    "text": "Lock the order. The supplier accepts, and the deposit reaches them instantly. The balance waits.",
+    "say": "Lock the order. The supplier accepts, and the deposit reaches them instantly. The balance waits."
+   }
+  ]
+ },
+ {
+  "scene": "textile",
+  "lines": [
+   {
+    "text": "Every naira payment is a Textile FX fill: one firm quote for exactly the dollars needed, settled in one transaction.",
+    "say": "Every Nyra payment is a Textile F X fill: one firm quote for exactly the dollars needed, settled in one transaction."
+   }
+  ]
+ },
+ {
+  "scene": "returns",
+  "lines": [
+   {
+    "text": "That one rate matters. In 2023, a seven-thousand-dollar balance cost two million naira more, just seven weeks later.",
+    "say": "That one rate matters. In twenty twenty-three, a seven-thousand-dollar balance cost two million Nyra more, just seven weeks later."
+   },
+   {
+    "text": "With Arra, it's paid for on day one.",
+    "say": "With Ahra, it's paid for on day one."
+   }
+  ]
+ },
+ {
+  "scene": "ship",
+  "lines": [
+   {
+    "text": "When they ship, the container number is checked, and your check period starts when the goods arrive.",
+    "say": "When they ship, the container number is checked, and your check period starts when the goods arrive."
+   },
+   {
+    "text": "All good? Pay the balance in one tap, or in parts.",
+    "say": "All good? Pay the balance in one tap, or in parts."
+   },
+   {
+    "text": "Something wrong? Report it with signed photos, and make an offer.",
+    "say": "Something wrong? Report it with signed photos, and make an offer."
+   }
+  ]
+ },
+ {
+  "scene": "safety",
+  "lines": [
+   {
+    "text": "Cancel before they accept. No accept, or no shipment, and Arra's agent refunds you automatically.",
+    "say": "Cancel before they accept. No accept, or no shipment, and Ahra's agent refunds you automatically."
+   },
+   {
+    "text": "A quiet buyer can't hold the money: ignored offers go through in seven days. And nobody, not even Arra, can send it anywhere else.",
+    "say": "A quiet buyer can't hold the money: ignored offers go through in seven days. And nobody, not even Ahra, can send it anywhere else."
+   }
+  ]
+ },
+ {
+  "scene": "after",
+  "lines": [
+   {
+    "text": "Afterwards, both sides review each other, hidden until both have written. Receipts and history stay with every order.",
+    "say": "Afterwards, both sides review each other, hidden until both have written. Receipts and history stay with every order."
+   }
+  ]
+ },
+ {
+  "scene": "uses",
+  "lines": [
+   {
+    "text": "It works for any deposit-and-balance deal: a house built back home, furniture made to order, a freelance project.",
+    "say": "It works for any deposit-and-balance deal: a house built back home, furniture made to order, a freelance project."
+   }
+  ]
+ },
+ {
+  "scene": "proof",
+  "lines": [
+   {
+    "text": "Arra is live on Celo mainnet. A friend's real order ran start to finish.",
+    "say": "Ahra is live on Sello main net. A friend's real order ran start to finish."
+   },
+   {
+    "text": "Verified contract, a registered agent, naira filled through Textile, and supplier checks paid over x402.",
+    "say": "Verified contract, a registered agent, Nyra filled through Textile, and supplier checks paid over x four oh two."
+   }
+  ]
+ },
+ {
+  "scene": "close",
+  "lines": [
+   {
+    "text": "Arra. Trade with anyone, without the worry.",
+    "say": "Ahra. Trade with anyone, without the worry."
+   }
+  ]
+ }
+]

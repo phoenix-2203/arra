@@ -1,0 +1,179 @@
+1
+00:00:00,750 --> 00:00:05,635
+In Lagos, an importer sends a thirty percent deposit to a supplier in Shenzhen.
+
+2
+00:00:05,935 --> 00:00:08,590
+The seventy percent balance is where it goes wrong.
+
+3
+00:00:08,890 --> 00:00:12,538
+Goods that never arrive. Over three billion dollars lost
+
+4
+00:00:12,538 --> 00:00:16,186
+in 2025 to "our bank details have changed" scams.
+
+5
+00:00:16,486 --> 00:00:19,366
+A naira that lost a third of its value in
+
+6
+00:00:19,366 --> 00:00:22,246
+a single day. And letters of credit have almost vanished.
+
+7
+00:00:22,546 --> 00:00:26,405
+Arra is Latin for earnest money: the deposit that secures a deal.
+
+8
+00:00:26,705 --> 00:00:31,014
+Pay the deposit, and keep the balance locked in an open contract on Celo.
+
+9
+00:00:31,314 --> 00:00:35,754
+Before any order, paste the page you found your supplier on. Arra's agent pays
+
+10
+00:00:35,754 --> 00:00:40,512
+half a cent per lookup to read it, and searches X and Reddit for complaints.
+
+11
+00:00:40,812 --> 00:00:44,446
+This example shop has two customer complaints: high risk.
+
+12
+00:00:45,371 --> 00:00:48,353
+A real seller comes back green. And suppliers
+
+13
+00:00:48,353 --> 00:00:51,707
+can confirm their own page, so impersonators get flagged.
+
+14
+00:00:53,293 --> 00:00:57,240
+Describe the order like a message, and the assistant fills in the terms.
+
+15
+00:00:59,507 --> 00:01:02,258
+Vague words like "good quality" are refused, and
+
+16
+00:01:02,258 --> 00:01:05,352
+the terms are fingerprinted, so they can't change later.
+
+17
+00:01:05,652 --> 00:01:08,522
+Send your supplier one link. They read the terms
+
+18
+00:01:08,522 --> 00:01:11,711
+in English or Chinese, and agree from their own wallet.
+
+19
+00:01:13,722 --> 00:01:15,898
+You see their record and reviews, and
+
+20
+00:01:15,898 --> 00:01:18,385
+a changed payout address sets off an alarm.
+
+21
+00:01:18,685 --> 00:01:22,492
+Pay from the wallet you already use: MiniPay, MetaMask, Rabby,
+
+22
+00:01:22,492 --> 00:01:26,680
+or any wallet on Celo. In dollars, or straight from naira.
+
+23
+00:01:26,980 --> 00:01:29,694
+Lock the order. The supplier accepts, and
+
+24
+00:01:29,694 --> 00:01:32,796
+the deposit reaches them instantly. The balance waits.
+
+25
+00:01:35,042 --> 00:01:38,968
+Every naira payment is a Textile FX fill: one firm
+
+26
+00:01:38,968 --> 00:01:42,893
+quote for exactly the dollars needed, settled in one transaction.
+
+27
+00:01:43,193 --> 00:01:47,110
+That one rate matters. In 2023, a seven-thousand-dollar balance
+
+28
+00:01:47,110 --> 00:01:51,027
+cost two million naira more, just seven weeks later.
+
+29
+00:01:51,327 --> 00:01:53,365
+With Arra, it's paid for on day one.
+
+30
+00:01:53,665 --> 00:01:56,017
+When they ship, the container number is checked,
+
+31
+00:01:56,017 --> 00:01:58,664
+and your check period starts when the goods arrive.
+
+32
+00:02:00,491 --> 00:02:03,460
+All good? Pay the balance in one tap, or in parts.
+
+33
+00:02:03,760 --> 00:02:07,234
+Something wrong? Report it with signed photos, and make an offer.
+
+34
+00:02:07,534 --> 00:02:10,439
+Cancel before they accept. No accept, or
+
+35
+00:02:10,439 --> 00:02:13,760
+no shipment, and Arra's agent refunds you automatically.
+
+36
+00:02:14,060 --> 00:02:18,198
+A quiet buyer can't hold the money: ignored offers go through in
+
+37
+00:02:18,198 --> 00:02:22,337
+seven days. And nobody, not even Arra, can send it anywhere else.
+
+38
+00:02:22,637 --> 00:02:26,017
+Afterwards, both sides review each other, hidden until both
+
+39
+00:02:26,017 --> 00:02:29,397
+have written. Receipts and history stay with every order.
+
+40
+00:02:31,362 --> 00:02:34,828
+It works for any deposit-and-balance deal: a house built
+
+41
+00:02:34,828 --> 00:02:38,295
+back home, furniture made to order, a freelance project.
+
+42
+00:02:38,595 --> 00:02:43,331
+Arra is live on Celo mainnet. A friend's real order ran start to finish.
+
+43
+00:02:43,631 --> 00:02:47,045
+Verified contract, a registered agent, naira filled
+
+44
+00:02:47,045 --> 00:02:50,947
+through Textile, and supplier checks paid over x402.
+
+45
+00:02:51,647 --> 00:02:53,839
+Arra. Trade with anyone, without the worry.
