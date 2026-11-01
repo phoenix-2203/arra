@@ -66,3 +66,7 @@ api.supplierCheck = (platform, handle) => call("POST", "/api/supplier-check", { 
 api.reviews = (id) => call("GET", `/api/orders/${id}/reviews`);
 api.addReview = (id, body) => call("POST", `/api/orders/${id}/reviews`, body);
 api.reviewSummary = (address) => call("GET", `/api/reviews/${address}`);
+api.verify = (body) => call("POST", "/api/verify", body);
+api.pageProofs = (address) => call("GET", `/api/page-proof/by/${address}`);
+api.pageProofStart = (platform, handle, address) => call("POST", "/api/page-proof/start", { platform, handle, address });
+api.pageProofConfirm = (platform, handle, address) => call("POST", "/api/page-proof/confirm", { platform, handle, address });

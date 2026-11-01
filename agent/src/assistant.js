@@ -159,5 +159,33 @@ export function assistant({ key = process.env.ANTHROPIC_API_KEY, geminiKey = pro
       const call = { input };
       return { message: clean(call.input.message, 1200), draft: cleanDraft(call.input.draft), ready: !!call.input.ready };
     },
+
+    /**
+     * Which of these public posts are a customer's complaint about this seller? Posts by
+     * other shops warning about fakes, jokes, news and unrelated people with the same name
+     * are dropped. Returns the indexes to keep, or null if the AI couldn't answer.
+     */
+    async judgeComplaints({ handle, name, posts }) {
+      if (!key && !geminiKey) return null;
+      const system = "You check public social media posts for a buyer who is about to pay a seller. For each numbered post, decide if it is a buyer or customer saying THIS seller cheated them, didn't deliver, sent fake or wrong goods, or warning others about THIS seller. Not complaints: the seller's own posts, warnings about fake pages copying the seller, jokes, news, or posts about someone else with a similar name. Answer with JSON only: {\"keep\": [indexes]}.";
+      const user = `Seller: @${handle}${name ? ` (business name: ${name})` : ""}\n\n` + posts.map((p, i) => `[${i}] ${p.source === "x" ? "X" : "Reddit"} post by ${p.author ?? "unknown"}: ${clean(p.text, 400)}`).join("\n\n");
+      let text = "";
+      if (key) {
+        const res = await fetchFn(ANTHROPIC_API, { method: "POST", headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" }, body: JSON.stringify({ model: process.env.ASSISTANT_MODEL ?? "claude-haiku-5-5", max_tokens: 200, system, messages: [{ role: "user", content: user }] }) });
+        if (!res.ok) return null;
+        text = (await res.json()).content?.find((c) => c.type === "text")?.text ?? "";
+      } else {
+        const res = await fetchFn(GEMINI_API, { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${geminiKey}` }, body: JSON.stringify({ model: process.env.ASSISTANT_MODEL ?? "gemini-flash-lite-latest", messages: [{ role: "system", content: system }, { role: "user", content: user }], max_tokens: 200, reasoning_effort: "none", response_format: { type: "json_object" } }) });
+        if (!res.ok) return null;
+        text = (await res.json()).choices?.[0]?.message?.content ?? "";
+      }
+      const m = text.match(/\{[\s\S]*\}/);
+      try {
+        const keep = JSON.parse(m?.[0] ?? "").keep;
+        return Array.isArray(keep) ? keep.filter((i) => Number.isInteger(i) && i >= 0 && i < posts.length) : null;
+      } catch {
+        return null;
+      }
+    },
   };
 }

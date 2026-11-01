@@ -3,6 +3,7 @@
 // order, connects the wallet they want to be paid in, and taps Agree or suggests a
 // change. The wallet address goes straight to the buyer, so nobody copies it by hand.
 import { useEffect, useState } from "react";
+import PageProof from "./PageProof.jsx";
 import { api } from "../api.js";
 import { hasWallet } from "../chain.js";
 import { short } from "../App.jsx";
@@ -96,7 +97,8 @@ export default function Invite({ code, wallet }) {
           {t.agreedDone}
           <p className="num" style={{ marginTop: 8, wordBreak: "break-all" }}><strong>{inv.address}</strong></p>
         </div>
-      ) : inv.changeRequest && mine && !agreed ? (
+      ) : null}
+      {agreed && mine ? <PageProof address={inv.address} lang={lang} /> : inv.changeRequest && mine && !agreed ? (
         <p className="note">{t.suggested(inv.changeRequest.text)}</p>
       ) : null}
 

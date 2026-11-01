@@ -127,7 +127,7 @@ const FEATURES = [
   ["rate", "Rate locked on day one", "Pay from naira once, at a firm Textile FX rate. A weaker naira next month can't touch it."],
   ["signature", "The right wallet, proven", "Your supplier connects and accepts from their own wallet, so a look-alike address in a chat can't steal the payment."],
   ["split", "Problems settle, not stall", "Report a problem with a photo and offer a split. An offer ignored for 7 days goes through; nothing stays stuck."],
-  ["alarm", "Bank-detail change alarm", "If a known supplier suddenly wants paying somewhere new, Arra stops you until you've confirmed by phone."],
+  ["search", "Check a supplier first", "Paste their Instagram, TikTok or X page. Arra's agent reads it, searches for complaints, and shows reviews from real orders, before any money moves."],
 ];
 
 const USES = [
@@ -159,7 +159,7 @@ export default function Landing({ wallet }) {
           </p>
           <div className="hero-cta">
             <a href="/new" className="button money" onClick={go("/new")}>Start an order</a>
-            <a href="#how" className="button secondary">See how it works</a>
+            <a href="/check" className="button secondary" onClick={go("/check")}>Check a supplier</a>
           </div>
           <ul className="trust-row">
             <li><Icon name="shield" size={18} /> Contract verified on Sourcify</li>

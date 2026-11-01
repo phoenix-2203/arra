@@ -17,6 +17,9 @@ import { OrderLinks, LINK_RE } from "./links.js";
 import { Invites } from "./invites.js";
 import { Notes } from "./notes.js";
 import { Reviews, dealState } from "./reviews.js";
+import { PageProofs } from "./pageProofs.js";
+import { verdict } from "./verdict.js";
+import { PLATFORMS, cleanHandle } from "./supplierCheck.js";
 import { orderPreviewPng } from "./ogImage.js";
 
 const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml", ".png": "image/png", ".json": "application/json", ".ico": "image/x-icon", ".webmanifest": "application/manifest+json" };
@@ -96,6 +99,7 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
   const invites = new Invites(join(dataDir, "invites"));
   const notes = new Notes(join(dataDir, "notes"));
   const reviews = new Reviews(join(dataDir, "reviews"));
+  const proofs = new PageProofs(join(dataDir, "page-proofs.json"), (label) => links.mac(label));
   const trackingDir = join(dataDir, "tracking");
   mkdirSync(trackingDir, { recursive: true });
   const trackingPath = (id) => join(trackingDir, `${Number(id)}.json`);
@@ -139,6 +143,46 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
       if (tooMany(req, "supplier", 20, 3600_000)) return [429, { error: "Too many checks from your connection. Try again in an hour." }];
       return [200, await supplier.check(body.platform, body.handle)];
     },
+    // Check a supplier: their public page, public complaints, who controls the page, and
+    // (when their wallet is known) their record and reviews on Arra, in one plain verdict.
+    "POST /api/verify": async (body, _url, req) => {
+      const platform = PLATFORMS[body.platform] ? body.platform : null;
+      const handle = platform ? cleanHandle(body.handle) : null;
+      const payTo = isAddress(String(body.address ?? ""), { strict: false }) ? body.address.toLowerCase() : null;
+      if (!handle && !payTo) return [400, { error: "Paste their Instagram, TikTok or X name, or their wallet address" }];
+      const paidParts = !!handle && !!supplier?.enabled;
+      if (paidParts && tooMany(req, "supplier", 20, 3600_000)) return [429, { error: "Too many checks from your connection. Try again in an hour." }];
+      const soft = (p) => p.catch((e) => ({ error: e.message }));
+      const [profile, rec, wallet] = await Promise.all([
+        paidParts ? soft(supplier.check(platform, handle)) : null,
+        payTo ? vaults.record(payTo).catch(() => null) : null,
+        payTo ? client.getTransactionCount({ address: payTo }).catch(() => null) : null,
+      ]);
+      const name = String(body.name ?? "").trim() || (profile && !profile.error ? profile.summary?.name ?? "" : "");
+      const complaints = paidParts && profile && !profile.error && profile.found ? await soft(supplier.complaints(handle, name, { judge: ai?.enabled ? (x) => ai.judgeComplaints(x) : null })) : null;
+      const proof = handle ? proofs.get(platform, handle) : payTo ? proofs.byAddress(payTo)[0] ?? null : null;
+      const rv = payTo ? reviews.summary(payTo, now()) : null;
+      const ok = (x) => (x && !x.error ? x : null);
+      return [200, {
+        platform, handle, payTo, name: name || null,
+        profile: profile ?? null,
+        complaints: complaints ?? null,
+        proof,
+        record: rec?.asSupplier ?? null,
+        reviews: rv?.asSupplier ?? null,
+        walletTxs: wallet,
+        verdict: verdict({ profile: ok(profile), complaints: ok(complaints), proof, payTo, payToPages: payTo ? proofs.byAddress(payTo) : [], record: rec?.asSupplier ?? null, reviews: rv?.asSupplier ?? null, walletTxs: wallet }),
+        paidChecks: !!supplier?.enabled,
+      }];
+    },
+    // Page proof: the supplier links their public page to the wallet that gets paid.
+    "POST /api/page-proof/start": async (body) => [200, proofs.start(body.platform, body.handle, body.address)],
+    "POST /api/page-proof/confirm": async (body, _url, req) => {
+      if (!supplier?.enabled) return [503, { error: "Page checks aren't switched on" }];
+      if (tooMany(req, "supplier", 20, 3600_000)) return [429, { error: "Too many checks from your connection. Try again in an hour." }];
+      return [200, await proofs.confirm(body.platform, body.handle, body.address, supplier)];
+    },
+
     // Public proof of the paid calls (amount and settlement transaction of each).
     "GET /api/supplier-check/payments": async () => {
       const list = supplier?.payments() ?? [];
@@ -391,6 +435,8 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
             return send(res, 200, reviews.view(o, deal, now()));
           }
         }
+        const pp = url.pathname.match(/^\/api\/page-proof\/by\/(0x[0-9a-fA-F]{40})$/);
+        if (pp && req.method === "GET") return send(res, 200, { proofs: proofs.byAddress(pp[1]) });
         const rs = url.pathname.match(/^\/api\/reviews\/(0x[0-9a-fA-F]{40})$/);
         if (rs && req.method === "GET") return send(res, 200, reviews.summary(rs[1], now()));
         const ph = url.pathname.match(/^\/api\/photos\/(0x[0-9a-f]{64})\.jpg$/);

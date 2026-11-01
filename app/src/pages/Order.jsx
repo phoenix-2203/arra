@@ -7,6 +7,7 @@ import { withToast } from "../toast.jsx";
 import TrackRecord from "../TrackRecord.jsx";
 import Notes from "./Notes.jsx";
 import Reviews from "./Reviews.jsx";
+import PageProof from "./PageProof.jsx";
 import Problem from "./Problem.jsx";
 import { downloadIcs, deadlines } from "../calendar.js";
 import { STRINGS, initialLang, saveLang, qtyText } from "../i18n.js";
@@ -436,6 +437,7 @@ export default function Order({ id, wallet }) {
           ) : null}
         </div>
 
+        {role === "supplier" && !final ? <PageProof address={o.supplier} lang={lang} /> : null}
         {busy ? <p className="note">{busy}</p> : null}
         {error ? <p className="note bad">{error}</p> : null}
         {lastTx ? <p className="note ok">{t.done}. <a href={`${EXPLORER}/tx/${lastTx}`} target="_blank" rel="noreferrer">{t.viewTx}</a></p> : null}

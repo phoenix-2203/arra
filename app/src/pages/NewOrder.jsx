@@ -10,7 +10,7 @@ import { navigate } from "../App.jsx";
 import { toast } from "../toast.jsx";
 import Icon from "../Icon.jsx";
 import Assistant from "./Assistant.jsx";
-import SupplierCheck from "./SupplierCheck.jsx";
+import SupplierVerify from "./SupplierVerify.jsx";
 
 const DAY = 86400;
 
@@ -125,7 +125,13 @@ function Chips({ value, options, onChange, label }) {
 export default function NewOrder({ wallet }) {
   const { account } = wallet;
   const [step, setStep] = useState(1);
-  const [f, setF] = useState(blankSheet);
+  // Coming from "Check a supplier": their name and the page that was checked come along.
+  const [fromCheck] = useState(() => {
+    const q = new URLSearchParams(typeof location !== "undefined" ? location.search : "");
+    const [platform, handle] = (q.get("check") ?? "").split(":");
+    return { supplier: (q.get("supplier") ?? "").slice(0, 80), page: platform && handle ? { platform, handle } : null };
+  });
+  const [f, setF] = useState(() => ({ ...blankSheet, supplier: fromCheck.supplier }));
   const [supplierAddr, setSupplierAddr] = useState("");
   const [payee, setPayee] = useState(null);
   const [phoneConfirmed, setPhoneConfirmed] = useState(false);
@@ -568,7 +574,7 @@ export default function NewOrder({ wallet }) {
               </div>
             </details>
           ) : null}
-          {hasCheck ? <SupplierCheck payee={K.payee.toLowerCase()} /> : null}
+          {hasCheck ? <SupplierVerify payTo={isAddress(supplierAddr) && supplierAddr.toLowerCase() !== account.toLowerCase() ? supplierAddr.toLowerCase() : ""} name={f.supplier} payee={K.payee.toLowerCase()} initial={fromCheck.page} /> : null}
           {isAddress(supplierAddr) && supplierAddr.toLowerCase() === account.toLowerCase() ? <p className="note bad">That's your own wallet. Use the {K.payee.toLowerCase()}'s.</p> : null}
           {isAddress(supplierAddr) && supplierAddr.toLowerCase() !== account.toLowerCase() ? <TrackRecord address={supplierAddr.toLowerCase()} as="supplier" /> : null}
           {payee?.status === "known" ? <p className="note ok">{payee.message}</p> : null}

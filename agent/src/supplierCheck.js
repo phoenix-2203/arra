@@ -20,10 +20,12 @@ const DAY = 86400_000;
 
 /** "@Phoenix.Store " or "instagram.com/phoenix.store" → "phoenix.store". */
 export function cleanHandle(raw) {
-  let h = String(raw ?? "").trim();
-  h = h.replace(/^(https?:\/\/)?(www\.|m\.)?(instagram\.com|tiktok\.com|x\.com|twitter\.com)\/@?/i, "").replace(/[/?#].*$/, "").replace(/^@/, "");
-  // A bare website address isn't a username.
-  if (/\.(com|net|org|ng|cn|io|co)$/i.test(h)) return null;
+  const input = String(raw ?? "").trim();
+  const PAGE = /^(https?:\/\/)?(www\.|m\.)?(instagram\.com|tiktok\.com|x\.com|twitter\.com)\/@?/i;
+  // A link to some other website isn't a username ("shop.ng" on its own can be one).
+  if (!PAGE.test(input) && /^(https?:\/\/|www\.)/i.test(input)) return null;
+  const h = input.replace(PAGE, "").replace(/[/?#].*$/, "").replace(/^@/, "");
+  if (/^(instagram|tiktok|x|twitter)\.com$/i.test(h)) return null;
   return HANDLE_RE.test(h) ? h.toLowerCase() : null;
 }
 
@@ -96,11 +98,64 @@ export function flags(s, now = Math.floor(Date.now() / 1000)) {
   return out;
 }
 
+// ---- public complaints: X and Reddit posts that name the seller ---------------------
+// Words people actually use when a seller took the money. Searching for them narrows the
+// results; each post still has to name this seller, and the seller's own posts are dropped
+// (shops often post "beware of fake pages using our name").
+export const COMPLAINT_RE = /\bscam|\bscammed|\bscammer|\bfraud|\bfake\b|\bthie(f|ves)|\bstole|never deliver|didn'?t deliver|did not deliver|not deliver|no delivery|ran away|blocked me|\brefund|don'?t buy|do not buy|\bbeware|ripped off|not as (described|pictured|advertised)|wrong (item|goods|product)|\b419\b/i;
+const TEXT_KEYS = ["full_text", "text", "selftext", "body", "content", "title"];
+const AUTHOR_KEYS = ["screen_name", "username", "author", "user_name", "userName"];
+const URL_KEYS = ["permalink", "url", "tweet_url", "link", "postUrl"];
+const ID_KEYS = ["id_str", "rest_id", "tweet_id", "id"];
+
+/** Pulls posts out of any search answer: objects that carry some text, an author and a link or id. */
+export function extractPosts(data, source) {
+  const out = [];
+  const seen = new Set();
+  const visit = (o) => {
+    if (!o || typeof o !== "object") return;
+    if (Array.isArray(o)) return o.forEach(visit);
+    const own = (keys) => keys.map((k) => o[k]).find((v) => typeof v === "string" && v.trim());
+    const title = typeof o.title === "string" ? o.title : "";
+    const body = own(TEXT_KEYS.filter((k) => k !== "title"));
+    const text = [title, body && body !== title ? body : ""].filter(Boolean).join(" · ").replace(/\s+/g, " ").trim();
+    if (text.length >= 12) {
+      let author = own(AUTHOR_KEYS) ?? (o.user && typeof o.user === "object" ? AUTHOR_KEYS.map((k) => o.user[k]).find((v) => typeof v === "string") : null) ?? (o.core?.user_results?.result?.legacy?.screen_name) ?? null;
+      let url = own(URL_KEYS) ?? null;
+      const id = ID_KEYS.map((k) => o[k]).find((v) => (typeof v === "string" || typeof v === "number") && /^\d{6,}$/.test(String(v)));
+      if (url && url.startsWith("/r/")) url = `https://www.reddit.com${url}`;
+      if (!url && source === "x" && id && author) url = `https://x.com/${author}/status/${id}`;
+      const at = epoch(o.created_utc ?? o.created_at ?? o.createdAt ?? o.created ?? o.timestamp);
+      if ((url || id) && !seen.has(text)) {
+        seen.add(text);
+        out.push({ source, text: text.slice(0, 400), author: author ? String(author).replace(/^u\//, "") : null, url: url && /^https:\/\//.test(url) ? url : null, at: at ?? null });
+      }
+    }
+    for (const v of Object.values(o)) if (v && typeof v === "object") visit(v);
+  };
+  visit(data);
+  return out;
+}
+
+/** Keeps posts that name this seller and complain, not the seller's own posts. */
+export function complaintCandidates(posts, handle, name) {
+  const names = [handle, name && name.trim().length >= 5 ? name.trim() : null].filter(Boolean).map((x) => x.toLowerCase());
+  return posts.filter((p) => {
+    const t = p.text.toLowerCase();
+    if (p.author && p.author.toLowerCase() === handle.toLowerCase()) return false;
+    return names.some((n) => t.includes(n)) && COMPLAINT_RE.test(p.text);
+  });
+}
+
 // The stablecoins the gateway takes on Celo (6 decimals each). The agent pays with whichever it holds.
 const TOKENS = { USDT: "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e", USAT: "0xD2ab3C9A02DBBAB236BfEC45D1d755DF4267F771", USDC: "0xcebA9300f2b948710d2653dD7B07f33A8B32118C" };
 const balanceAbi = [{ type: "function", name: "balanceOf", stateMutability: "view", inputs: [{ type: "address" }], outputs: [{ type: "uint256" }] }];
+const SEARCH = {
+  x: { path: "/v1/social/x/posts/search", body: (q) => ({ query: q, type: "latest" }) },
+  reddit: { path: "/v1/social/reddit/posts/search", body: (q) => ({ query: q, sort: "relevance", timeRange: "all" }) },
+};
 
-export function supplierChecker({ account, client = null, dataDir, gateway = process.env.BUY_GATEWAY ?? "https://gateway.usebuy.ai", network = process.env.BUY_NETWORK ?? "celo", dailyCapUsd = Number(process.env.BUY_DAILY_CAP_USD ?? 0.5), fetchImpl, now = () => Date.now() }) {
+export function supplierChecker({ account, client = null, dataDir, gateway = process.env.BUY_GATEWAY ?? "https://gateway.usebuy.ai", network = process.env.BUY_NETWORK ?? "celo", dailyCapUsd = Number(process.env.BUY_DAILY_CAP_USD ?? 0.5), fetchImpl, now = () => Date.now(), judge = null }) {
   const dir = join(dataDir, "supplier-checks");
   mkdirSync(dir, { recursive: true });
   const log = join(dataDir, "buy-payments.jsonl");
@@ -109,77 +164,143 @@ export function supplierChecker({ account, client = null, dataDir, gateway = pro
     if (!existsSync(log)) return 0;
     return readFileSync(log, "utf8").trim().split("\n").filter(Boolean).map((l) => JSON.parse(l)).filter((p) => p.at.slice(0, 10) === day() && p.outcome !== "rejected").reduce((s, p) => s + Number(p.amount) / 1e6, 0);
   };
+  const cached = (file) => {
+    if (!existsSync(file)) return null;
+    const c = JSON.parse(readFileSync(file, "utf8"));
+    return now() - Date.parse(c.at) < DAY ? c : null;
+  };
+  const unavailable = () => Object.assign(new Error("The supplier check couldn't run just now. You can still continue."), { status: 502 });
+
+  /** One paid call to the buy gateway. Returns the HTTP answer and the payment, if any. */
+  async function paidCall(path, body, what) {
+    if (!account) throw Object.assign(new Error("Supplier checks aren't switched on"), { status: 503 });
+    if (spentToday() >= dailyCapUsd) throw Object.assign(new Error("Supplier checks are paused for today. Try again tomorrow."), { status: 429 });
+    let paid = null;
+    // Pay with whichever stablecoin the agent holds (USDT first, then USA₮, then USDC).
+    let token = process.env.BUY_TOKEN ?? "USDT";
+    if (!process.env.BUY_TOKEN && client) {
+      for (const [sym, addr] of Object.entries(TOKENS)) {
+        const b = await client.readContract({ address: addr, abi: balanceAbi, functionName: "balanceOf", args: [account.address] }).catch(() => 0n);
+        if (b >= 30_000n) { token = sym; break; }
+      }
+    }
+    const res = await x402.payingFetch(
+      { account, network, preferredToken: token, fetchImpl },
+      `${gateway}${path}`,
+      {
+        method: "POST",
+        headers: { "content-type": "application/json", accept: "application/json" },
+        body: JSON.stringify(body),
+        maxAmount: 30_000n, // never more than $0.03 for one call
+        onPayment: (info) => {
+          paid = { at: new Date(now()).toISOString(), url: info.url, amount: info.amount, asset: info.asset, txHash: info.txHash ?? null, outcome: info.outcome, ...what };
+          appendFileSync(log, JSON.stringify(paid) + "\n");
+        },
+      },
+    ).catch((e) => {
+      console.error("buy:", e.code ?? "", e.message);
+      throw unavailable();
+    });
+    const text = await res.text();
+    let data = null;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      /* not JSON */
+    }
+    return { res, text, data, paid: paid ? { amount: paid.amount, txHash: paid.txHash } : null };
+  }
+
+  async function check(platform, rawHandle, { fresh = false } = {}) {
+    const P = PLATFORMS[platform];
+    const handle = cleanHandle(rawHandle);
+    if (!P) throw Object.assign(new Error("Choose Instagram, TikTok or X"), { status: 400 });
+    if (!handle) throw Object.assign(new Error("That doesn't look like a username"), { status: 400 });
+    const file = join(dir, `${platform}-${handle}.json`);
+    const c = !fresh && cached(file);
+    if (c) return { ...c, cached: true, flags: c.found ? flags(c.summary, Math.floor(now() / 1000)) : c.flags };
+    const { res, text, data, paid } = await paidCall(P.path, P.body(handle), { platform, handle });
+    const notFound = res.status === 404 || /not.?found|doesn.?t exist|no user/i.test(text.slice(0, 400));
+    if (!res.ok && !notFound) {
+      console.error("supplier check:", res.status, text.slice(0, 300));
+      throw unavailable();
+    }
+    const summary = data && !notFound ? summarize(data) : null;
+    const found = !!summary && (summary.followers !== null || summary.posts !== null || summary.name !== null);
+    const out = {
+      platform,
+      label: P.label,
+      handle,
+      url: P.url(handle),
+      found,
+      summary,
+      flags: found ? flags(summary, Math.floor(now() / 1000)) : [`No public ${P.label} account named @${handle}. Ask the supplier for the exact name.`],
+      paid,
+      at: new Date(now()).toISOString(),
+    };
+    writeFileSync(file, JSON.stringify(out));
+    return out;
+  }
+
+  /**
+   * Public complaints about a seller on X and Reddit. Two paid searches (about $0.01),
+   * kept for a day. Each kept post names the seller and complains; when an AI judge is
+   * available it also drops posts that aren't a customer's complaint about this seller.
+   */
+  async function complaints(rawHandle, rawName = "", { judge: useJudge = judge } = {}) {
+    const handle = cleanHandle(rawHandle);
+    if (!handle) throw Object.assign(new Error("That doesn't look like a username"), { status: 400 });
+    const name = String(rawName ?? "").replace(/["()]/g, " ").replace(/\s+/g, " ").trim().slice(0, 60);
+    const key = `complaints-${handle}-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 40)}.json`;
+    const file = join(dir, key);
+    const c = cached(file);
+    if (c) return { ...c, cached: true };
+    const who = [`"${handle}"`, `"@${handle}"`, name.length >= 5 ? `"${name}"` : null].filter(Boolean).join(" OR ");
+    const words = "(scam OR scammed OR fraud OR fake OR refund OR \"never delivered\" OR \"didn't deliver\" OR beware)";
+    const searched = [];
+    const posts = [];
+    const payments = [];
+    for (const [source, q] of [["x", `(${who}) ${words}`], ["reddit", `(${who}) (scam OR scammed OR fraud OR fake OR refund)`]]) {
+      try {
+        // eslint-disable-next-line no-await-in-loop
+        const r = await paidCall(SEARCH[source].path, SEARCH[source].body(q), { search: source, handle });
+        if (r.paid) payments.push({ source, ...r.paid });
+        if (!r.res.ok) {
+          console.error("complaints:", source, r.res.status, r.text.slice(0, 200));
+          continue;
+        }
+        searched.push(source);
+        posts.push(...extractPosts(r.data, source));
+      } catch (e) {
+        if (e.status === 429 || e.status === 503) throw e;
+      }
+    }
+    if (!searched.length) throw unavailable();
+    let found = complaintCandidates(posts, handle, name);
+    let judged = false;
+    if (found.length && useJudge) {
+      try {
+        const keep = await useJudge({ handle, name, posts: found });
+        if (Array.isArray(keep)) {
+          found = found.filter((_, i) => keep.includes(i));
+          judged = true;
+        }
+      } catch (e) {
+        console.error("complaints judge:", e.message);
+      }
+    }
+    const out = { handle, name, searched, scanned: posts.length, complaints: found.slice(0, 8), judged, paid: payments, at: new Date(now()).toISOString() };
+    writeFileSync(file, JSON.stringify(out));
+    return out;
+  }
+
   return {
     enabled: !!account,
     payments() {
       if (!existsSync(log)) return [];
       return readFileSync(log, "utf8").trim().split("\n").filter(Boolean).map((l) => JSON.parse(l));
     },
-    async check(platform, rawHandle) {
-      const P = PLATFORMS[platform];
-      const handle = cleanHandle(rawHandle);
-      if (!P) throw Object.assign(new Error("Choose Instagram, TikTok or X"), { status: 400 });
-      if (!handle) throw Object.assign(new Error("That doesn't look like a username"), { status: 400 });
-      const file = join(dir, `${platform}-${handle}.json`);
-      if (existsSync(file)) {
-        const c = JSON.parse(readFileSync(file, "utf8"));
-        if (now() - Date.parse(c.at) < DAY) return { ...c, cached: true, flags: c.found ? flags(c.summary, Math.floor(now() / 1000)) : c.flags };
-      }
-      if (!account) throw Object.assign(new Error("Supplier checks aren't switched on"), { status: 503 });
-      if (spentToday() >= dailyCapUsd) throw Object.assign(new Error("Supplier checks are paused for today. Try again tomorrow."), { status: 429 });
-      let paid = null;
-      // Pay with whichever stablecoin the agent holds (USDT first, then USA₮, then USDC).
-      let token = process.env.BUY_TOKEN ?? "USDT";
-      if (!process.env.BUY_TOKEN && client) {
-        for (const [sym, addr] of Object.entries(TOKENS)) {
-          const b = await client.readContract({ address: addr, abi: balanceAbi, functionName: "balanceOf", args: [account.address] }).catch(() => 0n);
-          if (b >= 30_000n) { token = sym; break; }
-        }
-      }
-      const res = await x402.payingFetch(
-        { account, network, preferredToken: token, fetchImpl },
-        `${gateway}${P.path}`,
-        {
-          method: "POST",
-          headers: { "content-type": "application/json", accept: "application/json" },
-          body: JSON.stringify(P.body(handle)),
-          maxAmount: 30_000n, // never more than $0.03 for one profile
-          onPayment: (info) => {
-            paid = { at: new Date(now()).toISOString(), url: info.url, amount: info.amount, asset: info.asset, txHash: info.txHash ?? null, outcome: info.outcome, platform, handle };
-            appendFileSync(log, JSON.stringify(paid) + "\n");
-          },
-        },
-      ).catch((e) => {
-        console.error("supplier check:", e.code ?? "", e.message);
-        throw Object.assign(new Error("The supplier check couldn't run just now. You can still continue."), { status: 502 });
-      });
-      const text = await res.text();
-      let data = null;
-      try {
-        data = JSON.parse(text);
-      } catch {
-        /* not JSON */
-      }
-      const notFound = res.status === 404 || /not.?found|doesn.?t exist|no user/i.test(text.slice(0, 400));
-      if (!res.ok && !notFound) {
-        console.error("supplier check:", res.status, text.slice(0, 300));
-        throw Object.assign(new Error("The supplier check couldn't run just now. You can still continue."), { status: 502 });
-      }
-      const summary = data && !notFound ? summarize(data) : null;
-      const found = !!summary && (summary.followers !== null || summary.posts !== null || summary.name !== null);
-      const out = {
-        platform,
-        label: P.label,
-        handle,
-        url: P.url(handle),
-        found,
-        summary,
-        flags: found ? flags(summary, Math.floor(now() / 1000)) : [`No public ${P.label} account named @${handle}. Ask the supplier for the exact name.`],
-        paid: paid ? { amount: paid.amount, txHash: paid.txHash } : null,
-        at: new Date(now()).toISOString(),
-      };
-      writeFileSync(file, JSON.stringify(out));
-      return out;
-    },
+    check,
+    complaints,
   };
 }

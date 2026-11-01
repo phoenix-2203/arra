@@ -19,6 +19,7 @@ const P = {
   clock: "M12 7v5l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z",
   wallet: "M3 7h15a3 3 0 0 1 3 3v8H3zM3 7l12-4v4M16 13h2",
   plus: "M12 5v14M5 12h14",
+  search: "M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-4.2-4.2",
 };
 
 export default function Icon({ name, size = 22, stroke = 1.8, className = "" }) {

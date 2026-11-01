@@ -9,6 +9,7 @@ import Order from "./pages/Order.jsx";
 import History from "./pages/History.jsx";
 import Receipt from "./pages/Receipt.jsx";
 import Invite from "./pages/Invite.jsx";
+import Check from "./pages/Check.jsx";
 
 export const short = (a) => (a ? `${a.slice(0, 6)}…${a.slice(-4)}` : "");
 
@@ -124,6 +125,7 @@ export default function App() {
           </nav>
         ) : null}
         <div className="tools">
+          {!landing ? <a className={`navlink${path === "/check" ? " on" : ""}`} href="/check" onClick={link("/check")}>Check<span className="wide-only"> a supplier</span></a> : null}
           {account && !landing ? <a className={`navlink${path === "/history" ? " on" : ""}`} href="/history" onClick={link("/history")}>History</a> : null}
           {account ? <a className="who num" href="/app" onClick={link("/app")}>{short(account)}</a> : null}
           {landing ? <a href="/app" className="button money small-btn" onClick={link("/app")}>Open app</a> : null}
@@ -132,7 +134,7 @@ export default function App() {
         </div>
       </header>
       <main>
-        {invite ? <Invite code={invite[1]} wallet={wallet} /> : receipt ? <Receipt id={receipt[1]} wallet={wallet} /> : order ? <Order id={order[1]} wallet={wallet} /> : path === "/new" ? <NewOrder wallet={wallet} /> : path === "/history" ? <History wallet={wallet} /> : landing ? <Landing wallet={wallet} /> : <Home wallet={wallet} />}
+        {invite ? <Invite code={invite[1]} wallet={wallet} /> : receipt ? <Receipt id={receipt[1]} wallet={wallet} /> : order ? <Order id={order[1]} wallet={wallet} /> : path === "/new" ? <NewOrder wallet={wallet} /> : path === "/check" ? <Check /> : path === "/history" ? <History wallet={wallet} /> : landing ? <Landing wallet={wallet} /> : <Home wallet={wallet} />}
       </main>
       <Toasts />
       <footer className="foot">
