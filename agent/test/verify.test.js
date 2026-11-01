@@ -164,3 +164,15 @@ test("a modest but long-running, active page looks established (real @shiproafri
   assert.equal(v.level, "good");
   assert.match(v.reasons[0].text, /244 followers, 423 posts, on X since Apr 2025/);
 });
+
+test("TikTok: the account's creation date is not mistaken for its last post", async () => {
+  const { summarize, flags } = await import("../src/supplierCheck.js");
+  const now = 1793526000;
+  const noPosts = summarize({ output: { userInfo: { user: { uniqueId: "happy14076", nickname: "guangzhouClothingshop", createTime: 1556000000, signature: "Factory" }, stats: { followerCount: 8738, videoCount: 173 } } } });
+  assert.equal(noPosts.createdAt, 1556000000);
+  assert.equal(noPosts.lastPostAt, null);
+  assert.deepEqual(flags(noPosts, now), [], "unknown last post: no 'hasn't posted' warning");
+  const withPosts = summarize({ output: { user: { createTime: 1556000000, followerCount: 8738 }, itemList: [{ createTime: now - 19 * 3600, author: { followerCount: 1 } }] } });
+  assert.equal(withPosts.lastPostAt, now - 19 * 3600);
+  assert.equal(withPosts.followers, 8738, "a post's author fields don't override the profile's");
+});

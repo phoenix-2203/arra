@@ -30,17 +30,21 @@ export function cleanHandle(raw) {
 }
 
 // ---- reading whatever shape the profile comes back in -------------------------------
-function walk(obj, visit, depth = 0) {
+// Lists of posts or videos inside a profile answer. Dates count as "last post" only inside
+// one of these; the account's own fields (followers, the date it was created) only outside.
+// Without this, an account created in 2019 looked like it last posted in 2019.
+const POST_LISTS = new Set(["items", "edges", "edge_owner_to_timeline_media", "media", "posts", "videos", "itemList", "item_list", "aweme_list", "video_list", "tweets", "timeline", "reels", "feed", "latest_posts", "recent_posts", "recent_media", "user_posts", "medias"]);
+function walk(obj, visit, depth = 0, inPost = false) {
   if (!obj || typeof obj !== "object" || depth > 7) return;
   for (const [k, v] of Object.entries(obj)) {
-    visit(k, v);
-    if (v && typeof v === "object") walk(v, visit, depth + 1);
+    visit(k, v, inPost);
+    if (v && typeof v === "object") walk(v, visit, depth + 1, inPost || POST_LISTS.has(k));
   }
 }
 function first(obj, keys, test) {
   let found;
-  walk(obj, (k, v) => {
-    if (found === undefined && keys.includes(k) && test(v)) found = v;
+  walk(obj, (k, v, inPost) => {
+    if (found === undefined && !inPost && keys.includes(k) && test(v)) found = v;
   });
   return found;
 }
@@ -66,12 +70,14 @@ export function summarize(data) {
   const priv = first(data, ["is_private", "private", "privateAccount", "protected", "is_protected"], (v) => typeof v === "boolean");
   const name = first(data, ["full_name", "fullName", "nickname", "displayName", "name"], isStr);
   const bio = first(data, ["biography", "bio", "description", "signature", "desc"], isStr);
-  const createdAt = epoch(first(data, ["created_at", "createdAt", "create_time", "account_created_at"], (v) => epoch(v) !== undefined));
+  const createdAt = epoch(first(data, ["created_at", "createdAt", "create_time", "createTime", "account_created_at"], (v) => epoch(v) !== undefined));
+  // Only dates found on actual posts. If the answer carries no posts, the last post is
+  // unknown, and no "hasn't posted" warning is given.
   let lastPostAt;
-  walk(data, (k, v) => {
-    if (["taken_at", "taken_at_timestamp", "createTime", "create_time", "timestamp", "created_at"].includes(k)) {
+  walk(data, (k, v, inPost) => {
+    if (inPost && ["taken_at", "taken_at_timestamp", "createTime", "create_time", "timestamp", "created_at", "createdAt"].includes(k)) {
       const t = epoch(v);
-      if (t && t <= Date.now() / 1000 + 86400 && (!lastPostAt || t > lastPostAt) && t !== createdAt) lastPostAt = t;
+      if (t && t <= Date.now() / 1000 + 86400 && (!lastPostAt || t > lastPostAt)) lastPostAt = t;
     }
   });
   return {
@@ -253,7 +259,7 @@ export function supplierChecker({ account, client = null, dataDir, gateway = pro
     const handle = cleanHandle(rawHandle);
     if (!P) throw Object.assign(new Error("Choose Instagram, TikTok or X"), { status: 400 });
     if (!handle) throw Object.assign(new Error("That doesn't look like a username"), { status: 400 });
-    const file = join(dir, `${platform}-${handle}.v2.json`); // v2: X field names; older saved reads are ignored
+    const file = join(dir, `${platform}-${handle}.v3.json`); // v3: post dates only from posts; older saved reads are ignored
     const c = !fresh && cached(file);
     if (c) return { ...c, cached: true, flags: c.found ? flags(c.summary, Math.floor(now() / 1000)) : c.flags };
     const { res, text, data, paid } = await paidCall(P.path, P.body(handle), { platform, handle });
