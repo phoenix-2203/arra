@@ -117,16 +117,20 @@ export function extractPosts(data, source) {
     if (Array.isArray(o)) return o.forEach(visit);
     const own = (keys) => keys.map((k) => o[k]).find((v) => typeof v === "string" && v.trim());
     const title = typeof o.title === "string" ? o.title : "";
-    const body = own(TEXT_KEYS.filter((k) => k !== "title"));
+    // Reddit's newer answers nest the text: { content: { markdown } } and { authorInfo: { name } }.
+    const nested = o.content && typeof o.content === "object" ? o.content.markdown ?? o.content.text ?? null : null;
+    const body = own(TEXT_KEYS.filter((k) => k !== "title")) ?? (typeof nested === "string" && nested.trim() ? nested : undefined);
     const text = [title, body && body !== title ? body : ""].filter(Boolean).join(" · ").replace(/\s+/g, " ").trim();
     if (text.length >= 12) {
-      let author = own(AUTHOR_KEYS) ?? (o.user && typeof o.user === "object" ? AUTHOR_KEYS.map((k) => o.user[k]).find((v) => typeof v === "string") : null) ?? (o.core?.user_results?.result?.legacy?.screen_name) ?? null;
+      let author = own(AUTHOR_KEYS) ?? (typeof o.authorInfo?.name === "string" ? o.authorInfo.name : null) ?? (o.user && typeof o.user === "object" ? AUTHOR_KEYS.map((k) => o.user[k]).find((v) => typeof v === "string") : null) ?? (o.core?.user_results?.result?.legacy?.screen_name) ?? null;
       let url = own(URL_KEYS) ?? null;
       const id = ID_KEYS.map((k) => o[k]).find((v) => (typeof v === "string" || typeof v === "number") && /^\d{6,}$/.test(String(v)));
       if (url && url.startsWith("/r/")) url = `https://www.reddit.com${url}`;
+      const t3 = typeof o.id === "string" && /^t3_[a-z0-9]+$/i.test(o.id) ? o.id.slice(3) : null;
+      if (!url && source === "reddit" && t3) url = `https://www.reddit.com/comments/${t3}/`;
       if (!url && source === "x" && id && author) url = `https://x.com/${author}/status/${id}`;
       const at = epoch(o.created_utc ?? o.created_at ?? o.createdAt ?? o.created ?? o.timestamp);
-      if ((url || id) && !seen.has(text)) {
+      if ((url || id || t3) && !seen.has(text)) {
         seen.add(text);
         out.push({ source, text: text.slice(0, 400), author: author ? String(author).replace(/^u\//, "") : null, url: url && /^https:\/\//.test(url) ? url : null, at: at ?? null });
       }
@@ -137,12 +141,18 @@ export function extractPosts(data, source) {
   return out;
 }
 
-/** Keeps posts that name this seller and complain, not the seller's own posts. */
-export function complaintCandidates(posts, handle, name) {
+/**
+ * Keeps posts that could be a customer's complaint about this seller. Dropped: the seller's
+ * own posts, posts older than two years (people and shops change), and posts that tag a
+ * crowd of accounts (replies like "@a @b @c @d scam?" are noise, not a buyer's story).
+ */
+export function complaintCandidates(posts, handle, name, nowSec = Math.floor(Date.now() / 1000)) {
   const names = [handle, name && name.trim().length >= 5 ? name.trim() : null].filter(Boolean).map((x) => x.toLowerCase());
   return posts.filter((p) => {
     const t = p.text.toLowerCase();
     if (p.author && p.author.toLowerCase() === handle.toLowerCase()) return false;
+    if (p.at && nowSec - p.at > 2 * 365 * 86400) return false;
+    if ((p.text.match(/@\w+/g) ?? []).length >= 4) return false;
     return names.some((n) => t.includes(n)) && COMPLAINT_RE.test(p.text);
   });
 }
@@ -289,7 +299,7 @@ export function supplierChecker({ account, client = null, dataDir, gateway = pro
       }
     }
     if (!searched.length) throw unavailable();
-    let found = complaintCandidates(posts, handle, name);
+    let found = complaintCandidates(posts, handle, name, Math.floor(now() / 1000));
     let judged = false;
     if (found.length && useJudge) {
       try {

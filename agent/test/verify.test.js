@@ -30,8 +30,8 @@ test("paying a wallet other than the confirmed page owner's is high risk", () =>
 
 test("warning signs, complaints, missing pages and a bad record", () => {
   assert.equal(verdict({ profile: page({ flags: ["Only 40 followers."] }), complaints: none }).level, "careful");
-  assert.equal(verdict({ profile: page(), complaints: { searched: ["x"], complaints: [{}] } }).level, "careful");
-  assert.equal(verdict({ profile: page(), complaints: { searched: ["x"], complaints: [{}, {}] } }).level, "risk");
+  assert.equal(verdict({ profile: page(), complaints: { searched: ["x"], complaints: [{}], judged: true } }).level, "careful");
+  assert.equal(verdict({ profile: page(), complaints: { searched: ["x"], complaints: [{}, {}], judged: true } }).level, "risk");
   assert.equal(verdict({ profile: page({ found: false, summary: null }) }).level, "careful", "often just a typo");
   assert.equal(verdict({ payTo: A, record: { accepted: 2, paid: 1, refundedUnshipped: 1, disputed: 0 } }).level, "risk");
   assert.equal(verdict({ payTo: A, reviews: { count: 3, people: 3, again: [1, 3] } }).level, "risk");
@@ -92,4 +92,29 @@ test("a wallet that confirmed a different page than the one checked gets a warni
   assert.equal(v.level, "careful");
   assert.match(v.reasons[0].text, /different page \(@other\.shop/);
   assert.equal(verdict({ payTo: A, payToPages: pages }).level, "good", "wallet-only check shows whose page it is");
+});
+
+test("real answers from mainnet: old, crowd-tagging and other people's warnings are dropped; Reddit's nested shape is read", () => {
+  const now = Date.parse("2026-11-01T10:00:00Z") / 1000;
+  // Shapes and posts as the buy gateway returned them for "celoorg" on 1 Nov 2026.
+  const x = { output: { status: "ok", timeline: [
+    { type: "tweet", tweet_id: "1513493847577292801", screen_name: "CathaPham", created_at: "Mon Apr 11 10:27:07 +0000 2022", text: "@Uncle_Celo @CeloDaily @ChorusOne @steakwallet @ChurroFi @CoinList @coinbase @Anchorage @CeloTax @CeloOrg Celo coin scam" },
+    { type: "tweet", tweet_id: "1253034875977904130", screen_name: "CoinList", created_at: "Thu Apr 23 18:42:49 +0000 2020", text: "Registration for the @CeloOrg Gold auction is now open. Beware of scams." },
+    { type: "tweet", tweet_id: "1603045370543865856", screen_name: "hoangphuc168x", created_at: "Wed Dec 14 15:12:54 +0000 2022", text: "@CeloOrg $CELO SCAM?" },
+    { type: "tweet", tweet_id: "2023165367506321852", screen_name: "buyer_ng", created_at: "Sun Oct 04 22:39:46 +0000 2026", text: "Paid @celoorg for 20 phones in August, never delivered. Scam." },
+  ] } };
+  const posts = extractPosts(x, "x");
+  assert.equal(posts.length, 4);
+  assert.deepEqual(complaintCandidates(posts, "celoorg", "Celo Foundation", now).map((p) => p.author), ["buyer_ng"]);
+  const reddit = { output: { children: [{ post: { id: "t3_1abcde", title: "Can't send cUSD back from Celo Foundation wallet, is this a scam?", authorInfo: { name: "RedgeQc" }, content: { markdown: "I added Celo to Metamask..." }, createdAt: "2026-09-01T10:00:00Z" } }] } };
+  const rp = extractPosts(reddit, "reddit");
+  assert.equal(rp[0].author, "RedgeQc");
+  assert.equal(rp[0].url, "https://www.reddit.com/comments/1abcde/");
+  assert.match(rp[0].text, /Metamask/);
+});
+
+test("matches the AI hasn't confirmed are a warning to read, never high risk", () => {
+  const two = [{}, {}];
+  assert.equal(verdict({ profile: page(), complaints: { searched: ["x"], complaints: two, judged: false } }).level, "careful");
+  assert.equal(verdict({ profile: page(), complaints: { searched: ["x"], complaints: two, judged: true } }).level, "risk");
 });

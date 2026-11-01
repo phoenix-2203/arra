@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { agentAccount, publicClient } from "../src/wallet.js";
 import { supplierChecker, PLATFORMS, cleanHandle } from "../src/supplierCheck.js";
+import { assistant } from "../src/assistant.js";
 import { balances, SEND } from "./_common.js";
 
 const [platform, handle] = process.argv.slice(2).filter((a) => !a.startsWith("--"));
@@ -46,7 +47,9 @@ if (process.argv.includes("--complaints")) {
     if (res.status !== 402) raws.push(`${String(i).split("/v1/")[1]}: ${(await res.clone().text()).slice(0, 1200)}`);
     return res;
   } });
-  const k = await c2.complaints(handle, r.summary?.name ?? "");
+  const ai = assistant();
+  const k = await c2.complaints(handle, r.summary?.name ?? "", { judge: ai.enabled ? (x) => ai.judgeComplaints(x) : null });
+  console.log(`\nAI check of the posts: ${ai.enabled ? (k.judged ? `yes (${ai.provider})` : "tried, no answer") : "off (no AI key)"}`);
   console.log("\nComplaints:", JSON.stringify({ searched: k.searched, scanned: k.scanned, kept: k.complaints, paid: k.paid }, null, 2));
   for (const x of raws) console.log("\nRaw search answer:\n" + x);
 }

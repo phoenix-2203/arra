@@ -40,8 +40,11 @@ export function verdict({ profile = null, complaints = null, proof = null, payTo
 
   if (complaints) {
     const n = complaints.complaints.length;
-    if (n >= 2) bad.push(`${n} public posts accuse this seller (read them below).`);
-    else if (n === 1) warn.push("One public post accuses this seller (read it below).");
+    // Only posts the AI confirmed are a customer's complaint about this seller can make the
+    // verdict "high risk". Without that check, a match is shown as a warning to read.
+    if (n >= 2 && complaints.judged) bad.push(`${n} public posts from customers accuse this seller (read them below).`);
+    else if (n === 1 && complaints.judged) warn.push("One public post from a customer accuses this seller (read it below).");
+    else if (n) warn.push(`${n === 1 ? "One public post uses" : `${n} public posts use`} words like "scam" next to this seller's name. ${n === 1 ? "It may not be" : "They may not be"} about them; read below.`);
     else info.push(`No public complaints found on ${complaints.searched.map((x) => (x === "x" ? "X" : "Reddit")).join(" or ")}. That helps, but it doesn't prove they're honest.`);
   }
 
