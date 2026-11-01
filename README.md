@@ -12,7 +12,7 @@ Arra is escrow for anyone who pays a deposit now and a balance later: an importe
 - **Agent:** ERC-8004 identity [#9996](https://celoscan.io/tx/0xc99e653aac82055dcefe99c1c5e7b4be6cefab39d4203a1bf73f4574a8935a90) · [agent card](agent.json) · every transaction tagged `celo_00cfddd372fa` (ERC-8021)
 - **Naira in, dollars locked:** cNGN → USDT through [Textile FX](https://docs.textilecredit.com/) at one firm quote, builder codes `arra` and `celo_00cfddd372fa`
 
-Built for [Agents on Open Rails](https://www.loops.house/agents-on-open-rails) (Celo × Loops House), **Open Corridors: Textile FX** track.
+Built for [Agents on Open Rails](https://www.loops.house/agents-on-open-rails) (Celo × Loops House), **Open Corridors: Textile FX** track, as a *treasury agent that manages a business's currency exposure*. It's a taker on Textile: it converts each buyer's whole order once, on day one, and its **rate guard** refuses any quote too far above an independent market rate. Strategy, rules and measured returns: **[docs/strategy.md](docs/strategy.md)**.
 
 ![Arra homepage with the live naira calculator](docs/screenshots/home.png)
 
@@ -65,6 +65,15 @@ A real case from this October, with official rates:
 That's in a calm year: the naira opened 2026 at ₦1,445.99 ([AllAfrica, CBN data](https://allafrica.com/stories/202601020184.html)), has been firmer since, and still moved 2.7% in three weeks, money that comes straight out of the importer's margin. Rates can also move the other way. Arra doesn't bet on either direction; it removes the bet, the way a bank forward contract would, which small importers rarely get.
 
 The cost of that certainty: Textile FX's **0.01%** fee, already in the quoted rate, plus a network fee of a fraction of a cent. Arra charges nothing today.
+
+**A fair rate, checked every time (rate guard).** Before the buyer signs anything, Arra's agent compares Textile's firm quote with an independent market rate (the median of two public feeds) and **refuses the quote if it's more than the buyer's limit above it**: 1%, 3% (default) or 5%. Nothing moves when it refuses. On Arra's real naira-paid order (30 October 2026), Textile's rate was about ₦1,374 per $1:
+
+| Compared with | Rate | Difference | On a $7,000 balance |
+|---|---|---|---|
+| Official rate (CBN, 29 Oct) | ₦1,346.91 | +2.0% (inside the 3% limit) | ₦189,630 more |
+| Street dealers (29 Oct) | ₦1,385 | **−0.8%** | **₦77,000 less** |
+
+([WithinNigeria, 31 Oct 2026](https://www.withinnigeria.com/2026/10/31/dollar-to-naira-today-october-31-2026-nfem-rate-%E2%82%A61346-91-black-market-%E2%82%A61385/)). Every quote, taken or refused, goes into an FX ledger; `GET /api/fx/returns` reports the execution cost and what each lock has been worth since. Six 2026 windows, both directions, are in [docs/strategy.md](docs/strategy.md).
 
 ## What Arra does
 
@@ -151,6 +160,7 @@ Money can only ever leave the vault to the buyer, the supplier, or that one-cent
 
 **Paying**
 - **Pay from naira at one locked rate.** Textile FX converts cNGN into exactly the USDT the order needs, at one firm quote, in one transaction. A weaker naira next month can't touch it.
+- **Rate guard.** The agent checks each Textile quote against an independent market rate and refuses one above the buyer's limit (1%, 3% or 5%), before anything moves. Every quote is logged so returns can be measured ([strategy](docs/strategy.md)).
 - **Any wallet on Celo.** MiniPay, MetaMask, Rabby or any wallet's in-app browser. In MiniPay and Valora the network fee comes out of USDT through Celo's fee abstraction, so no CELO is needed; other wallets need a few cents of CELO.
 - **Gas for the supplier.** If the supplier's wallet is empty, the buyer can send 0.02–0.05 CELO (or $0.10 USDT for MiniPay) in the same flow, so the supplier can accept.
 
@@ -273,7 +283,7 @@ The app treats every version as one Arra: order numbers never overlap, old links
 | Check | Where | Result |
 |---|---|---|
 | 55 contract tests: every path, deadlines, splits, keeper fee, v4 rules, plus fuzzing and invariant runs checking that the vault always holds exactly the open balances and money only leaves to the buyer, the supplier or the one-cent fee | `contracts/test/ArraVault.t.sol` (Foundry) | all pass |
-| 65 agent tests: API, order sheets (vague terms, impossible dates, tiny totals), wallet sign-in, private links, invites, signed notes, tracking, track record, link previews, Textile client, keeper, order assistant, supplier check (handles, profile reading, complaint filtering, verdict rules, page proofs, caps), double-blind reviews | `agent/test/` | all pass |
+| 74 agent tests: API, order sheets (vague terms, impossible dates, tiny totals), wallet sign-in, private links, invites, signed notes, tracking, track record, link previews, Textile client, rate guard (reference feeds, limits, FX ledger and returns), keeper, order assistant, supplier check (handles, profile reading, complaint filtering, verdict rules, page proofs, caps), double-blind reviews | `agent/test/` | all pass |
 | Mixed v3 + v4 vaults served as one Arra on a local chain | `agent/test/` with Anvil | pass |
 | The real app in a browser against a local chain with the v4 vault: full order, part payments, buyer cancel, supplier decline and refund, extended deadline, problem report with split and counter-offer, terms-first invite, reviews from both sides, supplier check (good, risky, impersonated page) against a stand-in gateway; every balance checked to the cent | Playwright + Anvil | all match |
 | Source on mainnet matches this repo exactly | Sourcify | exact match, v2, v3, v4 |
@@ -307,7 +317,7 @@ flowchart TB
     subgraph Server["agent/ — Node, on a small VPS"]
         API["HTTP API<br/>order sheets · invites · notes · tracking<br/>timelines · history · link previews"]
         AI["Order assistant<br/>(Claude or Gemini)"]
-        FX["Textile client<br/>RFQ + Ramp check"]
+        FX["Textile client + rate guard<br/>RFQ, reference rate, FX ledger"]
         K["Keeper<br/>refunds and payouts at deadlines"]
     end
     subgraph Celo["Celo mainnet"]
@@ -329,7 +339,7 @@ flowchart TB
 |---|---|
 | `contracts/src/ArraVault.sol` | The vault (Solidity 0.8.28, OpenZeppelin 5) |
 | `contracts/test/` | 55 Foundry tests, including fuzz and invariant runs |
-| `agent/src/` | Server, keeper, vault reader for all versions, history index, Textile client, order assistant, order sheet check, invites, signed notes, link previews |
+| `agent/src/` | Server, keeper, vault reader for all versions, history index, Textile client, rate guard and FX ledger, order assistant, order sheet check, invites, signed notes, link previews |
 | `agent/scripts/` | Deploy, verify, register agent, Textile swap, order tools, change the order cap; all preview first |
 | `app/` | The web app (landing, dashboard, new order, order page, supplier invite, history, receipts) |
 | `deploy/` | One-command VPS setup (systemd, Caddy, daily backups) |
@@ -354,6 +364,7 @@ npm run check                # wallet, balances, tag
 npm run deploy               # deploy a new vault version
 npm run verify-vault         # publish source to Sourcify
 npm run swap -- --usd 1      # Textile FX swap
+npm run fx-guard -- --usd 100   # rate guard against live prices (sends nothing)
 npm run set-max -- 500       # change the per-order cap
 ```
 
