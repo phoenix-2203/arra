@@ -10,6 +10,7 @@ import { navigate } from "../App.jsx";
 import { toast } from "../toast.jsx";
 import Icon from "../Icon.jsx";
 import Assistant from "./Assistant.jsx";
+import SupplierCheck from "./SupplierCheck.jsx";
 
 const DAY = 86400;
 
@@ -142,6 +143,7 @@ export default function NewOrder({ wallet }) {
   const [v4, setV4] = useState(false);
   const [transitDays, setTransitDays] = useState(60);
   const [hasAI, setHasAI] = useState(false);
+  const [hasCheck, setHasCheck] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [pasteOpen, setPasteOpen] = useState(false);
   const [timingOpen, setTimingOpen] = useState(false);
@@ -149,6 +151,7 @@ export default function NewOrder({ wallet }) {
   useEffect(() => {
     currentVault().then(() => {
       setHasAI(chain.ASSISTANT);
+      setHasCheck(chain.SUPPLIER_CHECK);
       setMaxOrder(chain.MAX_ORDER);
       setKeeperFee(chain.KEEPER_FEE);
       setV4(chain.VAULT_V4);
@@ -565,6 +568,7 @@ export default function NewOrder({ wallet }) {
               </div>
             </details>
           ) : null}
+          {hasCheck ? <SupplierCheck payee={K.payee.toLowerCase()} /> : null}
           {isAddress(supplierAddr) && supplierAddr.toLowerCase() === account.toLowerCase() ? <p className="note bad">That's your own wallet. Use the {K.payee.toLowerCase()}'s.</p> : null}
           {isAddress(supplierAddr) && supplierAddr.toLowerCase() !== account.toLowerCase() ? <TrackRecord address={supplierAddr.toLowerCase()} as="supplier" /> : null}
           {payee?.status === "known" ? <p className="note ok">{payee.message}</p> : null}

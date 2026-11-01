@@ -8,6 +8,7 @@ import { publicClient, agentAccount, taggedWallet } from "../src/wallet.js";
 import { VAULTS, USDT, USDT_FEE_ADAPTER } from "../src/config.js";
 import { runKeeper } from "../src/keeper.js";
 import { VaultSet } from "../src/vaults.js";
+import { supplierChecker } from "../src/supplierCheck.js";
 
 const PORT = Number(process.env.PORT ?? 8791);
 const client = publicClient();
@@ -25,10 +26,22 @@ const warm = () => vaults.sync().catch((e) => console.error("history sync:", e.s
 warm();
 setInterval(warm, 60 * 1000);
 
+const dataDir = process.env.DATA_DIR ?? fileURLToPath(new URL("../data", import.meta.url));
+// Supplier check: the agent pays for public profiles over x402 (buy). On when the agent key
+// is present, unless SUPPLIER_CHECK=0.
+let supplier = null;
+if (process.env.SUPPLIER_CHECK !== "0" && process.env.AGENT_PRIVATE_KEY) {
+  try {
+    supplier = supplierChecker({ account: agentAccount(), client, dataDir });
+  } catch (e) {
+    console.error("supplier check off:", e.message);
+  }
+}
 const app = createApp({
   client,
   vaults,
-  dataDir: process.env.DATA_DIR ?? fileURLToPath(new URL("../data", import.meta.url)),
+  supplier,
+  dataDir,
   staticDir: process.env.STATIC_DIR ?? fileURLToPath(new URL("../../app/dist", import.meta.url)),
 });
 await listen(app, PORT);

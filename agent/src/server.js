@@ -41,7 +41,7 @@ async function readJson(req, limit = MAX_BODY) {
   }
 }
 
-export function createApp({ client, vault, dataDir, staticDir, now = () => Math.floor(Date.now() / 1000), textile = textileClient(), history = null, vaults = null, links = null, ai = assistant() }) {
+export function createApp({ client, vault, dataDir, staticDir, now = () => Math.floor(Date.now() / 1000), textile = textileClient(), history = null, vaults = null, links = null, ai = assistant(), supplier = null }) {
   // One vault (tests, simple setups) or several versions shown as one Arra.
   vaults ??= new VaultSet({ client, vaults: [{ address: vault, firstId: 1, history: history ?? new LogIndex({ client, vault }) }] });
   let statsCache = null;
@@ -122,13 +122,26 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
       // keeperFee: what the agent takes if it has to trigger a refund or payout (v3 vaults; 0 before).
       keeperFee ??= await client.readContract({ address: vaults.current, abi: vaultAbi, functionName: "keeperFee" }).then((v) => (/^\d+$/.test(String(v)) ? String(v) : "0")).catch(() => "0");
       const v4 = (await abiFor(client, vaults.current).catch(() => null)) === vaultAbi;
-      return [200, { ok: true, vault: vaults.current, vaults: vaults.addresses, keeperFee, v4, assistant: ai.enabled, maxOrder: await maxOrder() }];
+      return [200, { ok: true, vault: vaults.current, vaults: vaults.addresses, keeperFee, v4, assistant: ai.enabled, supplierCheck: !!supplier?.enabled, maxOrder: await maxOrder() }];
     },
 
     // Live totals for the homepage (cached for a minute).
     "GET /api/stats": async () => {
       if (!statsCache || Date.now() - statsCache.at > 60_000) statsCache = { at: Date.now(), data: await vaults.stats() };
       return [200, statsCache.data];
+    },
+
+    // Supplier check: Arra's agent buys the supplier's public profile over x402 (buy gateway).
+    "POST /api/supplier-check": async (body, _url, req) => {
+      if (!supplier?.enabled) return [503, { error: "Supplier checks aren't switched on" }];
+      if (tooMany(req, "supplier", 20, 3600_000)) return [429, { error: "Too many checks from your connection. Try again in an hour." }];
+      return [200, await supplier.check(body.platform, body.handle)];
+    },
+    // Public proof of the paid calls (amount and settlement transaction of each).
+    "GET /api/supplier-check/payments": async () => {
+      const list = supplier?.payments() ?? [];
+      const total = list.filter((p) => p.outcome !== "rejected").reduce((t, p) => t + Number(p.amount), 0);
+      return [200, { count: list.length, totalUsd: (total / 1e6).toFixed(6), recent: list.slice(-50).reverse() }];
     },
 
     // Order assistant: describe the deal in your own words; Claude fills the form.

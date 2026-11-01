@@ -15,6 +15,8 @@ export let KEEPER_FEE = 0n;
 export let VAULT_V4 = false;
 // Whether the order assistant (Claude) is switched on for this server.
 export let ASSISTANT = false;
+// Whether the agent can pay (over x402) to check a supplier's public profile.
+export let SUPPLIER_CHECK = false;
 // The vault's per-order safety cap (USDT units); the owner can raise it.
 export let MAX_ORDER = 50_000_000n;
 let health;
@@ -26,6 +28,7 @@ export function currentVault() {
       KEEPER_FEE = BigInt(h.keeperFee ?? 0);
       VAULT_V4 = !!h.v4;
       ASSISTANT = !!h.assistant;
+      SUPPLIER_CHECK = !!h.supplierCheck;
       if (/^\d+$/.test(h.maxOrder ?? "")) MAX_ORDER = BigInt(h.maxOrder);
       return VAULT;
     })

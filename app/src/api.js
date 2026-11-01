@@ -62,3 +62,4 @@ api.assistant = (messages, today) => call("POST", "/api/assistant", { messages, 
 api.sessionText = (address, at) => call("GET", `/api/session/text?address=${address}&at=${at}`);
 api.signIn = (address, at, signature) => call("POST", "/api/session", { address, at, signature });
 api.orderLink = (id, owner) => call("POST", `/api/orders/${id}/link`, { owner });
+api.supplierCheck = (platform, handle) => call("POST", "/api/supplier-check", { platform, handle });
