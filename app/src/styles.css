@@ -710,3 +710,4 @@ details.more.plain summary { font-size: 14px; color: var(--text-soft); }
 .proof-code { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; border-radius: 14px; border: 1.5px dashed var(--gold); background: var(--gold-soft); }
 .proof-code strong { font-size: 22px; letter-spacing: .08em; color: var(--gold-soft-ink); }
 @media (max-width: 520px) { .wide-only { display: none; } }
+.searching { display: flex; align-items: center; gap: 10px; }

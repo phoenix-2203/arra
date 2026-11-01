@@ -5,7 +5,7 @@ import { useState } from "react";
 import { api } from "../api.js";
 import { navigate } from "../App.jsx";
 import Icon from "../Icon.jsx";
-import { PLATFORMS, VerifyResult, readHandle } from "./SupplierVerify.jsx";
+import { PLATFORMS, VerifyResult, readHandle, verifyFast } from "./SupplierVerify.jsx";
 
 const looksLikeWallet = (s) => /^0x[0-9a-fA-F]{40}$/.test(s.trim());
 
@@ -27,7 +27,10 @@ export default function Check() {
       // A wallet pasted into the main box works too.
       const asWallet = looksLikeWallet(handle);
       const h = asWallet ? null : readHandle(handle, platform);
-      setR(await api.verify({ platform: h?.platform, handle: h?.handle, address: asWallet ? handle.trim() : looksLikeWallet(wallet) ? wallet.trim() : undefined }));
+      await verifyFast({ platform: h?.platform, handle: h?.handle, address: asWallet ? handle.trim() : looksLikeWallet(wallet) ? wallet.trim() : undefined }, (x) => {
+        setR(x);
+        setBusy(false);
+      });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -69,7 +72,7 @@ export default function Check() {
             <small>Adds their record and reviews on Arra, and checks that this wallet really belongs to the page.</small>
           </label>
         </details>
-        <button className="money" disabled={busy || !handle.trim()}>{busy ? "Checking… (about 10 seconds)" : "Check"}</button>
+        <button className="money" disabled={busy || !handle.trim()}>{busy ? "Reading their page…" : "Check"}</button>
         {error ? <p className="note bad">{error}</p> : null}
       </form>
 

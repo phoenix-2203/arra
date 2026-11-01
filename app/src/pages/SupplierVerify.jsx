@@ -29,6 +29,21 @@ export function readHandle(raw, fallback) {
   return { platform: fallback, handle: s.replace(/^@/, "") };
 }
 
+/**
+ * Runs a check in two halves at once: their page (a few seconds) and the complaint search
+ * (slower). The first answer shows straight away; the full verdict replaces it when the
+ * search is done (that last call is answered from the server's cache).
+ */
+export async function verifyFast(base, onUpdate) {
+  if (!base.handle) return onUpdate(await api.verify(base));
+  const page = api.verify({ ...base, parts: ["profile"] });
+  const search = api.verify({ ...base, parts: ["complaints"] }).catch(() => null);
+  const first = await page;
+  onUpdate({ ...first, searching: true });
+  await search;
+  onUpdate(await api.verify(base).catch(() => ({ ...first, searching: false })));
+}
+
 export function VerifyResult({ r, compactFacts = false }) {
   const v = r.verdict;
   const L = LEVEL[v.level];
@@ -85,6 +100,7 @@ export function VerifyResult({ r, compactFacts = false }) {
           </ul>
         </div>
       ) : null}
+      {r.searching ? <p className="small muted searching"><span className="pulse" aria-hidden="true" /> Searching X and Reddit for complaints…</p> : null}
       {r.profile?.error || r.complaints?.error ? <p className="tiny muted">Part of the check couldn't run just now: {r.profile?.error ?? r.complaints?.error}</p> : null}
       <p className="tiny muted">
         This lowers the risk; it can't prove a seller is honest. Your balance stays locked until they ship either way.
@@ -108,7 +124,10 @@ export default function SupplierVerify({ payTo = "", name = "", payee = "supplie
     setError("");
     setBusy(true);
     try {
-      setR(await api.verify({ platform: pf, handle: h, name, address: payTo || undefined }));
+      await verifyFast({ platform: pf, handle: h, name, address: payTo || undefined }, (x) => {
+        setR(x);
+        setBusy(false);
+      });
     } catch (e) {
       setError(e.message);
     } finally {

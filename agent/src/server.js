@@ -150,28 +150,37 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
       const handle = platform ? cleanHandle(body.handle) : null;
       const payTo = isAddress(String(body.address ?? ""), { strict: false }) ? body.address.toLowerCase() : null;
       if (!handle && !payTo) return [400, { error: "Paste their Instagram, TikTok or X name, or their wallet address" }];
+      // The app asks for the quick part (their page) and the slow part (complaints) at the
+      // same time, shows the first answer at once, then asks once more for the whole verdict,
+      // which by then comes from the day's cache. Every part runs side by side.
+      const parts = Array.isArray(body.parts) ? body.parts : ["profile", "complaints"];
       const paidParts = !!handle && !!supplier?.enabled;
-      if (paidParts && tooMany(req, "supplier", 20, 3600_000)) return [429, { error: "Too many checks from your connection. Try again in an hour." }];
+      if (paidParts && tooMany(req, "supplier", 90, 3600_000)) return [429, { error: "Too many checks from your connection. Try again in an hour." }];
       const soft = (p) => p.catch((e) => ({ error: e.message }));
-      const [profile, rec, wallet] = await Promise.all([
-        paidParts ? soft(supplier.check(platform, handle)) : null,
+      // Only the name the buyer typed is used to search, so every call shares one cache entry.
+      const name = String(body.name ?? "").trim();
+      const judge = ai?.enabled ? (x) => ai.judgeComplaints(x) : null;
+      const [profile, complaints, rec, wallet] = await Promise.all([
+        paidParts && parts.includes("profile") ? soft(supplier.check(platform, handle)) : null,
+        paidParts && parts.includes("complaints") ? soft(supplier.complaints(handle, name, { judge })) : null,
         payTo ? vaults.record(payTo).catch(() => null) : null,
         payTo ? client.getTransactionCount({ address: payTo }).catch(() => null) : null,
       ]);
-      const name = String(body.name ?? "").trim() || (profile && !profile.error ? profile.summary?.name ?? "" : "");
-      const complaints = paidParts && profile && (profile.error || profile.found) ? await soft(supplier.complaints(handle, name, { judge: ai?.enabled ? (x) => ai.judgeComplaints(x) : null })) : null;
+      // A page that doesn't exist has no complaints worth showing.
+      const shownComplaints = profile && !profile.error && !profile.found ? null : complaints;
       const proof = handle ? proofs.get(platform, handle) : payTo ? proofs.byAddress(payTo)[0] ?? null : null;
       const rv = payTo ? reviews.summary(payTo, now()) : null;
       const ok = (x) => (x && !x.error ? x : null);
       return [200, {
-        platform, handle, payTo, name: name || null,
+        platform, handle, payTo, name: name || (ok(profile)?.summary?.name ?? null),
+        parts,
         profile: profile ?? null,
-        complaints: complaints ?? null,
+        complaints: shownComplaints ?? null,
         proof,
         record: rec?.asSupplier ?? null,
         reviews: rv?.asSupplier ?? null,
         walletTxs: wallet,
-        verdict: verdict({ profile: ok(profile), complaints: ok(complaints), proof, payTo, payToPages: payTo ? proofs.byAddress(payTo) : [], record: rec?.asSupplier ?? null, reviews: rv?.asSupplier ?? null, walletTxs: wallet }),
+        verdict: verdict({ profile: ok(profile), complaints: ok(shownComplaints), proof, payTo, payToPages: payTo ? proofs.byAddress(payTo) : [], record: rec?.asSupplier ?? null, reviews: rv?.asSupplier ?? null, walletTxs: wallet }),
         paidChecks: !!supplier?.enabled,
       }];
     },

@@ -182,6 +182,14 @@ export function supplierChecker({ account, client = null, dataDir, gateway = pro
     const c = JSON.parse(readFileSync(file, "utf8"));
     return now() - Date.parse(c.at) < DAY ? c : null;
   };
+  let tokenChoice = null;
+  // One check in flight per page: a second visitor asking at the same moment waits for it
+  // instead of paying again.
+  const inflight = new Map();
+  const shared = (key, fn) => {
+    if (!inflight.has(key)) inflight.set(key, fn().finally(() => inflight.delete(key)));
+    return inflight.get(key);
+  };
   const unavailable = () => Object.assign(new Error("The supplier check couldn't run just now. You can still continue."), { status: 502 });
 
   /** One paid call to the buy gateway. Returns the HTTP answer and the payment, if any. */
@@ -192,10 +200,13 @@ export function supplierChecker({ account, client = null, dataDir, gateway = pro
     // Pay with whichever stablecoin the agent holds (USDT first, then USA₮, then USDC).
     let token = process.env.BUY_TOKEN ?? "USDT";
     if (!process.env.BUY_TOKEN && client) {
-      for (const [sym, addr] of Object.entries(TOKENS)) {
-        const b = await client.readContract({ address: addr, abi: balanceAbi, functionName: "balanceOf", args: [account.address] }).catch(() => 0n);
-        if (b >= 30_000n) { token = sym; break; }
+      // Which coin to pay with, re-checked every 10 minutes rather than on every call.
+      if (!tokenChoice || now() - tokenChoice.at > 600_000) {
+        const bals = await Promise.all(Object.values(TOKENS).map((addr) => client.readContract({ address: addr, abi: balanceAbi, functionName: "balanceOf", args: [account.address] }).catch(() => 0n)));
+        const i = bals.findIndex((b) => b >= 30_000n);
+        tokenChoice = { at: now(), sym: i >= 0 ? Object.keys(TOKENS)[i] : "USDT" };
       }
+      token = tokenChoice.sym;
     }
     // The gateway says when its data provider hiccupped and nothing was charged: try again
     // once, a moment later (a fresh payment authorization is signed each time).
@@ -286,20 +297,26 @@ export function supplierChecker({ account, client = null, dataDir, gateway = pro
     const searched = [];
     const posts = [];
     const payments = [];
-    for (const [source, q] of [["x", `(${who}) ${words}`], ["reddit", `(${who}) (scam OR scammed OR fraud OR fake OR refund)`]]) {
+    // Both searches at once: the check takes as long as the slower one, not both added up.
+    const results = await Promise.all([["x", `(${who}) ${words}`], ["reddit", `(${who}) (scam OR scammed OR fraud OR fake OR refund)`]].map(async ([source, q]) => {
       try {
-        // eslint-disable-next-line no-await-in-loop
-        const r = await paidCall(SEARCH[source].path, SEARCH[source].body(q), { search: source, handle });
-        if (r.paid) payments.push({ source, ...r.paid });
-        if (!r.res.ok) {
-          console.error("complaints:", source, r.res.status, r.text.slice(0, 200));
-          continue;
-        }
-        searched.push(source);
-        posts.push(...extractPosts(r.data, source));
+        return { source, r: await paidCall(SEARCH[source].path, SEARCH[source].body(q), { search: source, handle }) };
       } catch (e) {
-        if (e.status === 429 || e.status === 503) throw e;
+        return { source, e };
       }
+    }));
+    for (const { source, r, e } of results) {
+      if (e) {
+        if (e.status === 429 || e.status === 503) throw e;
+        continue;
+      }
+      if (r.paid) payments.push({ source, ...r.paid });
+      if (!r.res.ok) {
+        console.error("complaints:", source, r.res.status, r.text.slice(0, 200));
+        continue;
+      }
+      searched.push(source);
+      posts.push(...extractPosts(r.data, source));
     }
     if (!searched.length) throw unavailable();
     let found = complaintCandidates(posts, handle, name, Math.floor(now() / 1000));
@@ -326,7 +343,7 @@ export function supplierChecker({ account, client = null, dataDir, gateway = pro
       if (!existsSync(log)) return [];
       return readFileSync(log, "utf8").trim().split("\n").filter(Boolean).map((l) => JSON.parse(l));
     },
-    check,
-    complaints,
+    check: (platform, handle, opts = {}) => (opts.fresh ? check(platform, handle, opts) : shared(`p:${platform}:${cleanHandle(handle)}`, () => check(platform, handle, opts))),
+    complaints: (handle, name = "", opts = {}) => shared(`c:${cleanHandle(handle)}:${String(name).trim().toLowerCase()}`, () => complaints(handle, name, opts)),
   };
 }
