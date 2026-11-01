@@ -214,12 +214,12 @@ async function signTakerProof(taker) {
  * Converts cNGN into exactly `usd` USDT in the buyer's wallet at one firm rate.
  * onStep: "quote" | "sign" | "approve" | "swap". Returns { hash, ngnPerUsd, takerPays }.
  */
-export async function convertNairaToUsdt(taker, usd, api, onStep = () => {}) {
+export async function convertNairaToUsdt(taker, usd, api, onStep = () => {}, maxBps) {
   await ensureWallet();
   onStep("quote");
   let q;
   try {
-    q = await api.fxQuote(taker, usd);
+    q = await api.fxQuote(taker, usd, undefined, maxBps);
   } catch (e) {
     // Only without a Textile partner key on the server: prove once (free, no gas)
     // that this wallet is yours. Textile confirmed MiniPay can sign this too.
@@ -232,8 +232,10 @@ export async function convertNairaToUsdt(taker, usd, api, onStep = () => {}) {
       if (/reject|denied|cancel/i.test(err?.shortMessage ?? err?.message ?? "")) throw err;
       throw new Error("Your wallet couldn't sign the free ownership message Textile needs. Pay with USDT instead, or try again from another Celo wallet.");
     }
-    q = await api.fxQuote(taker, usd, proof);
+    q = await api.fxQuote(taker, usd, proof, maxBps);
   }
+  // Arra's rate guard refused the quote: too far above the independent market rate.
+  if (q.status === "guarded") throw new Error(`Textile's rate right now is ₦${Math.round(q.ngnPerUsd).toLocaleString("en-NG")} per $1, ${(q.premiumBps / 100).toFixed(1)}% above the market rate (₦${Math.round(q.refNgnPerUsd).toLocaleString("en-NG")}). That's more than your ${q.maxBps / 100}% limit, so Arra didn't convert anything. Try again in a few minutes, raise the limit, or pay with USDT.`);
   if (q.status !== "quoted") throw new Error(q.reason === "no_makers_online" ? "No naira liquidity right now. Try again in a minute." : "Textile couldn't price this amount right now. Try a different amount or try again shortly.");
   const allowance = await reader.readContract({ address: CNGN, abi: erc20, functionName: "allowance", args: [taker, q.reactor] });
   if (allowance < BigInt(q.takerPays)) {

@@ -713,3 +713,7 @@ details.more.plain summary { font-size: 14px; color: var(--text-soft); }
 .searching { display: flex; align-items: center; gap: 10px; }
 .v-contacts { border: 1.5px dashed var(--line); border-radius: 12px; padding: 10px 12px; }
 .v-contacts > * + * { margin-top: 4px; }
+
+/* Rate guard under "Pay from naira" */
+.fx-guard { gap: 6px; }
+.bad-text { color: var(--alert-ink); }

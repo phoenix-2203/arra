@@ -177,6 +177,8 @@ export default function NewOrder({ wallet }) {
   const [cngn, setCngn] = useState(null);
   const [payWith, setPayWith] = useState("usdt");
   const [fxRate, setFxRate] = useState(null);
+  // Arra's rate guard: the most above the independent market rate the buyer accepts.
+  const [fxLimit, setFxLimit] = useState(300);
   // Gas for the supplier: sent from the buyer's own wallet right after the order is locked.
   const [supGas, setSupGas] = useState(null);
   const [myCelo, setMyCelo] = useState(null);
@@ -279,9 +281,9 @@ export default function NewOrder({ wallet }) {
   useEffect(() => {
     setFxRate(null);
     if (step !== 3 || payWith !== "naira" || missing <= 0n) return;
-    const t = setTimeout(() => api.fxPreview(formatUnits(missing, 6)).then(setFxRate).catch((e) => setFxRate({ error: e.message })), 300);
+    const t = setTimeout(() => api.fxPreview(formatUnits(missing, 6), fxLimit).then(setFxRate).catch((e) => setFxRate({ error: e.message })), 300);
     return () => clearTimeout(t);
-  }, [step, payWith, missing]);
+  }, [step, payWith, missing, fxLimit]);
 
   if (!account) {
     return (
@@ -338,7 +340,7 @@ export default function NewOrder({ wallet }) {
           approve: "Allow the conversion to use your cNGN. Confirm in your wallet.",
           swap: "Convert naira to USDT at the locked rate. Confirm in your wallet.",
         };
-        await convertNairaToUsdt(account, formatUnits(needUsdt, 6), api, (s) => setBusy(words[s]));
+        await convertNairaToUsdt(account, formatUnits(needUsdt, 6), api, (s) => setBusy(words[s]), fxLimit);
         // Some network nodes lag a second or two behind; wait until the USDT shows up.
         setBusy("Converted. Waiting for the USDT to show in your wallet…");
         let b = await usdtBalance(account);
@@ -625,6 +627,19 @@ export default function NewOrder({ wallet }) {
                 {ngn(BigInt(fxRate.cngn))} becomes ${usd(needUsdt)} USDT{needUsdt > shortBy ? ` (Textile's minimum is $1; the extra $${usd(needUsdt - shortBy)} stays in your wallet)` : ""} at about ₦{Math.round(fxRate.ngnPerUsd).toLocaleString("en-NG")} per $1, fee included. You'll confirm the final rate before anything moves.
               </p>
             ) : null}
+            {naira && needUsdt > 0n && fxRate && !fxRate.error ? (
+              <div className="field fx-guard">
+                <span className="field-label">Rate guard</span>
+                {fxRate.premiumBps !== null && fxRate.premiumBps !== undefined ? (
+                  <p className={`small num ${fxRate.withinLimit ? "" : "bad-text"}`}>
+                    {fxRate.premiumBps <= 0 ? `${(-fxRate.premiumBps / 100).toFixed(1)}% below` : `${(fxRate.premiumBps / 100).toFixed(1)}% above`} today's market rate (₦{Math.round(fxRate.refNgnPerUsd).toLocaleString("en-NG")}).{" "}
+                    {fxRate.withinLimit ? "Inside your limit." : "Above your limit: Arra won't convert at this rate."}
+                  </p>
+                ) : <p className="small muted">The market rate couldn't be checked just now; you'll still see and confirm Textile's exact rate.</p>}
+                <Chips label="Most above the market rate" value={fxLimit} onChange={setFxLimit} options={[[100, "1%"], [300, "3%"], [500, "5%"]]} />
+                <small>Arra refuses a quote above this, before anything moves. Street dealers charged about 3% above the official rate in October 2026.</small>
+              </div>
+            ) : null}
             {naira && fxRate?.error ? <p className="note bad">Couldn't get a naira rate: {fxRate.error}</p> : null}
           </fieldset>
 
@@ -699,7 +714,7 @@ export default function NewOrder({ wallet }) {
           {busy ? <p className="note">{busy}</p> : null}
           <div className="row">
             <button className="secondary" disabled={!!busy} onClick={() => setStep(2)}>Back</button>
-            <button className="money" disabled={!!busy || !supplierReady || !datesOk || tooBig || short || (!naira && balance !== null && total + gasUsdt > balance)} onClick={lock}>{naira && needUsdt > 0n && fxCngn ? `Convert ${ngn(fxCngn)} and lock $${usd(total)}` : `Lock $${usd(total)}`}{gas !== "none" ? " + send gas" : ""}</button>
+            <button className="money" disabled={!!busy || !supplierReady || !datesOk || tooBig || short || (naira && needUsdt > 0n && fxRate?.withinLimit === false) || (!naira && balance !== null && total + gasUsdt > balance)} onClick={lock}>{naira && needUsdt > 0n && fxCngn ? `Convert ${ngn(fxCngn)} and lock $${usd(total)}` : `Lock $${usd(total)}`}{gas !== "none" ? " + send gas" : ""}</button>
           </div>
         </section>
       )}

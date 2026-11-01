@@ -41,8 +41,9 @@ export const api = {
   myOrders: (address) => call("GET", `/api/orders?address=${address}`, null, sessionFor(address)),
 };
 
-api.fxPreview = (usd) => call("POST", "/api/fx/preview", { usd });
-api.fxQuote = (taker, usd, takerProof) => call("POST", "/api/fx/quote", { taker, usd, takerProof });
+api.fxPreview = (usd, maxBps) => call("POST", "/api/fx/preview", { usd, maxBps });
+api.fxQuote = (taker, usd, takerProof, maxBps) => call("POST", "/api/fx/quote", { taker, usd, takerProof, maxBps });
+api.fxReturns = () => call("GET", "/api/fx/returns");
 api.fxSubmit = (rfqId, txHash) => call("POST", `/api/fx/${rfqId}/submit`, { txHash });
 api.stats = () => call("GET", "/api/stats");
 api.tracking = (id, number, tx) => call("POST", `/api/orders/${id}/tracking`, { number, tx });
