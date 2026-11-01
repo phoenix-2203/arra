@@ -157,7 +157,9 @@ Money can only ever leave the vault to the buyer, the supplier, or that one-cent
 - **Supplier signs to accept.** The order only goes live when the supplier signs from the payout address, proving they control it on Celo.
 - **Bank-detail change alarm.** A new address for a supplier you've paid before is blocked until you confirm by phone.
 - **Fake container check.** Container numbers carry a check digit; invented ones are refused.
-- **Supplier check, paid by the agent.** Paste the supplier's Instagram, TikTok or X name. Arra's agent buys their public profile for about half a cent over x402 through [buy](https://usebuy.ai), paying in USDT from its own tagged wallet on Celo, and shows plain facts and warnings ("only 40 followers", "no posts in 6 months", "private account") before you lock. Results are cached for a day, spending is capped daily, and every payment is logged with its Celoscan link.
+- **Check a supplier, before any order.** Paste the Instagram, TikTok or X page you found them on (from the home page, or inside a new order). Arra's agent reads that page and searches X and Reddit for complaints about them, paying about $0.015 over x402 through [buy](https://usebuy.ai) from its own tagged wallet on Celo, free for the buyer. You get one verdict, **Looks established**, **Be careful** or **High risk**, with the plain reasons behind it and links to any posts. The verdict follows fixed rules, so the same facts always give the same answer; AI only helps drop posts that aren't real complaints about this seller. Results are cached for a day, spending is capped daily, and every payment is logged with its Celoscan link.
+- **"Page confirmed" for suppliers (optional).** A supplier proves the page buyers know them by belongs to the wallet that gets paid: they put a one-time code in their bio for a minute and the agent reads it. Only the page owner can edit the bio, so if someone pays a *different* wallet for that page, the check shows **High risk**: the usual impersonation trick.
+- **Reviews from real orders only.** After an accepted order ends, buyer and supplier answer three yes/no questions about each other (on time? as agreed? would deal again?) plus an optional comment, signed by their wallet. Double-blind, as on Airbnb: neither sees the other's review until both write or 14 days pass, so nobody can retaliate. The supplier's reviews appear next to their track record.
 - **Track record.** Each wallet's history on Arra (orders accepted, shipped, paid, disputed), read from the chain, shown before you lock.
 
 **Settling**
@@ -208,7 +210,7 @@ Money can only ever leave the vault to the buyer, the supplier, or that one-cent
 | **Fee abstraction** | Every fee is paid in USDT; users never need CELO. |
 | **MiniPay** | The app connects automatically inside MiniPay, where Nigerian users already hold stablecoins. |
 | **ERC-8004** | Arra's agent has an onchain identity (#9996) and a public agent card. |
-| **x402 via buy** | The agent pays for the data it needs: one supplier profile per check, about $0.005 in USDT, settled on Celo by the buy gateway (which covers the gas), with `@celo/buy-core`. The agent only signs the payment; the gateway sends that transaction, so it doesn't carry Arra's ERC-8021 tag. |
+| **x402 via buy** | The agent pays for the data it needs: a supplier's public profile plus an X and a Reddit search per check, about $0.005 each in USDT, settled on Celo by the buy gateway (which covers the gas), with `@celo/buy-core`. The agent only signs the payment; the gateway sends that transaction, so it doesn't carry Arra's ERC-8021 tag. |
 | **ERC-8021** | Every transaction from the agent and the app carries the attribution tag `celo_00cfddd372fa`, deployments included. |
 | **Cheap, fast blocks** | A full order costs a fraction of a cent, so even a $20 order is worth protecting. |
 
@@ -268,9 +270,9 @@ The app treats every version as one Arra: order numbers never overlap, old links
 | Check | Where | Result |
 |---|---|---|
 | 55 contract tests: every path, deadlines, splits, keeper fee, v4 rules, plus fuzzing and invariant runs checking that the vault always holds exactly the open balances and money only leaves to the buyer, the supplier or the one-cent fee | `contracts/test/ArraVault.t.sol` (Foundry) | all pass |
-| 49 agent tests: API, order sheets (vague terms, impossible dates, tiny totals), wallet sign-in, private links, invites, signed notes, tracking, track record, link previews, Textile client, keeper, order assistant, supplier check (handles, profile reading, warnings, caps) | `agent/test/` | all pass |
+| 60 agent tests: API, order sheets (vague terms, impossible dates, tiny totals), wallet sign-in, private links, invites, signed notes, tracking, track record, link previews, Textile client, keeper, order assistant, supplier check (handles, profile reading, complaint filtering, verdict rules, page proofs, caps), double-blind reviews | `agent/test/` | all pass |
 | Mixed v3 + v4 vaults served as one Arra on a local chain | `agent/test/` with Anvil | pass |
-| The real app in a browser against a local chain with the v4 vault: full order, part payments, buyer cancel, supplier decline and refund, extended deadline, problem report with split and counter-offer, terms-first invite; every balance checked to the cent | Playwright + Anvil | all match |
+| The real app in a browser against a local chain with the v4 vault: full order, part payments, buyer cancel, supplier decline and refund, extended deadline, problem report with split and counter-offer, terms-first invite, reviews from both sides, supplier check (good, risky, impersonated page) against a stand-in gateway; every balance checked to the cent | Playwright + Anvil | all match |
 | Source on mainnet matches this repo exactly | Sourcify | exact match, v2, v3, v4 |
 | Naira → USDT → locked order on mainnet through Textile FX | [`0xc9e673…`](https://celoscan.io/tx/0xc9e673ac56ea2fde09f3f5c356b53ee906784491701be78955420b5c17d0673c), [`0xe08ff4…`](https://celoscan.io/tx/0xe08ff4ee88fa2d2c19eb95236c0657747cb8cecf3cec03e51f1dfa84943a0622) | works |
 | Paid supplier check on mainnet over x402: the real gateway answer read correctly (name, followers, posts, last post) | [`0xae1e55…`](https://celoscan.io/tx/0xae1e55e1716f68c3d7cf376c5f72ce316fa9aca623931755c9d9a1897701c6dc) | works |
@@ -357,6 +359,8 @@ Optional in `.env`: `KEEPER=1` (run the agent's refunds and payouts), `TEXTILE_A
 ## Roadmap
 
 - **Bank to escrow in one flow** through Textile Ramp, as soon as it delivers cNGN on Celo.
+- **"Real person" badge through [Self](https://docs.celo.org/build-on-celo/build-with-self):** a supplier scans their passport chip and proves a real, unique person controls the payout wallet, without sharing their name or passport number. An option for suppliers who don't want to touch their bio.
+- **Alibaba and website reads:** the agent opens a supplier's store in a paid browser session through buy, and records their verified status and years on the platform.
 - **Group orders:** several traders fund one container, with shares and pro-rata refunds visible to all.
 - **Named arbitrator** (for example a market association leader) who can only split funds between the two parties.
 - **Inspection as a release step:** an independent inspector's signed report releases the balance.
