@@ -66,7 +66,7 @@ export function VerifyResult({ r, compactFacts = false }) {
           <p>
             <strong>{s.name ?? `@${p.handle}`}</strong>{" "}
             <a href={p.url} target="_blank" rel="noreferrer" className="small">@{p.handle} on {p.label}</a>
-            {s.verified ? <span className="pill act" style={{ marginLeft: 8 }}>Verified</span> : null}
+            {s.verified ? (p.platform === "x" ? <span className="pill" style={{ marginLeft: 8 }} title="On X the blue tick can be bought, so it says little about the seller">Blue tick (paid)</span> : <span className="pill act" style={{ marginLeft: 8 }}>Verified</span>) : null}
             {r.proof && r.proof.handle === p.handle && (!r.payTo || r.proof.address === r.payTo) ? <span className="pill ok-pill" style={{ marginLeft: 8 }}>Page confirmed</span> : null}
           </p>
           {!compactFacts ? (

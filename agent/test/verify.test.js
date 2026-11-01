@@ -158,3 +158,9 @@ test("a page without a follower count is described without question marks", () =
   assert.ok(!v.reasons.some((r) => r.text.includes("?")));
   assert.equal(v.level, "good");
 });
+
+test("a modest but long-running, active page looks established (real @shiproafrica numbers)", () => {
+  const v = verdict({ profile: page({ label: "X", handle: "shiproafrica", summary: { followers: 244, posts: 423, createdAt: 1744718209 } }), complaints: none });
+  assert.equal(v.level, "good");
+  assert.match(v.reasons[0].text, /244 followers, 423 posts, on X since Apr 2025/);
+});
