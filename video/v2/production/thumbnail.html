@@ -1,0 +1,43 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+@font-face { font-family: "D"; src: url("/agent/assets/fonts/BricolageGrotesque_700Bold.ttf"); }
+@font-face { font-family: "S"; src: url("/agent/assets/fonts/InstrumentSans_600SemiBold.ttf"); font-weight: 600; }
+@font-face { font-family: "S"; src: url("/agent/assets/fonts/InstrumentSans_400Regular.ttf"); font-weight: 400; }
+*{box-sizing:border-box;margin:0}
+body{width:1280px;height:720px;overflow:hidden;position:relative;font-family:"S",sans-serif;color:#eef2ea;
+ background:radial-gradient(900px 600px at 85% 15%,rgba(204,255,61,.20),transparent 60%),radial-gradient(700px 500px at 10% 100%,rgba(204,255,61,.08),transparent 60%),#090a07}
+.wm{position:absolute;left:64px;top:52px;font-family:"D";font-size:54px;letter-spacing:-.03em}
+.wm i{font-style:normal;color:#ccff3d}
+.h{position:absolute;left:64px;top:140px;width:680px;font-family:"D";font-size:76px;line-height:.98;letter-spacing:-.035em}
+.h em{font-style:normal;color:#ccff3d}
+.tag{position:absolute;left:66px;top:420px;width:600px;font-size:30px;line-height:1.35;color:#b9beb3}
+.sub{position:absolute;left:64px;bottom:62px;display:flex;gap:12px}
+.chip{font-size:24px;font-weight:600;padding:12px 20px;border-radius:999px;border:2px solid #2f3329;background:rgba(18,20,16,.9)}
+.chip.l{border-color:rgba(204,255,61,.6);color:#ccff3d}
+.card{position:absolute;right:58px;top:86px;width:470px;border-radius:30px;padding:34px 36px;background:linear-gradient(160deg,#171a12,#0f110c);border:2px solid #2f3329;box-shadow:0 40px 90px rgba(0,0,0,.7),0 0 0 8px rgba(204,255,61,.05);transform:rotate(-2.5deg)}
+.lab{font-size:22px;color:#8d9288}
+.amt{font-family:"D";font-size:86px;letter-spacing:-.04em;color:#ccff3d;line-height:1;margin:10px 0 6px}
+.amt small{font-family:"S";font-size:26px;color:#ccff3d;margin-left:8px}
+.st{font-size:24px;font-weight:600;margin-bottom:22px;display:flex;align-items:center;gap:10px}
+.lock{width:30px;height:30px}
+.row{display:flex;justify-content:space-between;font-size:24px;padding:14px 0;border-top:1.5px solid #2a2e24}
+.row b{font-weight:600}
+.ok{color:#ccff3d}
+.risk{position:absolute;right:96px;top:540px;transform:rotate(3deg);display:flex;align-items:center;gap:14px;padding:16px 24px;border-radius:20px;background:#2a110d;border:2px solid #ff7a6b;box-shadow:0 24px 60px rgba(0,0,0,.6)}
+.risk .b{width:40px;height:40px;border-radius:50%;background:#ff7a6b;color:#fff;font-family:"D";font-size:26px;display:grid;place-items:center}
+.risk div{font-size:20px;color:#ffb3a8;line-height:1.2}
+.risk strong{font-family:"D";font-size:28px;color:#ffb3a8;display:block}
+</style></head><body>
+<div class="wm">A<i>rr</i>a</div>
+<div class="h">Pay the deposit.<br><em>Lock the balance</em><br>until it ships.</div>
+<div class="tag">Escrow for any deal with a deposit and a balance. An AI agent checks the supplier first.</div>
+<div class="sub"><span class="chip l">Escrow on Celo</span><span class="chip">Naira or USDT</span><span class="chip">AI agent · x402</span></div>
+<div class="card">
+  <div class="lab">Locked for your supplier</div>
+  <div class="amt">$196<small>USDT</small></div>
+  <div class="st"><svg class="lock" viewBox="0 0 24 24" fill="none" stroke="#ccff3d" stroke-width="2" stroke-linecap="round"><path d="M7 11V8a5 5 0 0 1 10 0v3M5 11h14v10H5zM12 15v2"/></svg>Balance safe until shipping</div>
+  <div class="row"><span>Order total</span><b>$280</b></div>
+  <div class="row"><span>Deposit paid on accept</span><b class="ok">$84 ✓</b></div>
+  <div class="row"><span>Not shipped in time?</span><b class="ok">Refunded</b></div>
+</div>
+<div class="risk"><span class="b">!</span><div><strong>High risk</strong>2 customer complaints found</div></div>
+</body></html>
