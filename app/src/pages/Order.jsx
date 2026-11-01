@@ -6,6 +6,7 @@ import { Cloth } from "../Adire.jsx";
 import { withToast } from "../toast.jsx";
 import TrackRecord from "../TrackRecord.jsx";
 import Notes from "./Notes.jsx";
+import Reviews from "./Reviews.jsx";
 import Problem from "./Problem.jsx";
 import { downloadIcs, deadlines } from "../calendar.js";
 import { STRINGS, initialLang, saveLang, qtyText } from "../i18n.js";
@@ -364,6 +365,8 @@ export default function Order({ id, wallet }) {
           {role === "buyer" && problem !== null ? <Problem order={o} link={view.link} preset={problem || undefined} lang={lang} onCancel={() => setProblem(null)} onDone={() => { setProblem(null); setTell(tellText("problem")); load(); }} /> : null}
         </div>
       ) : null}
+
+      {final ? <Reviews order={o} link={view.link} role={role} goods={goods} lang={lang} /> : null}
 
       <section className="stack">
         {account ? <p className="small muted">{t.youAre[role]}</p> : null}

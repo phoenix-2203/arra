@@ -63,3 +63,6 @@ api.sessionText = (address, at) => call("GET", `/api/session/text?address=${addr
 api.signIn = (address, at, signature) => call("POST", "/api/session", { address, at, signature });
 api.orderLink = (id, owner) => call("POST", `/api/orders/${id}/link`, { owner });
 api.supplierCheck = (platform, handle) => call("POST", "/api/supplier-check", { platform, handle });
+api.reviews = (id) => call("GET", `/api/orders/${id}/reviews`);
+api.addReview = (id, body) => call("POST", `/api/orders/${id}/reviews`, body);
+api.reviewSummary = (address) => call("GET", `/api/reviews/${address}`);

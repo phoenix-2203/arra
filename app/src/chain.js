@@ -281,6 +281,32 @@ export async function signNote(orderId, { kind, text = "", photo = ZERO32, reply
   return { kind, text, photo, replyTo, at, signature };
 }
 
+// ---- Reviews: signed by the wallet after a finished order (free, moves no money) ----
+export function reviewTypedData({ orderId, q1, q2, again, comment, at }) {
+  return {
+    domain: { name: "Arra Reviews", version: "1", chainId: 42220 },
+    types: {
+      Review: [
+        { name: "orderId", type: "uint256" },
+        { name: "q1", type: "uint8" },
+        { name: "q2", type: "uint8" },
+        { name: "again", type: "uint8" },
+        { name: "comment", type: "string" },
+        { name: "at", type: "uint256" },
+      ],
+    },
+    primaryType: "Review",
+    message: { orderId: BigInt(orderId), q1, q2, again, comment, at: BigInt(at) },
+  };
+}
+export async function signReview(orderId, { q1, q2, again, comment = "" }) {
+  const w = await ensureWallet();
+  const at = Math.floor(Date.now() / 1000);
+  const c = comment.trim();
+  const signature = await w.signTypedData({ account: w.account, ...reviewTypedData({ orderId, q1, q2, again, comment: c, at }) });
+  return { q1, q2, again, comment: c, at, signature };
+}
+
 /** Shrinks a photo on the phone to a JPEG of at most 1280 px before upload. */
 export function shrinkPhoto(file, max = 1280) {
   return new Promise((resolve, reject) => {

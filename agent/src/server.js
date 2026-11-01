@@ -16,6 +16,7 @@ import { VaultSet } from "./vaults.js";
 import { OrderLinks, LINK_RE } from "./links.js";
 import { Invites } from "./invites.js";
 import { Notes } from "./notes.js";
+import { Reviews, dealState } from "./reviews.js";
 import { orderPreviewPng } from "./ogImage.js";
 
 const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml", ".png": "image/png", ".json": "application/json", ".ico": "image/x-icon", ".webmanifest": "application/manifest+json" };
@@ -94,6 +95,7 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
   // buyer can see and track it.
   const invites = new Invites(join(dataDir, "invites"));
   const notes = new Notes(join(dataDir, "notes"));
+  const reviews = new Reviews(join(dataDir, "reviews"));
   const trackingDir = join(dataDir, "tracking");
   mkdirSync(trackingDir, { recursive: true });
   const trackingPath = (id) => join(trackingDir, `${Number(id)}.json`);
@@ -375,6 +377,22 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
             return send(res, 200, { note: await notes.add(o, body, now()) });
           }
         }
+        // Reviews: both sides of a finished, accepted order; hidden until both write or 14 days pass.
+        const rv = url.pathname.match(/^\/api\/orders\/([A-Za-z0-9]{1,10})\/reviews$/);
+        if (rv) {
+          const id = await toId(rv[1]);
+          const o = id && (await vaults.read(id));
+          if (!o) return send(res, 404, { error: "No such order" });
+          const deal = dealState(o, await vaults.timeline(id));
+          if (req.method === "GET") return send(res, 200, reviews.view(o, deal, now()));
+          if (req.method === "POST") {
+            const body = await readJson(req);
+            await reviews.add(o, deal, body, now());
+            return send(res, 200, reviews.view(o, deal, now()));
+          }
+        }
+        const rs = url.pathname.match(/^\/api\/reviews\/(0x[0-9a-fA-F]{40})$/);
+        if (rs && req.method === "GET") return send(res, 200, reviews.summary(rs[1], now()));
         const ph = url.pathname.match(/^\/api\/photos\/(0x[0-9a-f]{64})\.jpg$/);
         if (ph && req.method === "GET") {
           if (!notes.hasPhoto(ph[1])) return send(res, 404, { error: "No such photo" });
