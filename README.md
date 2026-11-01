@@ -157,6 +157,7 @@ Money can only ever leave the vault to the buyer, the supplier, or that one-cent
 - **Supplier signs to accept.** The order only goes live when the supplier signs from the payout address, proving they control it on Celo.
 - **Bank-detail change alarm.** A new address for a supplier you've paid before is blocked until you confirm by phone.
 - **Fake container check.** Container numbers carry a check digit; invented ones are refused.
+- **Supplier check, paid by the agent.** Paste the supplier's Instagram, TikTok or X name. Arra's agent buys their public profile for about half a cent over x402 through [buy](https://usebuy.ai), paying in USDT from its own tagged wallet on Celo, and shows plain facts and warnings ("only 40 followers", "no posts in 6 months", "private account") before you lock. Results are cached for a day, spending is capped daily, and every payment is logged with its Celoscan link.
 - **Track record.** Each wallet's history on Arra (orders accepted, shipped, paid, disputed), read from the chain, shown before you lock.
 
 **Settling**
@@ -207,6 +208,7 @@ Money can only ever leave the vault to the buyer, the supplier, or that one-cent
 | **Fee abstraction** | Every fee is paid in USDT; users never need CELO. |
 | **MiniPay** | The app connects automatically inside MiniPay, where Nigerian users already hold stablecoins. |
 | **ERC-8004** | Arra's agent has an onchain identity (#9996) and a public agent card. |
+| **x402 via buy** | The agent pays for the data it needs: one supplier profile per check, about $0.005 in USDT, settled on Celo by the buy gateway (which covers the gas), with `@celo/buy-core`. The agent only signs the payment; the gateway sends that transaction, so it doesn't carry Arra's ERC-8021 tag. |
 | **ERC-8021** | Every transaction from the agent and the app carries the attribution tag `celo_00cfddd372fa`, deployments included. |
 | **Cheap, fast blocks** | A full order costs a fraction of a cent, so even a $20 order is worth protecting. |
 
@@ -239,6 +241,7 @@ Everything below can be checked on Celoscan. Orders so far are **small test orde
 | First Textile FX swap, 1 USDT → 1,381.23 cNGN (tagged) | [`0xd1c5fd…e906`](https://celoscan.io/tx/0xd1c5fd631c02af304388e1040e1ad9726220547ba2658740ba425c3d7063e906) |
 | First naira-paid order: Textile FX fill, about ₦1,374 cNGN → 1 USDT (tagged) | [`0xc9e673…673c`](https://celoscan.io/tx/0xc9e673ac56ea2fde09f3f5c356b53ee906784491701be78955420b5c17d0673c) |
 | …then locked in vault v4: $1.00 order, $0.30 deposit (tagged) | [`0xe08ff4…0622`](https://celoscan.io/tx/0xe08ff4ee88fa2d2c19eb95236c0657747cb8cecf3cec03e51f1dfa84943a0622) · [order page](https://usearra.duckdns.org/o/ek7MhbWNhw) |
+| First supplier check paid by the agent over x402 (buy): Instagram profile, $0.005 USDT from the agent wallet | [`0xae1e55…c6dc`](https://celoscan.io/tx/0xae1e55e1716f68c3d7cf376c5f72ce316fa9aca623931755c9d9a1897701c6dc) |
 | Order cap raised to $500 on vault v4 (tagged) | [`0x77a930…a8b9`](https://celoscan.io/tx/0x77a930de1c28f41726146dbbd370057f4937a26847c4caa57eed396841eba8b9) |
 | Agent wallet (team) | [`0xF4Fa…7053`](https://celoscan.io/address/0xF4Fa62d294E5BcB514D27612998D7459c5D97053) |
 
@@ -265,11 +268,12 @@ The app treats every version as one Arra: order numbers never overlap, old links
 | Check | Where | Result |
 |---|---|---|
 | 55 contract tests: every path, deadlines, splits, keeper fee, v4 rules, plus fuzzing and invariant runs checking that the vault always holds exactly the open balances and money only leaves to the buyer, the supplier or the one-cent fee | `contracts/test/ArraVault.t.sol` (Foundry) | all pass |
-| 47 agent tests: API, order sheets (vague terms, impossible dates, tiny totals), wallet sign-in, private links, invites, signed notes, tracking, track record, link previews, Textile client, keeper, order assistant | `agent/test/` | all pass |
+| 49 agent tests: API, order sheets (vague terms, impossible dates, tiny totals), wallet sign-in, private links, invites, signed notes, tracking, track record, link previews, Textile client, keeper, order assistant, supplier check (handles, profile reading, warnings, caps) | `agent/test/` | all pass |
 | Mixed v3 + v4 vaults served as one Arra on a local chain | `agent/test/` with Anvil | pass |
 | The real app in a browser against a local chain with the v4 vault: full order, part payments, buyer cancel, supplier decline and refund, extended deadline, problem report with split and counter-offer, terms-first invite; every balance checked to the cent | Playwright + Anvil | all match |
 | Source on mainnet matches this repo exactly | Sourcify | exact match, v2, v3, v4 |
 | Naira → USDT → locked order on mainnet through Textile FX | [`0xc9e673…`](https://celoscan.io/tx/0xc9e673ac56ea2fde09f3f5c356b53ee906784491701be78955420b5c17d0673c), [`0xe08ff4…`](https://celoscan.io/tx/0xe08ff4ee88fa2d2c19eb95236c0657747cb8cecf3cec03e51f1dfa84943a0622) | works |
+| Paid supplier check on mainnet over x402: the real gateway answer read correctly (name, followers, posts, last post) | [`0xae1e55…`](https://celoscan.io/tx/0xae1e55e1716f68c3d7cf376c5f72ce316fa9aca623931755c9d9a1897701c6dc) | works |
 | Attribution tag on every agent and app transaction | `npm run verify-tag` and the decoded tag on each tx | `celo_00cfddd372fa` |
 | 29 real-world failure scenarios between buyers and suppliers, each traced to a fix (most shipped in v4) | our "What can go wrong" review | fixes A–J live |
 
