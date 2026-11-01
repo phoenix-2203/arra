@@ -1,6 +1,6 @@
 # Arra demo film
 
-`Arra_Demo.mp4`: 2 minutes 57 seconds, 1920×1080, 30 fps, H.264 + AAC, loudness −16 LUFS. Captions: `Arra_Demo.srt`.
+`Arra_Demo.mp4`: 3 minutes 32 seconds, 1920×1080, 30 fps, H.264 + AAC, loudness −16 LUFS. Captions: `Arra_Demo.srt`.
 
 Everything is generated from this folder: no stock footage, no stock music. The current film is built by `v2/`; the first cut's sources are kept in `narration/` and `production/`.
 

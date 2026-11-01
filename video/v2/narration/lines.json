@@ -155,10 +155,10 @@
   "scene": "link",
   "si": 5,
   "li": 0,
-  "text": "Send your supplier one link. They read the terms in English or Chinese, and agree from their own wallet.",
+  "text": "Send your supplier one link. They read the exact terms, and agree from their own wallet.",
   "file": "lines/05_00.wav",
-  "dur": 6.229,
-  "heard": "Send your supplier one link. They read the terms in English or Chinese and agree from their own wallet.",
+  "dur": 5.052,
+  "heard": "Send your supplier one link. They read the exact terms and agree from their own wallet.",
   "missing": []
  },
  {
@@ -307,11 +307,13 @@
   "scene": "uses",
   "si": 13,
   "li": 0,
-  "text": "It works for any deposit-and-balance deal: a house built back home, furniture made to order, a freelance project.",
+  "text": "And it isn't just for China. Any buyer, any supplier, anywhere: a carpenter in Ibadan, a builder back home, a freelance designer.",
   "file": "lines/13_00.wav",
-  "dur": 7.04,
-  "heard": "It works for any deposit and balance deal. A house built back home, furniture made to order a freelance project.",
-  "missing": []
+  "dur": 8.151,
+  "heard": "and it isn't just for China. Any buyer, any supplier, anywhere. A carpenter in Ibaden, a builder back home, a freelance designer.",
+  "missing": [
+   "ibadan"
+  ]
  },
  {
   "scene": "proof",

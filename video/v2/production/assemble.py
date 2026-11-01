@@ -5,8 +5,8 @@ here = os.path.dirname(os.path.abspath(__file__))
 T = json.load(open(f'{here}/timeline.json'))
 CLIPS = '/root/arra-e2e/clips'
 FONT = '/root/arra/agent/assets/fonts/InstrumentSans_600SemiBold.ttf'
-WHO = {'check': 'Buyer', 'proof': 'Supplier', 'describe': 'Buyer', 'link-a': 'Buyer', 'link-b': 'Supplier · in Chinese', 'link-c': 'Buyer',
-       'lock-a': 'Buyer', 'lock-b': 'Supplier · in Chinese', 'ship-a': 'Supplier', 'ship-b': 'Buyer', 'after': 'Buyer'}
+WHO = {'check': 'Buyer', 'proof': 'Supplier', 'describe': 'Buyer', 'link-a': 'Buyer', 'link-b': 'Supplier', 'link-c': 'Buyer',
+       'lock-a': 'Buyer', 'lock-b': 'Supplier', 'ship-a': 'Supplier', 'ship-b': 'Buyer', 'after': 'Buyer'}
 run = lambda a: subprocess.run(a, check=True)
 os.makedirs(f'{here}/clips', exist_ok=True)
 for sc in T['scenes']:

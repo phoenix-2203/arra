@@ -217,13 +217,15 @@ scenes.textile = () => {
 };
 // ------------------------------------------------------------------ uses
 scenes.uses = () => {
+  const tile = (id, x, ico, h, p) => `<div class="tile card" id="${id}" style="left:${x}px;width:390px;height:470px;padding:38px"><div class="ico">${ico}</div><h3 style="font-size:38px">${h}</h3><p>${p}</p></div>`;
   const s = $(`<div class="scene">
-    <div class="abs" style="left:140px;top:130px"><div class="kicker">Not just imports</div><div class="d h2" style="margin-top:12px">Any deal with a deposit and a balance</div></div>
-    <div class="tile card" id="u1" style="left:140px"><div class="ico">⌂</div><h3>A house built back home</h3><p>Diaspora families release money stage by stage as the work is done.</p></div>
-    <div class="tile card" id="u2" style="left:700px"><div class="ico">▤</div><h3>Made to order</h3><p>Furniture, signage, tailoring: money for materials now, the rest when it's finished.</p></div>
-    <div class="tile card" id="u3" style="left:1260px"><div class="ico">⟨⟩</div><h3>Freelance projects</h3><p>Milestones without a platform holding the money.</p></div>
+    <div class="abs" style="left:140px;top:130px"><div class="kicker">Not just China</div><div class="d h2" style="margin-top:12px">Any buyer, any supplier, anywhere</div></div>
+    ${tile('u1', 140, '⇄', 'Imports', 'From China, Turkey, Dubai or anywhere: the balance waits for the shipment.')}
+    ${tile('u2', 556, '▤', 'Local suppliers', 'A carpenter in Ibadan, a tailor in Aba: money for materials now, the rest when it\'s done.')}
+    ${tile('u3', 972, '⌂', 'Building back home', 'Diaspora families release money stage by stage as the work is done.')}
+    ${tile('u4', 1388, '⟨⟩', 'Services', 'Designers, developers, events: milestones without a platform holding the money.')}
   </div>`);
-  return { el: s, at(u) { ['#u1', '#u2', '#u3'].forEach((id, i) => show(s.querySelector(id), fade(u, 2.4 + i * 1.5))); } };
+  return { el: s, at(u) { ['#u1', '#u2', '#u3', '#u4'].forEach((id, i) => show(s.querySelector(id), fade(u, 1.0 + i * 1.6))); } };
 };
 // ------------------------------------------------------------------ 7 returns
 scenes.returns = () => {

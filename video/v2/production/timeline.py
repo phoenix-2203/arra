@@ -28,7 +28,7 @@ DEMOS = {
  'after':    {'speed': 1.45, 'segs': [('after', 0.2, M('after')['revealed'] + 0.3), ('after', M('after')['end'] - 3.0, M('after')['_end'])],
               'at': [('after', 0.25)]},
 }
-ORDER = ['hook', 'problem', 'intro', 'check', 'describe', 'link', 'wallets', 'lock', 'textile', 'returns', 'ship', 'safety', 'after', 'uses', 'proof', 'close']
+ORDER = ['hook', 'problem', 'intro', 'uses', 'check', 'describe', 'link', 'wallets', 'lock', 'textile', 'returns', 'ship', 'safety', 'after', 'proof', 'close']
 T = {'crossfade': X, 'scenes': [], 'lines': []}
 t = 0.0
 for sid in ORDER:
