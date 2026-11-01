@@ -57,13 +57,16 @@ const fakeTextile = {
     return { providers: [{ id: "busha", chainIds: [56] }] };
   },
 };
+const cancelled = [];
+fakeTextile.cancel = async (id) => cancelled.push(id);
+const fakeRates = { get: async () => ({ ngnPerUsd: 1580, sources: [{ name: "test" }] }) };
 let server, base, dir;
 before(async () => {
   dir = mkdtempSync(join(tmpdir(), "arra-srv-"));
   const staticDir = join(dir, "dist");
   mkdirSync(staticDir);
   writeFileSync(join(staticDir, "index.html"), '<!doctype html><head><title>Arra</title><meta name="description" content="x" /><meta property="og:title" content="Arra" /><meta property="og:image" content="/og.png" /></head>');
-  server = await listen(createApp({ client: fakeClient, vault: "0xvault", dataDir: join(dir, "data"), staticDir, now: () => T, textile: fakeTextile, links: LINKS }), 0);
+  server = await listen(createApp({ client: fakeClient, vault: "0xvault", dataDir: join(dir, "data"), staticDir, now: () => T, textile: fakeTextile, links: LINKS, rates: fakeRates }), 0);
   base = `http://127.0.0.1:${server.address().port}`;
 });
 after(() => server?.close());
@@ -184,6 +187,20 @@ test("naira payment: preview, proof-gated firm quote, claim token kept on the se
   assert.equal((await post(`/api/fx/${q.rfqId}/submit`, { txHash: hash }))[0], 200);
   assert.deepEqual(submitted.at(-1), { id: "rfq_9", claim: "rfqc_hidden", txHash: hash });
   assert.equal((await post("/api/fx/rfq_unknown/submit", { txHash: hash }))[0], 404);
+  // Rate guard: 1601 vs a 1580 mid is 1.33% above; inside the default 3%, outside a 1% limit.
+  assert.equal(q.premiumBps, 133);
+  assert.equal(q.refNgnPerUsd, 1580);
+  assert.equal(p.withinLimit, true);
+  const [, g] = await post("/api/fx/quote", { taker: BUYER, usd: "47", maxBps: 100, takerProof: { nonce: "0x1", issuedAt: 1, signature: "0x2" } });
+  assert.equal(g.status, "guarded");
+  assert.equal(g.rfqId, undefined, "a refused quote can't be filled");
+  assert.deepEqual(cancelled, ["rfq_9"]);
+  // Returns: one fill of $47, 21 naira per dollar above the mid at the time.
+  const [, ret] = await get("/api/fx/returns");
+  assert.equal(ret.fills, 1);
+  assert.equal(ret.executionCostNgn, 47 * 21);
+  assert.equal(ret.refused.length, 1);
+  assert.equal(ret.rows[0].rfqId, undefined);
   const [, prov] = await get("/api/ramp/providers");
   assert.deepEqual(prov.celo, []);
 });

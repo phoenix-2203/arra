@@ -15,7 +15,8 @@
     "order": "node --env-file=.env scripts/order.js",
     "set-max": "node --env-file=.env scripts/set-max-order.js",
     "supplier-check": "node --env-file=.env scripts/supplier-check.js",
-    "judge-test": "node --env-file=.env scripts/judge-test.js"
+    "judge-test": "node --env-file=.env scripts/judge-test.js",
+    "fx-guard": "node --env-file-if-exists=.env scripts/fx-guard.js"
   },
   "keywords": [],
   "author": "",

@@ -11,6 +11,7 @@ import { checkContainerNumber } from "./container.js";
 import { nextActions, explain, vaultAbi, abiFor } from "./vault.js";
 import { assistant } from "./assistant.js";
 import { textileClient, ngnPerUsd, rampSupportsCelo, TextileError } from "./textile.js";
+import { referenceRate, guard, FxLedger, returns as fxReturns, DEFAULT_MAX_BPS, MAX_BPS_CHOICES } from "./fxGuard.js";
 import { LogIndex } from "./history.js";
 import { VaultSet } from "./vaults.js";
 import { OrderLinks, LINK_RE } from "./links.js";
@@ -45,7 +46,7 @@ async function readJson(req, limit = MAX_BODY) {
   }
 }
 
-export function createApp({ client, vault, dataDir, staticDir, now = () => Math.floor(Date.now() / 1000), textile = textileClient(), history = null, vaults = null, links = null, ai = assistant(), supplier = null }) {
+export function createApp({ client, vault, dataDir, staticDir, now = () => Math.floor(Date.now() / 1000), textile = textileClient(), history = null, vaults = null, links = null, ai = assistant(), supplier = null, rates = referenceRate() }) {
   // One vault (tests, simple setups) or several versions shown as one Arra.
   vaults ??= new VaultSet({ client, vaults: [{ address: vault, firstId: 1, history: history ?? new LogIndex({ client, vault }) }] });
   let statsCache = null;
@@ -60,6 +61,9 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
   };
   // Claim tokens for firm quotes stay on the server; the browser only gets the rfqId.
   const claims = new Map();
+  // Every conversion with the reference rate at that moment (see fxGuard.js, docs/strategy.md).
+  const fxLedger = new FxLedger(join(dataDir, "fx-ledger.jsonl"));
+  const refRate = () => rates.get().catch(() => null);
   const usdUnits = (v) => {
     if (!/^\d+(\.\d{1,6})?$/.test(String(v ?? ""))) throw Object.assign(new Error("usd must be an amount like 12.50"), { status: 400 });
     const [w, f = ""] = String(v).split(".");
@@ -263,19 +267,38 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
     "POST /api/fx/preview": async (body) =>
       fx(async () => {
         const buyAmount = usdUnits(body.usd);
-        const { data } = await textile.preview({ buyAmount });
-        return [200, { cngn: data.sellAmount, usdt: data.buyAmount ?? buyAmount.toString(), ngnPerUsd: ngnPerUsd({ sellAmount: data.sellAmount, buyAmount: data.buyAmount ?? buyAmount }) }];
+        const [{ data }, ref] = await Promise.all([textile.preview({ buyAmount }), refRate()]);
+        const rate = ngnPerUsd({ sellAmount: data.sellAmount, buyAmount: data.buyAmount ?? buyAmount });
+        const g = guard({ ngnPerUsd: rate, ref, maxBps: body.maxBps });
+        return [200, { cngn: data.sellAmount, usdt: data.buyAmount ?? buyAmount.toString(), ngnPerUsd: rate, refNgnPerUsd: g.refNgnPerUsd, premiumBps: g.premiumBps, maxBps: g.maxBps, withinLimit: g.ok, limits: MAX_BPS_CHOICES }];
       }),
+    // Firm quote, then Arra's rate guard: a quote too far above the independent mid rate is
+    // cancelled before the buyer is asked to sign anything.
     "POST /api/fx/quote": async (body) =>
       fx(async () => {
         if (!isAddress(body.taker ?? "", { strict: false })) return [400, { error: "taker must be an address" }];
-        const { data } = await textile.request({ buyAmount: usdUnits(body.usd), taker: body.taker, takerProof: body.takerProof });
+        const usd = usdUnits(body.usd);
+        const [{ data }, ref] = await Promise.all([textile.request({ buyAmount: usd, taker: body.taker, takerProof: body.takerProof }), refRate()]);
         if (data.status !== "quoted") return [200, { status: data.status, reason: data.reason ?? null }];
+        const q = data.quote;
+        const rate = ngnPerUsd({ sellAmount: q.takerPays, buyAmount: q.buyAmount });
+        const g = guard({ ngnPerUsd: rate, ref, maxBps: body.maxBps ?? DEFAULT_MAX_BPS });
+        const entry = { at: now(), rfqId: data.rfqId, usd: (Number(usd) / 1e6).toString(), ngnPerUsd: rate, refNgnPerUsd: g.refNgnPerUsd, refSources: ref?.sources?.map((x) => x.name) ?? [], premiumBps: g.premiumBps, maxBps: g.maxBps };
+        if (!g.ok) {
+          fxLedger.add({ ...entry, status: "guarded" });
+          if (textile.cancel) textile.cancel(data.rfqId, data.claimToken).catch(() => {});
+          return [200, { status: "guarded", ngnPerUsd: rate, refNgnPerUsd: g.refNgnPerUsd, premiumBps: g.premiumBps, maxBps: g.maxBps }];
+        }
+        fxLedger.add({ ...entry, status: "quoted" });
         claims.set(data.rfqId, data.claimToken);
         setTimeout(() => claims.delete(data.rfqId), 15 * 60 * 1000).unref?.();
-        const q = data.quote;
-        return [200, { status: "quoted", rfqId: data.rfqId, takerPays: q.takerPays, buyAmount: q.buyAmount, feeAmount: q.feeAmount, reactor: q.reactor, expiresAt: q.expiresAt, ngnPerUsd: ngnPerUsd({ sellAmount: q.takerPays, buyAmount: q.buyAmount }), transactions: data.transactions }];
+        return [200, { status: "quoted", rfqId: data.rfqId, takerPays: q.takerPays, buyAmount: q.buyAmount, feeAmount: q.feeAmount, reactor: q.reactor, expiresAt: q.expiresAt, ngnPerUsd: rate, refNgnPerUsd: g.refNgnPerUsd, premiumBps: g.premiumBps, maxBps: g.maxBps, guardChecked: g.checked, transactions: data.transactions }];
       }),
+    // The strategy's returns on the conversions Arra actually made (public, no wallets shown).
+    "GET /api/fx/returns": async () => {
+      const r = fxReturns(fxLedger.all(), await refRate());
+      return [200, { ...r, rows: r.rows.map(({ rfqId, ...x }) => x) }];
+    },
     "GET /api/ramp/providers": async () =>
       fx(async () => {
         const all = await textile.rampProviders();
@@ -515,6 +538,7 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
           const body = await readJson(req);
           if (!/^0x[0-9a-fA-F]{64}$/.test(body.txHash ?? "")) return send(res, 400, { error: "txHash required" });
           const [st, payload] = await fx(async () => [200, (await textile.submit(sub[1], claim, body.txHash)).data ?? { ok: true }]);
+          if (st === 200) fxLedger.filled(sub[1], body.txHash, now());
           return send(res, st, payload);
         }
         const s = url.pathname.match(/^\/api\/sheets\/(0x[0-9a-fA-F]{64})$/);
