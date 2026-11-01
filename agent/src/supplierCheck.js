@@ -253,7 +253,7 @@ export function supplierChecker({ account, client = null, dataDir, gateway = pro
     const handle = cleanHandle(rawHandle);
     if (!P) throw Object.assign(new Error("Choose Instagram, TikTok or X"), { status: 400 });
     if (!handle) throw Object.assign(new Error("That doesn't look like a username"), { status: 400 });
-    const file = join(dir, `${platform}-${handle}.json`);
+    const file = join(dir, `${platform}-${handle}.v2.json`); // v2: X field names; older saved reads are ignored
     const c = !fresh && cached(file);
     if (c) return { ...c, cached: true, flags: c.found ? flags(c.summary, Math.floor(now() / 1000)) : c.flags };
     const { res, text, data, paid } = await paidCall(P.path, P.body(handle), { platform, handle });
