@@ -30,8 +30,11 @@ const c = supplierChecker({ account, client: publicClient(), dataDir: mkdtempSyn
   if (res.status !== 402) raw = await res.clone().text();
   return res;
 } });
-const r = await c.check(platform, handle);
-console.log("\nResult:", JSON.stringify({ found: r.found, summary: r.summary, flags: r.flags, paid: r.paid }, null, 2));
+const r = await c.check(platform, handle).catch((e) => {
+  console.log(`\nProfile check failed: ${e.message} (nothing is charged when the gateway can't answer)`);
+  return {};
+});
+if (r.summary !== undefined) console.log("\nResult:", JSON.stringify({ found: r.found, summary: r.summary, flags: r.flags, paid: r.paid }, null, 2));
 if (r.paid?.txHash) console.log(`Settlement: https://celoscan.io/tx/${r.paid.txHash}`);
 console.log("\nRaw answer (first 1500 characters, for checking the fields):\n" + (raw ?? "").slice(0, 1500));
 

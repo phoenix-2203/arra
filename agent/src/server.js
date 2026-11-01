@@ -159,7 +159,7 @@ export function createApp({ client, vault, dataDir, staticDir, now = () => Math.
         payTo ? client.getTransactionCount({ address: payTo }).catch(() => null) : null,
       ]);
       const name = String(body.name ?? "").trim() || (profile && !profile.error ? profile.summary?.name ?? "" : "");
-      const complaints = paidParts && profile && !profile.error && profile.found ? await soft(supplier.complaints(handle, name, { judge: ai?.enabled ? (x) => ai.judgeComplaints(x) : null })) : null;
+      const complaints = paidParts && profile && (profile.error || profile.found) ? await soft(supplier.complaints(handle, name, { judge: ai?.enabled ? (x) => ai.judgeComplaints(x) : null })) : null;
       const proof = handle ? proofs.get(platform, handle) : payTo ? proofs.byAddress(payTo)[0] ?? null : null;
       const rv = payTo ? reviews.summary(payTo, now()) : null;
       const ok = (x) => (x && !x.error ? x : null);

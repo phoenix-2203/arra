@@ -73,3 +73,20 @@ test("refuses bad input, respects the daily cap, and words the warnings plainly"
   assert.equal(cleanHandle("instagram.com"), null, "a bare domain is not a handle");
   assert.deepEqual(flags(summarize({ is_private: true, follower_count: 5000, media_count: 300 })), ["Private account: you can't see their posts."]);
 });
+
+test("retries once when the gateway's provider fails and nothing was charged", async () => {
+  const account = privateKeyToAccount(generatePrivateKey());
+  const calls = [];
+  const ok = fakeGateway({ follower_count: 5000, media_count: 300, full_name: "Shop" }, calls);
+  let failed = 0;
+  const flaky = async (input, init) => {
+    if (new Headers(init?.headers).get("X-PAYMENT") && failed++ === 0) {
+      return new Response(JSON.stringify({ error: "provider_error", providerStatus: 502, paymentSettled: false, retryable: true }), { status: 503 });
+    }
+    return ok(input, init);
+  };
+  const c = supplierChecker({ account, dataDir: mkdtempSync(join(tmpdir(), "sc-")), fetchImpl: flaky, now: () => Date.parse("2026-11-01T10:00:00Z") });
+  const r = await c.check("instagram", "shop");
+  assert.equal(r.found, true);
+  assert.equal(failed, 2);
+});

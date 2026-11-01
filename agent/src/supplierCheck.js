@@ -184,7 +184,9 @@ export function supplierChecker({ account, client = null, dataDir, gateway = pro
         if (b >= 30_000n) { token = sym; break; }
       }
     }
-    const res = await x402.payingFetch(
+    // The gateway says when its data provider hiccupped and nothing was charged: try again
+    // once, a moment later (a fresh payment authorization is signed each time).
+    const once = () => x402.payingFetch(
       { account, network, preferredToken: token, fetchImpl },
       `${gateway}${path}`,
       {
@@ -197,11 +199,22 @@ export function supplierChecker({ account, client = null, dataDir, gateway = pro
           appendFileSync(log, JSON.stringify(paid) + "\n");
         },
       },
-    ).catch((e) => {
-      console.error("buy:", e.code ?? "", e.message);
-      throw unavailable();
-    });
-    const text = await res.text();
+    );
+    let res;
+    let text;
+    for (let attempt = 0; ; attempt++) {
+      // eslint-disable-next-line no-await-in-loop
+      res = await once().catch((e) => {
+        console.error("buy:", e.code ?? "", e.message);
+        throw unavailable();
+      });
+      // eslint-disable-next-line no-await-in-loop
+      text = await res.text();
+      const retry = res.status >= 500 && /"retryable":\s*true/.test(text) && !/"paymentSettled":\s*true/.test(text);
+      if (!retry || attempt >= 2) break;
+      // eslint-disable-next-line no-await-in-loop
+      await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
+    }
     let data = null;
     try {
       data = JSON.parse(text);
