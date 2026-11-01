@@ -5,19 +5,19 @@
    "id": "hook",
    "type": "card",
    "start": 0.0,
-   "dur": 8.84,
+   "dur": 9.607,
    "lines": [
     {
-     "local": 0.7,
-     "at": 0.7,
-     "dur": 4.885,
+     "local": 0.9,
+     "at": 0.9,
+     "dur": 5.013,
      "text": "In Lagos, an importer sends a thirty percent deposit to a supplier in Shenzhen.",
      "file": "lines/00_00.wav"
     },
     {
-     "local": 5.785,
-     "at": 5.785,
-     "dur": 2.655,
+     "local": 6.313,
+     "at": 6.313,
+     "dur": 2.744,
      "text": "The seventy percent balance is where it goes wrong.",
      "file": "lines/00_01.wav"
     }
@@ -26,20 +26,20 @@
   {
    "id": "problem",
    "type": "card",
-   "start": 8.24,
-   "dur": 17.924,
+   "start": 9.007,
+   "dur": 19.023,
    "lines": [
     {
-     "local": 0.3,
-     "at": 8.54,
-     "dur": 8.64,
+     "local": 0.5,
+     "at": 9.507,
+     "dur": 8.954,
      "text": "Goods that never arrive: this week, a man in Bauchi was charged over \u20a65.7 million paid for a tractor that never came.",
      "file": "lines/01_00.wav"
     },
     {
-     "local": 9.14,
-     "at": 17.38,
-     "dur": 8.384,
+     "local": 9.854,
+     "at": 18.861,
+     "dur": 8.619,
      "text": "Over three billion dollars lost in 2025 to fake \"bank details changed\" messages. And the naira still moves in weeks.",
      "file": "lines/01_01.wav"
     }
@@ -48,20 +48,20 @@
   {
    "id": "intro",
    "type": "card",
-   "start": 25.564,
-   "dur": 13.294,
+   "start": 27.43,
+   "dur": 9.954,
    "lines": [
     {
-     "local": 0.3,
-     "at": 25.864,
-     "dur": 8.085,
-     "text": "Arra, Latin for earnest money, works for any deal with a deposit and a balance: imports, a house back home, a freelance project.",
+     "local": 0.5,
+     "at": 27.93,
+     "dur": 4.028,
+     "text": "Arra is Latin for earnest money: the deposit that secures a deal.",
      "file": "lines/02_00.wav"
     },
     {
-     "local": 8.585,
-     "at": 34.149,
-     "dur": 4.309,
+     "local": 4.928,
+     "at": 32.358,
+     "dur": 4.476,
      "text": "Pay the deposit, and keep the balance locked in an open contract on Celo.",
      "file": "lines/02_01.wav"
     }
@@ -70,73 +70,73 @@
   {
    "id": "check",
    "type": "demo",
-   "start": 38.258,
-   "dur": 27.515,
-   "speed": 1.4,
+   "start": 36.784,
+   "dur": 32.357,
+   "speed": 1.1,
    "segs": [
     {
      "clip": "check",
      "from": 0.2,
      "to": 16.9,
      "at": 0.0,
-     "speed": 1.4
+     "speed": 1.1
     },
     {
      "clip": "check",
      "from": 16.9,
      "to": 21.87,
-     "at": 11.929,
-     "speed": 3.0
+     "at": 15.182,
+     "speed": 2.0
     },
     {
      "clip": "check",
      "from": 21.87,
      "to": 26.26,
-     "at": 13.585,
+     "at": 17.667,
      "speed": 1.0
     },
     {
      "clip": "check",
      "from": 26.22,
      "to": 26.26,
-     "at": 17.975,
-     "speed": 0.01
+     "at": 22.057,
+     "speed": 0.012
     },
     {
      "clip": "proof",
      "from": 4.6,
      "to": 12.1,
-     "at": 21.975,
-     "speed": 1.4
+     "at": 25.39,
+     "speed": 1.1
     }
    ],
-   "visual": 27.332,
+   "visual": 32.208,
    "lines": [
     {
-     "local": 0.3,
-     "at": 38.558,
-     "dur": 6.827,
+     "local": 0.5,
+     "at": 37.284,
+     "dur": 7.066,
      "text": "Before any order, paste the page you found them on. Arra's agent reads it, and searches X and Reddit for complaints.",
      "file": "lines/03_00.wav"
     },
     {
-     "local": 8.293,
-     "at": 46.551,
-     "dur": 3.634,
+     "local": 10.555,
+     "at": 47.339,
+     "dur": 3.712,
      "text": "This example shop has two customer complaints: high risk.",
      "file": "lines/03_01.wav"
     },
     {
-     "local": 13.335,
-     "at": 51.593,
-     "dur": 9.399,
+     "local": 17.417,
+     "at": 54.201,
+     "dur": 9.638,
      "text": "A real seller comes back green. The agent pays for this data itself: half a cent a lookup, over x402, through the buy marketplace on Celo.",
      "file": "lines/03_02.wav"
     },
     {
-     "local": 22.934,
-     "at": 61.192,
-     "dur": 4.181,
+     "local": 27.455,
+     "at": 64.239,
+     "dur": 4.352,
      "text": "And suppliers can confirm their own page, so impersonators get flagged.",
      "file": "lines/03_03.wav"
     }
@@ -145,31 +145,31 @@
   {
    "id": "describe",
    "type": "demo",
-   "start": 65.173,
-   "dur": 12.809,
-   "speed": 1.65,
+   "start": 68.541,
+   "dur": 16.625,
+   "speed": 1.2,
    "segs": [
     {
      "clip": "describe",
      "from": 0.2,
      "to": 20.15,
      "at": 0.0,
-     "speed": 1.65
+     "speed": 1.2
     }
    ],
-   "visual": 12.091,
+   "visual": 16.625,
    "lines": [
     {
-     "local": 0.3,
-     "at": 65.473,
-     "dur": 3.947,
+     "local": 0.5,
+     "at": 69.041,
+     "dur": 4.117,
      "text": "Describe the order like a message, and the assistant fills in the terms.",
      "file": "lines/04_00.wav"
     },
     {
-     "local": 6.564,
-     "at": 71.737,
-     "dur": 5.845,
+     "local": 9.025,
+     "at": 77.566,
+     "dur": 5.947,
      "text": "Vague words like \"good quality\" are refused, and the terms are fingerprinted, so they can't change later.",
      "file": "lines/04_01.wav"
     }
@@ -178,45 +178,45 @@
   {
    "id": "link",
    "type": "demo",
-   "start": 77.382,
-   "dur": 13.483,
-   "speed": 1.5,
+   "start": 84.566,
+   "dur": 16.452,
+   "speed": 1.15,
    "segs": [
     {
      "clip": "link-a",
      "from": 0.2,
      "to": 6.39,
      "at": 0.0,
-     "speed": 1.5
+     "speed": 1.15
     },
     {
      "clip": "link-b",
      "from": 0.2,
      "to": 6.44,
-     "at": 4.127,
-     "speed": 1.5
+     "at": 5.383,
+     "speed": 1.15
     },
     {
      "clip": "link-c",
      "from": 0.2,
      "to": 6.69,
-     "at": 8.287,
-     "speed": 1.5
+     "at": 10.809,
+     "speed": 1.15
     }
    ],
-   "visual": 12.613,
+   "visual": 16.452,
    "lines": [
     {
-     "local": 0.3,
-     "at": 77.682,
-     "dur": 6.059,
+     "local": 0.5,
+     "at": 85.066,
+     "dur": 6.229,
      "text": "Send your supplier one link. They read the terms in English or Chinese, and agree from their own wallet.",
      "file": "lines/05_00.wav"
     },
     {
-     "local": 8.42,
-     "at": 85.802,
-     "dur": 4.663,
+     "local": 10.983,
+     "at": 95.549,
+     "dur": 4.757,
      "text": "You see their record and reviews, and a changed payout address sets off an alarm.",
      "file": "lines/05_01.wav"
     }
@@ -225,13 +225,13 @@
   {
    "id": "wallets",
    "type": "card",
-   "start": 90.265,
-   "dur": 8.695,
+   "start": 100.418,
+   "dur": 9.345,
    "lines": [
     {
-     "local": 0.3,
-     "at": 90.565,
-     "dur": 7.995,
+     "local": 0.5,
+     "at": 100.918,
+     "dur": 8.295,
      "text": "Pay from the wallet you already use: MiniPay, MetaMask, Rabby, or any wallet on Celo. In dollars, or straight from naira.",
      "file": "lines/06_00.wav"
     }
@@ -240,31 +240,31 @@
   {
    "id": "lock",
    "type": "demo",
-   "start": 98.36,
-   "dur": 8.562,
-   "speed": 1.6,
+   "start": 109.163,
+   "dur": 11.913,
+   "speed": 1.15,
    "segs": [
     {
      "clip": "lock-a",
      "from": 0.2,
      "to": 8.48,
      "at": 0.0,
-     "speed": 1.6
+     "speed": 1.15
     },
     {
      "clip": "lock-b",
      "from": 0.2,
      "to": 5.62,
-     "at": 5.175,
-     "speed": 1.6
+     "at": 7.2,
+     "speed": 1.15
     }
    ],
-   "visual": 8.562,
+   "visual": 11.913,
    "lines": [
     {
-     "local": 0.3,
-     "at": 98.66,
-     "dur": 5.816,
+     "local": 0.5,
+     "at": 109.663,
+     "dur": 5.935,
      "text": "Lock the order. The supplier accepts, and the deposit reaches them instantly. The balance waits.",
      "file": "lines/07_00.wav"
     }
@@ -273,13 +273,13 @@
   {
    "id": "textile",
    "type": "card",
-   "start": 106.322,
-   "dur": 8.551,
+   "start": 120.476,
+   "dur": 9.214,
    "lines": [
     {
-     "local": 0.3,
-     "at": 106.622,
-     "dur": 7.851,
+     "local": 0.5,
+     "at": 120.976,
+     "dur": 8.164,
      "text": "Every naira payment is a Textile FX fill: one firm quote for exactly the dollars needed, settled in one transaction.",
      "file": "lines/08_00.wav"
     }
@@ -288,20 +288,20 @@
   {
    "id": "returns",
    "type": "card",
-   "start": 114.273,
-   "dur": 10.943,
+   "start": 129.09,
+   "dur": 11.667,
    "lines": [
     {
-     "local": 0.3,
-     "at": 114.573,
-     "dur": 8.005,
+     "local": 0.5,
+     "at": 129.59,
+     "dur": 8.16,
      "text": "That one rate matters. This October, a seven-thousand-dollar balance cost a quarter of a million naira more, in just twenty days.",
      "file": "lines/09_00.wav"
     },
     {
-     "local": 8.505,
-     "at": 122.778,
-     "dur": 2.038,
+     "local": 9.06,
+     "at": 138.15,
+     "dur": 2.057,
      "text": "With Arra, it's paid for on day one.",
      "file": "lines/09_01.wav"
     }
@@ -310,59 +310,59 @@
   {
    "id": "ship",
    "type": "demo",
-   "start": 124.616,
-   "dur": 14.271,
-   "speed": 1.7,
+   "start": 140.157,
+   "dur": 18.662,
+   "speed": 1.3,
    "segs": [
     {
      "clip": "ship-a",
      "from": 0.2,
      "to": 8.07,
      "at": 0.0,
-     "speed": 1.7
+     "speed": 1.3
     },
     {
      "clip": "ship-b",
      "from": 0.2,
      "to": 4.53,
-     "at": 4.629,
-     "speed": 1.7
+     "at": 6.054,
+     "speed": 1.3
     },
     {
      "clip": "ship-b",
      "from": 42.97,
      "to": 47.83,
-     "at": 7.176,
-     "speed": 1.7
+     "at": 9.385,
+     "speed": 1.3
     },
     {
      "clip": "ship-b",
      "from": 4.53,
      "to": 11.73,
-     "at": 10.035,
-     "speed": 1.7
+     "at": 13.123,
+     "speed": 1.3
     }
    ],
-   "visual": 14.271,
+   "visual": 18.662,
    "lines": [
     {
-     "local": 0.3,
-     "at": 124.916,
-     "dur": 4.999,
+     "local": 0.5,
+     "at": 140.657,
+     "dur": 5.156,
      "text": "When they ship, the container number is checked, and your check period starts when the goods arrive.",
      "file": "lines/10_00.wav"
     },
     {
-     "local": 7.176,
-     "at": 131.792,
-     "dur": 2.969,
+     "local": 9.385,
+     "at": 149.542,
+     "dur": 3.072,
      "text": "All good? Pay the balance in one tap, or in parts.",
      "file": "lines/10_01.wav"
     },
     {
-     "local": 10.345,
-     "at": 134.961,
-     "dur": 3.474,
+     "local": 13.123,
+     "at": 153.28,
+     "dur": 3.584,
      "text": "Something wrong? Report it with signed photos, and make an offer.",
      "file": "lines/10_02.wav"
     }
@@ -371,20 +371,20 @@
   {
    "id": "safety",
    "type": "card",
-   "start": 138.287,
-   "dur": 14.849,
+   "start": 158.219,
+   "dur": 15.91,
    "lines": [
     {
-     "local": 0.3,
-     "at": 138.587,
-     "dur": 6.226,
+     "local": 0.5,
+     "at": 158.719,
+     "dur": 6.396,
      "text": "Cancel before they accept. No accept, or no shipment, and Arra's agent refunds you automatically.",
      "file": "lines/11_00.wav"
     },
     {
-     "local": 6.726,
-     "at": 145.013,
-     "dur": 7.723,
+     "local": 7.296,
+     "at": 165.515,
+     "dur": 8.064,
      "text": "A quiet buyer can't hold the money: ignored offers go through in seven days. And nobody, not even Arra, can redirect it.",
      "file": "lines/11_01.wav"
     }
@@ -393,70 +393,85 @@
   {
    "id": "after",
    "type": "demo",
-   "start": 152.536,
-   "dur": 7.768,
-   "speed": 1.9,
+   "start": 173.529,
+   "dur": 10.179,
+   "speed": 1.45,
    "segs": [
     {
      "clip": "after",
      "from": 0.2,
      "to": 11.66,
      "at": 0.0,
-     "speed": 1.9
+     "speed": 1.45
     },
     {
      "clip": "after",
      "from": 13.01,
      "to": 16.31,
-     "at": 6.032,
-     "speed": 1.9
+     "at": 7.903,
+     "speed": 1.45
     }
    ],
-   "visual": 7.768,
+   "visual": 10.179,
    "lines": [
     {
-     "local": 0.3,
-     "at": 152.836,
-     "dur": 6.76,
+     "local": 0.5,
+     "at": 174.029,
+     "dur": 6.951,
      "text": "Afterwards, both sides review each other, hidden until both have written. Receipts and history stay with every order.",
      "file": "lines/12_00.wav"
     }
    ]
   },
   {
-   "id": "proof",
+   "id": "uses",
    "type": "card",
-   "start": 159.704,
-   "dur": 12.344,
+   "start": 183.108,
+   "dur": 8.09,
    "lines": [
     {
-     "local": 0.3,
-     "at": 160.004,
-     "dur": 4.128,
-     "text": "Live on Celo mainnet: a friend's real order ran start to finish.",
+     "local": 0.5,
+     "at": 183.608,
+     "dur": 7.04,
+     "text": "It works for any deposit-and-balance deal: a house built back home, furniture made to order, a freelance project.",
      "file": "lines/13_00.wav"
+    }
+   ]
+  },
+  {
+   "id": "proof",
+   "type": "card",
+   "start": 190.598,
+   "dur": 13.284,
+   "lines": [
+    {
+     "local": 0.5,
+     "at": 191.098,
+     "dur": 4.245,
+     "text": "Live on Celo mainnet: a friend's real order ran start to finish.",
+     "file": "lines/14_00.wav"
     },
     {
-     "local": 4.628,
-     "at": 164.332,
-     "dur": 7.316,
+     "local": 5.145,
+     "at": 195.743,
+     "dur": 7.589,
      "text": "Verified contract, a registered agent, naira filled through Textile, and supplier checks paid over x402.",
-     "file": "lines/13_01.wav"
+     "file": "lines/14_01.wav"
     }
    ]
   },
   {
    "id": "close",
    "type": "card",
-   "start": 171.448,
-   "dur": 4.692,
+   "start": 203.282,
+   "dur": 5.707,
    "lines": [
     {
-     "local": 0.7,
-     "at": 172.148,
-     "dur": 2.192,
+     "local": 0.9,
+     "at": 204.182,
+     "dur": 2.257,
      "text": "Arra. Trade with anyone, without the worry.",
-     "file": "lines/14_00.wav"
+     "file": "lines/15_00.wav"
     }
    ]
   }
@@ -464,228 +479,236 @@
  "lines": [
   {
    "scene": "hook",
-   "local": 0.7,
-   "at": 0.7,
-   "dur": 4.885,
+   "local": 0.9,
+   "at": 0.9,
+   "dur": 5.013,
    "text": "In Lagos, an importer sends a thirty percent deposit to a supplier in Shenzhen.",
    "file": "lines/00_00.wav"
   },
   {
    "scene": "hook",
-   "local": 5.785,
-   "at": 5.785,
-   "dur": 2.655,
+   "local": 6.313,
+   "at": 6.313,
+   "dur": 2.744,
    "text": "The seventy percent balance is where it goes wrong.",
    "file": "lines/00_01.wav"
   },
   {
    "scene": "problem",
-   "local": 0.3,
-   "at": 8.54,
-   "dur": 8.64,
+   "local": 0.5,
+   "at": 9.507,
+   "dur": 8.954,
    "text": "Goods that never arrive: this week, a man in Bauchi was charged over \u20a65.7 million paid for a tractor that never came.",
    "file": "lines/01_00.wav"
   },
   {
    "scene": "problem",
-   "local": 9.14,
-   "at": 17.38,
-   "dur": 8.384,
+   "local": 9.854,
+   "at": 18.861,
+   "dur": 8.619,
    "text": "Over three billion dollars lost in 2025 to fake \"bank details changed\" messages. And the naira still moves in weeks.",
    "file": "lines/01_01.wav"
   },
   {
    "scene": "intro",
-   "local": 0.3,
-   "at": 25.864,
-   "dur": 8.085,
-   "text": "Arra, Latin for earnest money, works for any deal with a deposit and a balance: imports, a house back home, a freelance project.",
+   "local": 0.5,
+   "at": 27.93,
+   "dur": 4.028,
+   "text": "Arra is Latin for earnest money: the deposit that secures a deal.",
    "file": "lines/02_00.wav"
   },
   {
    "scene": "intro",
-   "local": 8.585,
-   "at": 34.149,
-   "dur": 4.309,
+   "local": 4.928,
+   "at": 32.358,
+   "dur": 4.476,
    "text": "Pay the deposit, and keep the balance locked in an open contract on Celo.",
    "file": "lines/02_01.wav"
   },
   {
    "scene": "check",
-   "local": 0.3,
-   "at": 38.558,
-   "dur": 6.827,
+   "local": 0.5,
+   "at": 37.284,
+   "dur": 7.066,
    "text": "Before any order, paste the page you found them on. Arra's agent reads it, and searches X and Reddit for complaints.",
    "file": "lines/03_00.wav"
   },
   {
    "scene": "check",
-   "local": 8.293,
-   "at": 46.551,
-   "dur": 3.634,
+   "local": 10.555,
+   "at": 47.339,
+   "dur": 3.712,
    "text": "This example shop has two customer complaints: high risk.",
    "file": "lines/03_01.wav"
   },
   {
    "scene": "check",
-   "local": 13.335,
-   "at": 51.593,
-   "dur": 9.399,
+   "local": 17.417,
+   "at": 54.201,
+   "dur": 9.638,
    "text": "A real seller comes back green. The agent pays for this data itself: half a cent a lookup, over x402, through the buy marketplace on Celo.",
    "file": "lines/03_02.wav"
   },
   {
    "scene": "check",
-   "local": 22.934,
-   "at": 61.192,
-   "dur": 4.181,
+   "local": 27.455,
+   "at": 64.239,
+   "dur": 4.352,
    "text": "And suppliers can confirm their own page, so impersonators get flagged.",
    "file": "lines/03_03.wav"
   },
   {
    "scene": "describe",
-   "local": 0.3,
-   "at": 65.473,
-   "dur": 3.947,
+   "local": 0.5,
+   "at": 69.041,
+   "dur": 4.117,
    "text": "Describe the order like a message, and the assistant fills in the terms.",
    "file": "lines/04_00.wav"
   },
   {
    "scene": "describe",
-   "local": 6.564,
-   "at": 71.737,
-   "dur": 5.845,
+   "local": 9.025,
+   "at": 77.566,
+   "dur": 5.947,
    "text": "Vague words like \"good quality\" are refused, and the terms are fingerprinted, so they can't change later.",
    "file": "lines/04_01.wav"
   },
   {
    "scene": "link",
-   "local": 0.3,
-   "at": 77.682,
-   "dur": 6.059,
+   "local": 0.5,
+   "at": 85.066,
+   "dur": 6.229,
    "text": "Send your supplier one link. They read the terms in English or Chinese, and agree from their own wallet.",
    "file": "lines/05_00.wav"
   },
   {
    "scene": "link",
-   "local": 8.42,
-   "at": 85.802,
-   "dur": 4.663,
+   "local": 10.983,
+   "at": 95.549,
+   "dur": 4.757,
    "text": "You see their record and reviews, and a changed payout address sets off an alarm.",
    "file": "lines/05_01.wav"
   },
   {
    "scene": "wallets",
-   "local": 0.3,
-   "at": 90.565,
-   "dur": 7.995,
+   "local": 0.5,
+   "at": 100.918,
+   "dur": 8.295,
    "text": "Pay from the wallet you already use: MiniPay, MetaMask, Rabby, or any wallet on Celo. In dollars, or straight from naira.",
    "file": "lines/06_00.wav"
   },
   {
    "scene": "lock",
-   "local": 0.3,
-   "at": 98.66,
-   "dur": 5.816,
+   "local": 0.5,
+   "at": 109.663,
+   "dur": 5.935,
    "text": "Lock the order. The supplier accepts, and the deposit reaches them instantly. The balance waits.",
    "file": "lines/07_00.wav"
   },
   {
    "scene": "textile",
-   "local": 0.3,
-   "at": 106.622,
-   "dur": 7.851,
+   "local": 0.5,
+   "at": 120.976,
+   "dur": 8.164,
    "text": "Every naira payment is a Textile FX fill: one firm quote for exactly the dollars needed, settled in one transaction.",
    "file": "lines/08_00.wav"
   },
   {
    "scene": "returns",
-   "local": 0.3,
-   "at": 114.573,
-   "dur": 8.005,
+   "local": 0.5,
+   "at": 129.59,
+   "dur": 8.16,
    "text": "That one rate matters. This October, a seven-thousand-dollar balance cost a quarter of a million naira more, in just twenty days.",
    "file": "lines/09_00.wav"
   },
   {
    "scene": "returns",
-   "local": 8.505,
-   "at": 122.778,
-   "dur": 2.038,
+   "local": 9.06,
+   "at": 138.15,
+   "dur": 2.057,
    "text": "With Arra, it's paid for on day one.",
    "file": "lines/09_01.wav"
   },
   {
    "scene": "ship",
-   "local": 0.3,
-   "at": 124.916,
-   "dur": 4.999,
+   "local": 0.5,
+   "at": 140.657,
+   "dur": 5.156,
    "text": "When they ship, the container number is checked, and your check period starts when the goods arrive.",
    "file": "lines/10_00.wav"
   },
   {
    "scene": "ship",
-   "local": 7.176,
-   "at": 131.792,
-   "dur": 2.969,
+   "local": 9.385,
+   "at": 149.542,
+   "dur": 3.072,
    "text": "All good? Pay the balance in one tap, or in parts.",
    "file": "lines/10_01.wav"
   },
   {
    "scene": "ship",
-   "local": 10.345,
-   "at": 134.961,
-   "dur": 3.474,
+   "local": 13.123,
+   "at": 153.28,
+   "dur": 3.584,
    "text": "Something wrong? Report it with signed photos, and make an offer.",
    "file": "lines/10_02.wav"
   },
   {
    "scene": "safety",
-   "local": 0.3,
-   "at": 138.587,
-   "dur": 6.226,
+   "local": 0.5,
+   "at": 158.719,
+   "dur": 6.396,
    "text": "Cancel before they accept. No accept, or no shipment, and Arra's agent refunds you automatically.",
    "file": "lines/11_00.wav"
   },
   {
    "scene": "safety",
-   "local": 6.726,
-   "at": 145.013,
-   "dur": 7.723,
+   "local": 7.296,
+   "at": 165.515,
+   "dur": 8.064,
    "text": "A quiet buyer can't hold the money: ignored offers go through in seven days. And nobody, not even Arra, can redirect it.",
    "file": "lines/11_01.wav"
   },
   {
    "scene": "after",
-   "local": 0.3,
-   "at": 152.836,
-   "dur": 6.76,
+   "local": 0.5,
+   "at": 174.029,
+   "dur": 6.951,
    "text": "Afterwards, both sides review each other, hidden until both have written. Receipts and history stay with every order.",
    "file": "lines/12_00.wav"
   },
   {
-   "scene": "proof",
-   "local": 0.3,
-   "at": 160.004,
-   "dur": 4.128,
-   "text": "Live on Celo mainnet: a friend's real order ran start to finish.",
+   "scene": "uses",
+   "local": 0.5,
+   "at": 183.608,
+   "dur": 7.04,
+   "text": "It works for any deposit-and-balance deal: a house built back home, furniture made to order, a freelance project.",
    "file": "lines/13_00.wav"
   },
   {
    "scene": "proof",
-   "local": 4.628,
-   "at": 164.332,
-   "dur": 7.316,
+   "local": 0.5,
+   "at": 191.098,
+   "dur": 4.245,
+   "text": "Live on Celo mainnet: a friend's real order ran start to finish.",
+   "file": "lines/14_00.wav"
+  },
+  {
+   "scene": "proof",
+   "local": 5.145,
+   "at": 195.743,
+   "dur": 7.589,
    "text": "Verified contract, a registered agent, naira filled through Textile, and supplier checks paid over x402.",
-   "file": "lines/13_01.wav"
+   "file": "lines/14_01.wav"
   },
   {
    "scene": "close",
-   "local": 0.7,
-   "at": 172.148,
-   "dur": 2.192,
+   "local": 0.9,
+   "at": 204.182,
+   "dur": 2.257,
    "text": "Arra. Trade with anyone, without the worry.",
-   "file": "lines/14_00.wav"
+   "file": "lines/15_00.wav"
   }
  ],
- "total": 176.14
+ "total": 208.989
 }

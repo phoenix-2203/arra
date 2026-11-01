@@ -29,8 +29,8 @@
   "scene": "intro",
   "lines": [
    {
-    "text": "Arra, Latin for earnest money, works for any deal with a deposit and a balance: imports, a house back home, a freelance project.",
-    "say": "Ahra, Latin for earnest money, works for any deal with a deposit and a balance: imports, a house back home, a freelance project."
+    "text": "Arra is Latin for earnest money: the deposit that secures a deal.",
+    "say": "Ahra is Latin for earnest money: the deposit that secures a deal."
    },
    {
     "text": "Pay the deposit, and keep the balance locked in an open contract on Celo.",
@@ -161,6 +161,15 @@
    {
     "text": "Afterwards, both sides review each other, hidden until both have written. Receipts and history stay with every order.",
     "say": "Afterwards, both sides review each other, hidden until both have written. Receipts and history stay with every order."
+   }
+  ]
+ },
+ {
+  "scene": "uses",
+  "lines": [
+   {
+    "text": "It works for any deposit-and-balance deal: a house built back home, furniture made to order, a freelance project.",
+    "say": "It works for any deposit-and-balance deal: a house built back home, furniture made to order, a freelance project."
    }
   ]
  },

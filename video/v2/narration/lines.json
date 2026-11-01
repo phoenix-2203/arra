@@ -5,7 +5,7 @@
   "li": 0,
   "text": "In Lagos, an importer sends a thirty percent deposit to a supplier in Shenzhen.",
   "file": "lines/00_00.wav",
-  "dur": 4.885,
+  "dur": 5.013,
   "heard": "In Lagos, an importer sends a 30% deposit to a supplier in Shenzhen.",
   "missing": [
    "thirty",
@@ -18,7 +18,7 @@
   "li": 1,
   "text": "The seventy percent balance is where it goes wrong.",
   "file": "lines/00_01.wav",
-  "dur": 2.655,
+  "dur": 2.744,
   "heard": "The 70% balance is where it goes wrong.",
   "missing": [
    "seventy",
@@ -31,8 +31,8 @@
   "li": 0,
   "text": "Goods that never arrive: this week, a man in Bauchi was charged over \u20a65.7 million paid for a tractor that never came.",
   "file": "lines/01_00.wav",
-  "dur": 8.64,
-  "heard": "goods that never arrived. This week, a man in Bauchai was charged over 5.7 million naira, paid for tractor that never came.",
+  "dur": 8.954,
+  "heard": "goods that never arrived. This week, a man in Bauchai was charged over 5.7 million Naira, paid for a tractor that never came.",
   "missing": [
    "arrive",
    "bauchi",
@@ -48,8 +48,8 @@
   "li": 1,
   "text": "Over three billion dollars lost in 2025 to fake \"bank details changed\" messages. And the naira still moves in weeks.",
   "file": "lines/01_01.wav",
-  "dur": 8.384,
-  "heard": "over $3 billion lost in 2025 to fake bank details changed messages. And the Naira still moves in weeks.",
+  "dur": 8.619,
+  "heard": "over $3 billion lost in 2025 to fake bank details changed messages. And the Naira still moves in weeks. (buzzer buzzes)",
   "missing": [
    "three",
    "dollars",
@@ -63,10 +63,10 @@
   "scene": "intro",
   "si": 2,
   "li": 0,
-  "text": "Arra, Latin for earnest money, works for any deal with a deposit and a balance: imports, a house back home, a freelance project.",
+  "text": "Arra is Latin for earnest money: the deposit that secures a deal.",
   "file": "lines/02_00.wav",
-  "dur": 8.085,
-  "heard": "ARA Latin for Earnest Money works for any deal with a deposit and a balance. Imports a house back home, a freelance project.",
+  "dur": 4.028,
+  "heard": "ARA is Latin for earnest money, the deposit that secures a deal.",
   "missing": [
    "ahra"
   ]
@@ -77,8 +77,8 @@
   "li": 1,
   "text": "Pay the deposit, and keep the balance locked in an open contract on Celo.",
   "file": "lines/02_01.wav",
-  "dur": 4.309,
-  "heard": "Pay the deposit and keep the balance locked in an open contract on sell-o.",
+  "dur": 4.476,
+  "heard": "Pay the deposit and keep the balance locked in an open contract on Cello.",
   "missing": [
    "sello"
   ]
@@ -89,8 +89,8 @@
   "li": 0,
   "text": "Before any order, paste the page you found them on. Arra's agent reads it, and searches X and Reddit for complaints.",
   "file": "lines/03_00.wav",
-  "dur": 6.827,
-  "heard": "Before any order, paste the page you found them on. R is Agent reads it and searches X and Reddit for complaints.",
+  "dur": 7.066,
+  "heard": "Before any order, paste the page you found them on. R as Agent reads it and searches X and Reddit for complaints.",
   "missing": [
    "ahras"
   ]
@@ -101,7 +101,7 @@
   "li": 1,
   "text": "This example shop has two customer complaints: high risk.",
   "file": "lines/03_01.wav",
-  "dur": 3.634,
+  "dur": 3.712,
   "heard": "This example shop has two customer complaints, high risk.",
   "missing": []
  },
@@ -111,10 +111,9 @@
   "li": 2,
   "text": "A real seller comes back green. The agent pays for this data itself: half a cent a lookup, over x402, through the buy marketplace on Celo.",
   "file": "lines/03_02.wav",
-  "dur": 9.399,
-  "heard": "A real seller comes back green. The agent pays for this data itself. Half a centa look up over X402 through the buy marketplace on sell-o.",
+  "dur": 9.638,
+  "heard": "A real seller comes back green. The agent pays for this data itself. Half a cent a look up over X402 through the buy marketplace on sell-o.",
   "missing": [
-   "cent",
    "x",
    "four",
    "oh",
@@ -128,7 +127,7 @@
   "li": 3,
   "text": "And suppliers can confirm their own page, so impersonators get flagged.",
   "file": "lines/03_03.wav",
-  "dur": 4.181,
+  "dur": 4.352,
   "heard": "and suppliers can confirm their own page, so impersonators get flagged.",
   "missing": []
  },
@@ -138,8 +137,8 @@
   "li": 0,
   "text": "Describe the order like a message, and the assistant fills in the terms.",
   "file": "lines/04_00.wav",
-  "dur": 3.947,
-  "heard": "Describe the order like a message and the assistant fills in the terms.",
+  "dur": 4.117,
+  "heard": "describe the order like a message and the assistant fills in the terms. [AUDIO OUT]",
   "missing": []
  },
  {
@@ -148,7 +147,7 @@
   "li": 1,
   "text": "Vague words like \"good quality\" are refused, and the terms are fingerprinted, so they can't change later.",
   "file": "lines/04_01.wav",
-  "dur": 5.845,
+  "dur": 5.947,
   "heard": "vague words like \"good quality\" are refused, and the terms are fingerprinted, so they can't change later.",
   "missing": []
  },
@@ -158,7 +157,7 @@
   "li": 0,
   "text": "Send your supplier one link. They read the terms in English or Chinese, and agree from their own wallet.",
   "file": "lines/05_00.wav",
-  "dur": 6.059,
+  "dur": 6.229,
   "heard": "Send your supplier one link. They read the terms in English or Chinese and agree from their own wallet.",
   "missing": []
  },
@@ -168,8 +167,8 @@
   "li": 1,
   "text": "You see their record and reviews, and a changed payout address sets off an alarm.",
   "file": "lines/05_01.wav",
-  "dur": 4.663,
-  "heard": "You see their record and reviews, and a changed payout address sets off an alarm.",
+  "dur": 4.757,
+  "heard": "You see their record and reviews, and a changed payout address sets off an alarm. [BUZZER]",
   "missing": []
  },
  {
@@ -178,11 +177,11 @@
   "li": 0,
   "text": "Pay from the wallet you already use: MiniPay, MetaMask, Rabby, or any wallet on Celo. In dollars, or straight from naira.",
   "file": "lines/06_00.wav",
-  "dur": 7.995,
-  "heard": "Pay from the wallet you already use, mini-pay, metamask, rabby, or any wallet on sell-o, in dollars or straight from Naira.",
+  "dur": 8.295,
+  "heard": "Pay from the wallet you already use. Many pay, met a mask, rabby, or any wallet on sell-o. In dollars or straight from Naira.",
   "missing": [
+   "mini",
    "meta",
-   "mask",
    "sello",
    "nyra"
   ]
@@ -193,7 +192,7 @@
   "li": 0,
   "text": "Lock the order. The supplier accepts, and the deposit reaches them instantly. The balance waits.",
   "file": "lines/07_00.wav",
-  "dur": 5.816,
+  "dur": 5.935,
   "heard": "Lock the order, the supplier accepts and the deposit reaches them instantly. The balance waits.",
   "missing": []
  },
@@ -203,8 +202,8 @@
   "li": 0,
   "text": "Every naira payment is a Textile FX fill: one firm quote for exactly the dollars needed, settled in one transaction.",
   "file": "lines/08_00.wav",
-  "dur": 7.851,
-  "heard": "Every NIRA payment is a textile FX fill. One firm quote for exactly the dollars needed, settled in one transaction. [BUZZER]",
+  "dur": 8.164,
+  "heard": "Every NIRA payment is a textile FX fill. One firm quote for exactly the dollars needed settled in one transaction.",
   "missing": [
    "nyra",
    "f",
@@ -217,7 +216,7 @@
   "li": 0,
   "text": "That one rate matters. This October, a seven-thousand-dollar balance cost a quarter of a million naira more, in just twenty days.",
   "file": "lines/09_00.wav",
-  "dur": 8.005,
+  "dur": 8.16,
   "heard": "That one rate matters. This October, a $7,000 balance cost a quarter of a million nyramore in just 20 days.",
   "missing": [
    "seven",
@@ -234,7 +233,7 @@
   "li": 1,
   "text": "With Arra, it's paid for on day one.",
   "file": "lines/09_01.wav",
-  "dur": 2.038,
+  "dur": 2.057,
   "heard": "With Aura, it's paid for on day one.",
   "missing": [
    "ahra"
@@ -246,7 +245,7 @@
   "li": 0,
   "text": "When they ship, the container number is checked, and your check period starts when the goods arrive.",
   "file": "lines/10_00.wav",
-  "dur": 4.999,
+  "dur": 5.156,
   "heard": "When they ship, the container number is checked, and your check period starts when the goods arrive.",
   "missing": []
  },
@@ -256,7 +255,7 @@
   "li": 1,
   "text": "All good? Pay the balance in one tap, or in parts.",
   "file": "lines/10_01.wav",
-  "dur": 2.969,
+  "dur": 3.072,
   "heard": "All good, pay the balance in one tap or in parts.",
   "missing": []
  },
@@ -266,7 +265,7 @@
   "li": 2,
   "text": "Something wrong? Report it with signed photos, and make an offer.",
   "file": "lines/10_02.wav",
-  "dur": 3.474,
+  "dur": 3.584,
   "heard": "Something wrong, report it with signed photos and make an offer.",
   "missing": []
  },
@@ -276,8 +275,8 @@
   "li": 0,
   "text": "Cancel before they accept. No accept, or no shipment, and Arra's agent refunds you automatically.",
   "file": "lines/11_00.wav",
-  "dur": 6.226,
-  "heard": "Cancel before they accept. No accept or no shipment, and R's agent refunds you automatically.",
+  "dur": 6.396,
+  "heard": "Cancel before they accept. No accept or no shipment and R is agent refunds you automatically.",
   "missing": [
    "ahras"
   ]
@@ -288,8 +287,8 @@
   "li": 1,
   "text": "A quiet buyer can't hold the money: ignored offers go through in seven days. And nobody, not even Arra, can redirect it.",
   "file": "lines/11_01.wav",
-  "dur": 7.723,
-  "heard": "A quiet buyer can't hold the money, ignored offers go through in seven days, and nobody, not even ARA, can redirect it.",
+  "dur": 8.064,
+  "heard": "A quiet buyer can't hold the money, ignored offers go through in seven days. And nobody, not even ARA, can redirect it.",
   "missing": [
    "ahra"
   ]
@@ -300,17 +299,27 @@
   "li": 0,
   "text": "Afterwards, both sides review each other, hidden until both have written. Receipts and history stay with every order.",
   "file": "lines/12_00.wav",
-  "dur": 6.76,
+  "dur": 6.951,
   "heard": "Afterwards, both sides review each other, hidden until both have written. Receipts and history stay with every order.",
   "missing": []
  },
  {
-  "scene": "proof",
+  "scene": "uses",
   "si": 13,
   "li": 0,
-  "text": "Live on Celo mainnet: a friend's real order ran start to finish.",
+  "text": "It works for any deposit-and-balance deal: a house built back home, furniture made to order, a freelance project.",
   "file": "lines/13_00.wav",
-  "dur": 4.128,
+  "dur": 7.04,
+  "heard": "It works for any deposit and balance deal. A house built back home, furniture made to order a freelance project.",
+  "missing": []
+ },
+ {
+  "scene": "proof",
+  "si": 14,
+  "li": 0,
+  "text": "Live on Celo mainnet: a friend's real order ran start to finish.",
+  "file": "lines/14_00.wav",
+  "dur": 4.245,
   "heard": "Live on Cello Mainnet, a friend's real order ran start to finish.",
   "missing": [
    "sello",
@@ -320,11 +329,11 @@
  },
  {
   "scene": "proof",
-  "si": 13,
+  "si": 14,
   "li": 1,
   "text": "Verified contract, a registered agent, naira filled through Textile, and supplier checks paid over x402.",
-  "file": "lines/13_01.wav",
-  "dur": 7.316,
+  "file": "lines/14_01.wav",
+  "dur": 7.589,
   "heard": "Verified contract, a registered agent, Naira filled through textile and supplier checks paid over X402.",
   "missing": [
    "nyra",
@@ -336,11 +345,11 @@
  },
  {
   "scene": "close",
-  "si": 14,
+  "si": 15,
   "li": 0,
   "text": "Arra. Trade with anyone, without the worry.",
-  "file": "lines/14_00.wav",
-  "dur": 2.192,
+  "file": "lines/15_00.wav",
+  "dur": 2.257,
   "heard": "ARA, trade with anyone without the worry.",
   "missing": [
    "ahra"

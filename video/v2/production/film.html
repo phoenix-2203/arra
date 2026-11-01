@@ -128,7 +128,7 @@ scenes.intro = () => {
   </div>`);
   return { el: s, at(u) {
     const p = fade(u, .1, .8); const wm = s.querySelector('#wm'); wm.style.opacity = p; wm.style.transform = `scale(${.94 + .06 * eo(p)})`;
-    show(s.querySelector('#mean'), fade(u, 1.2)); const us = s.querySelector('#uses'); show(us, fade(u, 3.4)); us.style.opacity = fade(u, 3.4) * (1 - P(u, L('intro', 1) - .4, .4)); show(s.querySelector('#tg'), fade(u, L('intro', 1))); show(s.querySelector('#flow'), fade(u, L('intro', 1) + 2.2)); show(s.querySelector('#not'), fade(u, L('intro', 1) + 5.2));
+    show(s.querySelector('#mean'), fade(u, 1.2)); s.querySelector('#uses').style.display = 'none'; show(s.querySelector('#tg'), fade(u, L('intro', 1))); show(s.querySelector('#flow'), fade(u, L('intro', 1) + 2.2)); show(s.querySelector('#not'), fade(u, L('intro', 1) + 5.2));
   } };
 };
 // ------------------------------------------------------------------ helpers for product scenes
@@ -223,7 +223,7 @@ scenes.uses = () => {
     <div class="tile card" id="u2" style="left:700px"><div class="ico">▤</div><h3>Made to order</h3><p>Furniture, signage, tailoring: money for materials now, the rest when it's finished.</p></div>
     <div class="tile card" id="u3" style="left:1260px"><div class="ico">⟨⟩</div><h3>Freelance projects</h3><p>Milestones without a platform holding the money.</p></div>
   </div>`);
-  return { el: s, at(u) { ['#u1', '#u2', '#u3'].forEach((id, i) => show(s.querySelector(id), fade(u, 2.6 + i * 1.6))); } };
+  return { el: s, at(u) { ['#u1', '#u2', '#u3'].forEach((id, i) => show(s.querySelector(id), fade(u, 2.4 + i * 1.5))); } };
 };
 // ------------------------------------------------------------------ 7 returns
 scenes.returns = () => {
