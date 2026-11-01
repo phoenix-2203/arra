@@ -77,6 +77,12 @@ export function VerifyResult({ r, compactFacts = false }) {
               {s.createdAt ? <div><dt>Joined</dt><dd>{new Date(s.createdAt * 1000).toLocaleDateString("en-GB", { month: "short", year: "numeric" })}</dd></div> : null}
             </dl>
           ) : null}
+          {s.contacts?.length ? (
+            <div className="v-contacts">
+              <p className="small"><strong>Contacts on their page:</strong> {s.contacts.map((c, i) => <span key={c.value}>{i ? " · " : ""}{c.kind} <span className="num">{c.value}</span></span>)}</p>
+              <p className="tiny muted">Chatting with them on another number? Scammers copy real shops. Message the number above to confirm it's really them.</p>
+            </div>
+          ) : null}
         </div>
       ) : null}
       <ul className="v-reasons">

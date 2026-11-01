@@ -711,3 +711,5 @@ details.more.plain summary { font-size: 14px; color: var(--text-soft); }
 .proof-code strong { font-size: 22px; letter-spacing: .08em; color: var(--gold-soft-ink); }
 @media (max-width: 520px) { .wide-only { display: none; } }
 .searching { display: flex; align-items: center; gap: 10px; }
+.v-contacts { border: 1.5px dashed var(--line); border-radius: 12px; padding: 10px 12px; }
+.v-contacts > * + * { margin-top: 4px; }

@@ -82,7 +82,7 @@ export function summarize(data) {
   });
   return {
     name: name?.slice(0, 80) ?? null,
-    bio: bio?.slice(0, 200) ?? null,
+    bio: bio?.slice(0, 300) ?? null,
     followers: followers ?? null,
     following: following ?? null,
     posts: posts ?? null,
@@ -90,7 +90,27 @@ export function summarize(data) {
     private: priv ?? null,
     createdAt: createdAt ?? null,
     lastPostAt: lastPostAt ?? null,
+    contacts: contactsIn(bio ?? ""),
   };
+}
+
+/**
+ * WhatsApp, WeChat and phone numbers a seller lists in their own bio. Scammers often pose
+ * as a real shop on WhatsApp, so the buyer can check they're chatting with the number the
+ * page itself gives.
+ */
+export function contactsIn(text) {
+  const out = [];
+  const re = /(whats\s*app|wa\.me\/|wa|we\s*chat|weixin|vx|tel|phone|call|line)?[\s:：=]*(\+?\d[\d\s().-]{6,18}\d)/gi;
+  for (const m of String(text).matchAll(re)) {
+    const digits = m[2].replace(/\D/g, "");
+    if (digits.length < 7 || digits.length > 15) continue;
+    const w = (m[1] ?? "").toLowerCase().replace(/\s/g, "");
+    const kind = /whats|wa/.test(w) ? "WhatsApp" : /wechat|weixin|vx/.test(w) ? "WeChat" : "Phone";
+    const value = m[2].trim().replace(/\s+/g, " ");
+    if (!out.some((c) => c.value.replace(/\D/g, "") === digits)) out.push({ kind, value });
+  }
+  return out.slice(0, 4);
 }
 
 /** Plain-words warnings a careful buyer would notice on the page. */
@@ -259,7 +279,7 @@ export function supplierChecker({ account, client = null, dataDir, gateway = pro
     const handle = cleanHandle(rawHandle);
     if (!P) throw Object.assign(new Error("Choose Instagram, TikTok or X"), { status: 400 });
     if (!handle) throw Object.assign(new Error("That doesn't look like a username"), { status: 400 });
-    const file = join(dir, `${platform}-${handle}.v3.json`); // v3: post dates only from posts; older saved reads are ignored
+    const file = join(dir, `${platform}-${handle}.v4.json`); // v4: contacts from the bio; older saved reads are ignored
     const c = !fresh && cached(file);
     if (c) return { ...c, cached: true, flags: c.found ? flags(c.summary, Math.floor(now() / 1000)) : c.flags };
     const { res, text, data, paid } = await paidCall(P.path, P.body(handle), { platform, handle });

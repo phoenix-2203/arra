@@ -176,3 +176,13 @@ test("TikTok: the account's creation date is not mistaken for its last post", as
   assert.equal(withPosts.lastPostAt, now - 19 * 3600);
   assert.equal(withPosts.followers, 8738, "a post's author fields don't override the profile's");
 });
+
+test("contact numbers a seller lists in their bio (real @happy14076 bio)", async () => {
+  const { contactsIn } = await import("../src/supplierCheck.js");
+  assert.deepEqual(contactsIn("Video show style is limited, add me, I send you a full catalog.Thank you for your support.\nwechat 18025912617\nwhatsapp +86 13642384303"), [
+    { kind: "WeChat", value: "18025912617" },
+    { kind: "WhatsApp", value: "+86 13642384303" },
+  ]);
+  assert.deepEqual(contactsIn("Celo is now a Layer 2. Secured by Ethereum."), []);
+  assert.deepEqual(contactsIn("Since 2019 | 24/7"), [], "years and hours aren't phone numbers");
+});
